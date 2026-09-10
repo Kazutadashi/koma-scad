@@ -10,6 +10,8 @@ KomaSCAD is an open-source, customizable shogi piece generator. Make a replaceme
 
 Choose a piece, export an STL, and print it with one filament for the body and another for the text. Both recessed and raised lettering are supported, with independent inscriptions on the front and back.
 
+![OpenSCAD preview of the Shogi piece](images/shogi_piece_preview.png)
+
 ## Features
 
 - **Named pieces:** 9 Shogi and 207 Taikyoku presets.
