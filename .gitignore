@@ -1,0 +1,15 @@
+# Local renders and slicer projects
+/exports/
+/build/
+*.stl
+*.gcode
+*.bgcode
+*.3mf
+*.csg
+# Python and editor artifacts
+__pycache__/
+*.py[cod]
+*.bak
+*~
+.DS_Store
+Thumbs.db

@@ -1,0 +1,3 @@
+Require custom glyph artwork (IDS in source front or back):
+Huai chicken
+Old rat
