@@ -1,13 +1,72 @@
-# KomaSCAD — community base, revision 2
+# KomaSCAD — community base, revision 3.3.1
 
 A reproducible starting point for a readable, balanced koma in OpenSCAD 2021.01. This revision concentrates on one king, with the controls needed to establish an ordinary shogi set next. It does not claim to reproduce the exact calligraphy in the reference photographs.
 
+## Maker signature in 3.1
+
+Expand **12 - Maker signature on heel**, enable **Signature Enabled**, and enter your name or mark in **Signature Text**. The default is disabled with empty text, so existing pieces are unchanged. This is horizontal text on the broad bottom edge (heel), not an additional inscription on the reverse face. Looking straight at the heel with the front inscription face uppermost, text reads left to right.
+
+Use **Inspect signature** and F5, then a top view, to check the composition. The blue border shows the safe area; red shows overflow. The signature is clipped to that area, not automatically shrunk. Reduce the font size or adjust position when red appears. Rotation is available for unusual layouts. The signature has its own font choice; empty inherits Font Name. It is independent of the front/back glyph layout and does not inherit their stroke expansion or rounding.
+
+| Signature control | Meaning |
+| --- | --- |
+| `Signature_Enabled` | Off by default; enables the optional mark. |
+| `Signature_Text` | Horizontal name, initials, date, or other text; empty leaves no mark. |
+| `Signature_Font` | Font family/style; empty inherits shared Font_Name. |
+| `Signature_Font_Size` | Typographic size in mm; default 2.5. |
+| `Signature_Letter_Spacing` | Unitless spacing multiplier; default 1. |
+| `Signature_X` | mm from centre, positive to the viewer’s right. |
+| `Signature_Y` | mm across heel thickness, positive toward the front inscription face. |
+| `Signature_Rotation` | Degrees counterclockwise as viewed. |
+| `Signature_Depth` | mm into heel; default 0.4. Zero creates no mark. |
+| `Signature_Margin` | mm protective border; default 0.6. Accounts for the taper over the cut depth. |
+| `Signature_Filament` | Colour-workflow material; default Same as front. |
+| `Signature_Colour` | Custom RGBA swatch, used when Signature Filament is Custom. |
+
+**Print** engraves the mark; **Blank** remains completely unmarked. **Colour assembly** fills the mark as a fourth possible material part. It shares the front material by default, or can use another palette/custom choice. **Colour signature** exports just the aligned signature region. This is a co-printed region, not a loose insert. If signature and face engraving volumes intersect under unusual manual settings, the signature owns the intersection so material volumes do not overlap.
+
+In **Upright** orientation the heel faces the print bed. The signature therefore occupies the first layers; check those sliced layers for legible small features, bridging over recesses, or correct material assignment. The default shallow recess avoids protruding text on the base. Its physical print quality remains untested.
+
+The colour exporter accepts saved signature settings. You can also enable and set a mark directly:
+
+```bash
+python3 komascad_export.py --preset '00 Base - King' --signature-text 'KomaSCAD' --output signed-king.3mf
+```
+
+`--signature-colour Gold` can override its material. The supplied signed STL and 3MF are demonstrations using “KomaSCAD”; that name is not inserted into the base preset. Verification checks disabled/empty behaviour, a closed engraved solid with unchanged outer bounds, a signature that fits the safe heel, and colour-part volume conservation. The colour signature occupies 0–0.4 mm above the bed in the Upright demonstration.
+
+## Colour workflow in 3.0
+
+See [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) for the complete multipart workflow and exporter commands. The three new **Body_Filament**, **Front_Filament**, and **Back_Filament** dropdowns choose preview swatches and named 3MF materials. Colour assembly previews flush inlays; Colour body/front/back select aligned export parts. Use **komascad_export.py** to retain these materials in a 3MF on OpenSCAD 2021.01. Standard Print/Blank STL exports are retained.
+
+Colour inlays require Recessed or None on active faces and Protect Face Edges enabled. Existing RGBA controls apply when the new Filament choice is Custom. Explicit Same as body/front choices reuse a material. Metallic and glitter finishes depend on filament selection, not rendered texture.
+
+Per-character lists now expose three entries; defaults remain neutral. Older two-entry lists still work because missing entries use neutral values. The exporter accepts saved presets and can override body/front/back colours or strings from the command line.
+
+## Opening the file and units in 2.3
+
+The SCAD contains complete standalone defaults and generates the king without loading JSON or changing a preset. If opening it leaves the viewport empty, press **F5** to initiate Preview. Changing a preset also requests a preview when Customizer's Automatic Preview is enabled; that does not mean the preset is needed to construct the piece. SCAD code cannot trigger its own execution or change the application's preview settings. If geometry has been compiled but is off screen, use **View > View All**.
+
+In Customizer select **Show Details**. Each numeric control now has an adjacent description starting with its units: **mm**, **Degrees**, **Multiplier**, **Fraction**, **Count**, or **RGBA**. Parameter identifiers are unchanged so existing presets continue to work. Unless stated otherwise, mm values are before Model Scale; Minimum Web and Reference Line Width describe final-size mm. Glyph size/width/height entries are multipliers, not millimetres.
+
+## Neutral proportions in 2.2
+
+Front and back now start with identical layout controls: all size/width/height multipliers are 1, and all character offsets and rotations are 0. No king-specific reshaping is applied. Width Scale now changes only glyph width; it no longer reduces automatic font size or changes character spacing. Automatic size still responds to body dimensions and character count. Different glyphs retain their natural font proportions.
+
+Existing saved custom presets can retain the old multipliers. Select the updated **00 Base - King** preset or explicitly reset Front Width Scale to 1 and Front Glyph Width / Height to [1, 1]. These changes preserve the Print preview correction.
+
+## Print preview correction in 2.1
+
+Print mode now explicitly evaluates its Boolean geometry with `render(convexity=30)` before F5 displays it. This avoids relying on the raw OpenCSG preview of the engraved polyhedron. Preview updates may take longer, especially with text rounding enabled. Inspect mode remains available for fast lettering adjustments.
+
+The previous checks validated exported solids but did not validate their OpenGL F5 display. The corrected two-sided 王将 model exports an identical set of triangles to the previous version and remains one watertight solid. An actual OpenGL screenshot could not be obtained in this environment, so GUI confirmation on the user's installation remains necessary. Existing JSON presets are compatible with this correction.
+
 ## Start in five steps
 
-1. Keep **shogi_piece.scad** and **shogi_piece.json** together. Open the SCAD in OpenSCAD 2021.01, show Customizer, and select **00 Base - King**. If an already-open session shows old presets, reopen the file.
+1. Keep **shogi_piece.scad** and **shogi_piece.json** together. Open the SCAD in OpenSCAD 2021.01, show Customizer, and press **F5**. Selecting **00 Base - King** is optional; the source defaults match it. If an already-open session shows old presets, reopen the file.
 2. Install **Noto Serif CJK JP SemiBold**, or choose your own Japanese font from **Help > Font List**. On Arch, `noto-fonts-cjk` is the official package. The [Arch package page](https://archlinux.org/packages/extra/any/noto-fonts-cjk/) and [upstream font download guide](https://github.com/notofonts/noto-cjk/blob/main/Serif/README.md) provide the sources. Restart OpenSCAD after installing fonts. `fc-match 'Noto Serif CJK JP:style=SemiBold'` should identify the intended family and style. A missing font can silently fall back; rectangles or unexpected Latin shapes are not valid inscriptions.
 3. Select **Inspect front**, then F5 and a top view. The black shapes are the actual font outlines. Blue marks the safe margin and centreline; red marks lettering outside that margin. Inspect the back the same way. The external blue bar represents `Reference_Line_Width` at final size; it is not a measured minimum stroke test.
-4. Select **Print**, use **Upright**, press F6, then export STL. Inspection is intentionally F5-only: F6 and geometry export reject it. **Blank** exports just the body. Colours do not create a second material.
+4. Select **Print**, use **Upright**, press F6, then export STL. Inspection is intentionally F5-only: F6 and geometry export reject it. **Blank** exports just the body. In Print/Blank, colours do not create a second material; use the separate colour workflow for multipart output.
 5. Slice and print one piece before building a set. Judge its lettering at arm's length, the counters between strokes, the edge feel, and its balance on the board.
 
 Command-line export from the folder containing the two files:
@@ -25,8 +84,8 @@ openscad -o king.stl -p shogi_piece.json -P '00 Base - King' shogi_piece.scad
 | Point thickness | 3 mm before bevel | Allows a more useful web when future pieces receive two-sided recesses |
 | Taper | Equal front and back slopes | A simple, comprehensible default; independent reference angles remain available |
 | Typeface | Noto Serif CJK JP SemiBold | Reproducible serif starting point, not the photographed brush lettering |
-| Layout | Automatic size and spacing, 1.25 front width multiplier | Fills the broad face while leaving breathing room |
-| First character | Width ×0.94, height ×0.90 | A slightly narrower, flatter 王 above 将 |
+| Layout | Automatic size and spacing; identical front/back controls | Predictable starting point for any inscription |
+| Character proportions | All width/height multipliers are 1 | Preserves the font’s natural proportions |
 | Recess | 0.8 mm perpendicular to face | A starting depth for later hand colouring |
 | Stroke expansion | 0.12 mm outward per contour | Gives fine outlines more presence, while requiring inspection of counters |
 | Bevel | 0.35 mm wide, 0.18 mm deep | A small edge break |
@@ -45,18 +104,18 @@ Work in this order: overall position, overall size, spacing, individual glyph pr
 | --- | --- |
 | Make both front characters 10% larger | `Front_Text_Scale = 1.10` |
 | Use a specific typographic size | Set `Front_Font_Size` above zero; zero restores automatic size |
-| Widen lettering without making it taller | Increase `Front_Width_Scale`, e.g. 1.25 to 1.30 |
+| Widen lettering without making it taller | Increase `Front_Width_Scale`, e.g. 1 to 1.10 |
 | Make only the upper character larger | `Front_Glyph_Size = [1.10, 1]` |
-| Make only the lower character taller | `Front_Glyph_Height = [0.90, 1.10]` |
+| Make only the lower character taller | `Front_Glyph_Height = [1, 1.10]` |
 | Move the lower character down 0.5 mm | `Front_Glyph_Y = [0, -0.5]` |
 | Move the whole inscription toward the point | `Front_Text_Y = 0.5` |
 | Increase distance between centres | Increase `Front_Spacing_Scale`, or set explicit `Front_Character_Spacing` |
 | Rotate just the upper character | `Front_Glyph_Rotation = [2, 0]` |
-| Start a single-character version | Set `Front_Characters = "王"`; reset the first glyph width/height to 1 if you want its natural proportions |
+| Start a single-character version | Set `Front_Characters = "王"`; neutral glyph multipliers already preserve its natural proportions |
 | Suppress a face while retaining its text | Set that face's `Text_Style` to `None` |
 | Use another font on the reverse | Set `Back_Font_Override`; an empty override inherits `Font_Name` |
 
-Pairs mean **[first character, second character]**. A single character uses the first entry. Third and later characters use neutral adjustments unless you extend the corresponding numeric lists in the SCAD source. The stacking algorithm accepts longer strings; long names are not guaranteed readable on an ordinary-sized piece. The numeric entries are multipliers, millimetres, or degrees as indicated, not character codes.
+Lists mean **[first character, second character, third character]**. A single character uses the first entry. The third character has its own controls. Fourth and later characters use neutral adjustments unless you extend the corresponding numeric lists in the SCAD source. The stacking algorithm accepts longer strings; long names are not guaranteed readable on an ordinary-sized piece. The numeric entries are multipliers, millimetres, or degrees as indicated, not character codes.
 
 X always means the viewer's right on the face being edited; Y points toward the tip. Back text is automatically oriented to read correctly from the reverse with the point up. Do not mirror it manually. Whole-inscription rotation rotates the arrangement around its centre. Glyph offsets are in this arrangement's coordinate system, so they rotate with it. Glyph rotation turns an individual glyph around its own text alignment origin.
 
@@ -64,7 +123,7 @@ X always means the viewer's right on the face being edited; Y points toward the 
 
 ## Automatic layout: useful, but honest
 
-OpenSCAD 2021.01 is the actual target. This implementation does not depend on newer `textmetrics()` features. Automatic size is an estimate based on character count, face length, body width, and the overall width multiplier. It does not measure glyph bounds, solve kerning, or automatically fit every font to the pentagon. The blue safe-face boundary and red overflow display work on actual 2D outlines.
+OpenSCAD 2021.01 is the actual target. This implementation does not depend on newer `textmetrics()` features. Automatic size is an estimate based on character count, face length, body width. It does not measure glyph bounds, solve kerning, or automatically fit every font to the pentagon. The blue safe-face boundary and red overflow display work on actual 2D outlines.
 
 With `Protect_Face_Edges = true`, printable lettering is intersected with the safe face. **Protection trims overflowing strokes; it does not shrink or move them.** Always correct any red overflow using size, width, spacing, or position before printing. Disabling protection allows intentional edge breaches and can also create detached raised fragments. There is no numerical assertion that rejects all text overflow in this OpenSCAD version.
 
@@ -89,7 +148,7 @@ For stronger visual contrast with one filament, test sealing and hand filling th
 | `Category` | Informational string only. Never selects hidden dimensions. |
 | `Front_Characters`, `Back_Characters` | Unicode strings, stacked in order from point to heel; empty means blank. |
 | `Font_Name` | Shared installed font family and optional Fontconfig style. |
-| `Output_Mode` | Print, Blank, Inspect front, or Inspect back. Inspect is F5-only. |
+| `Output_Mode` | Print/Blank; Inspect front/back/signature/pawn circle; Colour assembly/body/front/back/signature. All Inspect views and Colour assembly are F5-only. Use the exporter for colour 3MF. |
 | `Print_Orientation` | Upright, Back face down, or Design coordinates; ignored by flat inspection views. Raised reverse text cannot use Back face down. |
 | `Model_Scale` | Uniformly scales body, lettering, offsets, bevel, and relief. Does not resize only the blank. |
 | `Piece_Length`, `Base_Width`, `Rear_Thickness` | Authoritative dimensions in all categories. |
@@ -101,7 +160,7 @@ For stronger visual contrast with one filament, test sealing and hand filling th
 | `Front_Center_Fraction`, `Back_Center_Fraction` | Centre of character stack as a fraction of the heel-to-point face length. |
 | `Front_Text_X`, `Back_Text_X` | Whole-inscription lateral offset in face mm. |
 | `Front_Text_Y`, `Back_Text_Y` | Additional whole-inscription offset toward the point, in face mm. |
-| `Front_Width_Scale`, `Back_Width_Scale` | Width multiplier for each glyph; automatic font-size estimate also accounts for this multiplier. |
+| `Front_Width_Scale`, `Back_Width_Scale` | Width multiplier for each glyph; does not change font size, height, or character spacing. |
 | `Front_Height_Scale`, `Back_Height_Scale` | Height multiplier for each glyph; does not change centres. |
 | `Front_Text_Rotation`, `Back_Text_Rotation` | Rotation of the entire layout about its centre. |
 | `Front_Glyph_Size`, `Back_Glyph_Size` | Per-character uniform size multipliers. |
@@ -123,8 +182,8 @@ For stronger visual contrast with one filament, test sealing and hand filling th
 | `Angle_Mode` | Selects which plan angle to derive, or checks all three. The derived angle's input field is inactive. |
 | `Face_Base_Angle`, `Face_Shoulder_Angle`, `Face_Tip_Angle` | Symmetric pentagon interior angles; must satisfy `2*base + 2*shoulder + tip = 540`. |
 | `Front_Side_Base_Angle`, `Back_Side_Base_Angle` | Independent reference side angles, used only in Reference side angles mode. |
-| `Body_Colour` | Display colour for the body. |
-| `Front_Inscription_Colour`, `Back_Inscription_Colour` | Separate ink colours in inspection; no separate material output. |
+| `Body_Colour` | Custom body RGBA swatch, used when Body_Filament is Custom. |
+| `Front_Inscription_Colour`, `Back_Inscription_Colour` | Custom front/back RGBA swatches, used when the respective Filament choice is Custom. |
 | `Show_Layout_Guides` | Shows safe outline, centreline, and reference-width bar in inspection. Red overflow remains visible even when guides are hidden. |
 | `Reference_Line_Width` | Final-size width of the external inspection reference bar. Does not alter geometry or set the slicer. |
 | `Text_Curve_Resolution` | Curve tessellation for lettering and rounded contours; the body itself is planar. |
@@ -168,18 +227,73 @@ For a manual migration of an old text centre `y_old`, use `Center_Fraction = 0` 
 
 Each preset is a complete, flat OpenSCAD parameter set. There is no custom inheritance mechanism to maintain or install. Keep `fileFormatVersion` as the string `"1"`. Numeric, Boolean, and vector values are represented as strings in the JSON, matching OpenSCAD's preset format.
 
-The single base preset explicitly includes all 71 public parameters and matches the SCAD defaults. For now, save personal tuning under another preset name in Customizer. Once the base passes a physical test, establish separate ordinary-shogi king, rook, bishop, gold, silver, knight, lance, and pawn compositions, including their reverse sides. Size hierarchy and inscription conventions should be reviewed as a set; they are not inferred from category names.
+The single base preset explicitly includes all 88 public parameters and matches the SCAD defaults. For now, save personal tuning under another preset name in Customizer. Once the base passes a physical test, establish separate ordinary-shogi king, rook, bishop, gold, silver, knight, lance, and pawn compositions, including their reverse sides. Size hierarchy and inscription conventions should be reviewed as a set; they are not inferred from category names.
 
 Later, keep one SCAD engine and separate preset files by game or family. A useful future naming scheme is `10 Shogi - King`, `10 Shogi - Pawn`, `20 Chu - ...`, `30 Taikyoku - ...`. Game-specific promotion mappings, variant nomenclature, rare-character font coverage, and historical dimensional choices require their own review. The former 216-entry catalogue has not been treated as a verified source for those details.
 
 ## Validation and remaining limits
 
-**24 validation checks passed.** Validation uses OpenSCAD **2021.01** and the stated Noto Serif CJK JP SemiBold font. The base SVG outlines were visually checked, and actual outline subtraction checks test whether they extend beyond the safe face. The printable output is checked for one connected, watertight solid with consistent winding and positive volume. Both face transforms use right-handed orthonormal bases, avoiding mirrored reverse text and wedge-induced glyph stretching.
+**The initial release passed 24 validation checks.** Validation uses OpenSCAD **2021.01** and the stated Noto Serif CJK JP SemiBold font. The base SVG outlines were visually checked, and actual outline subtraction checks test whether they extend beyond the safe face. The printable output is checked for one connected, watertight solid with consistent winding and positive volume. Both face transforms use right-handed orthonormal bases, avoiding mirrored reverse text and wedge-induced glyph stretching.
 
 The checks cover single/two/four-character layouts, a smaller two-sided pawn, blank and unbevelled bodies, mixed raised/recessed lettering, rounded text, reference-angle taper, face-down orientation, scaling, deliberate invalid inputs, margin protection, and rejection of inspection export. These are geometry and regression checks; the experimental pawn is not a delivered shogi-set preset.
 
 The available environment does not provide an X server for OpenSCAD's OpenGL screenshots. The supplied face illustration therefore uses actual OpenSCAD-exported SVG paths composed over the analytic face outline. It is a flat artwork preview, not a photograph, a slicer simulation, or a claim of physical print quality. The GUI widgets have not been interactively exercised on Arch.
 
-The exact brush-style glyphs shown in the references remain a future artwork decision. This revision supports installed fonts, not imported per-piece SVG calligraphy. It does not implement automatic stroke-width repair, font-coverage detection, maker's marks on the heel, multi-material inserts, or bed packing. None is required to evaluate this base's body and lettering controls.
+The exact brush-style glyphs shown in the references remain a future artwork decision. This revision supports installed fonts, not imported per-piece SVG calligraphy. It does not implement automatic stroke-width repair, complete font-coverage detection, loose press-fit inserts, or bed packing. Co-printed colour inlays are supported in revision 3.0. None is required to evaluate this base's body and lettering controls.
 
-The supplied base STL is the tested single solid: volume approximately **4525.59 mm³**, standing **31.5 mm** tall in Upright orientation. Its smallest build-plate Z coordinate is **0 mm**. The STL includes geometry only.
+The supplied base STL is a tested single solid, standing **31.5 mm** tall in Upright orientation. Its smallest build-plate Z coordinate is **0 mm**. The STL includes geometry only.
+
+Revision 2.2 verification: matching front/back strings produce identical raw 2D outlines at the default symmetric taper. Width adjustment no longer changes the resolved automatic font size or spacing. The updated base was re-exported and checked as one watertight solid.
+
+| New colour parameter | Meaning |
+| --- | --- |
+| `Body_Filament` | Palette/custom choice or generic Filament 1/2/3 for the body. |
+| `Front_Filament` | Palette/custom choice or Same as body for front lettering. |
+| `Back_Filament` | Palette/custom choice, Same as body, or Same as front for reverse lettering. |
+
+## Pawn Circle — revision 3.2
+
+Enable **Pawn Circle** in **10 - Advanced shape angles**. It is off by default, so existing designs stay unchanged. The default 81° / 117° / 144° base already satisfies it. Select **Inspect pawn circle** and press F5 (then View All if needed) for a diagram of twenty copies of the current outline. This view is deliberately blocked from STL export; choose Print to export one piece.
+
+The name is descriptive: we could not verify a formal Japanese name for this arrangement. [Itsutsu's explanation](https://www.i-tsu-tsu.co.jp/blog/tools-of/) describes twenty pieces and ideal face angles of 81°, 117°, and 144°. Twenty pawns means eighteen playing pawns plus two spares; the [Japan Shogi Association's title-match report](https://kifulog.shogi.or.jp/oui/2018/08/post-db22.html) notes that two spare pawns are usual for title-match sets. This is a useful geometric check, not a complete certification of craftsmanship.
+
+**Angle Mode determines which inputs you retain.** Nothing silently rewrites your Customizer values. Resolved angles and ring diameters appear in the Console after preview.
+
+| Angle Mode | Supplied angles | Circle behaviour |
+|---|---|---|
+| Derive shoulder | Base and tip | Base must be 81°; shoulder = (378° − tip)/2. Shoulder field is unused. |
+| Derive tip | Base and shoulder | Base must be 81°; tip = 378° − 2 × shoulder. Tip field is unused. |
+| Derive base | Shoulder and tip | Base is solved as 81°; supplied shoulder and tip must satisfy 2 × shoulder + tip = 378°. Base field is unused. |
+| Check all three | All three | Base must be 81° and the pentagon must close. |
+
+Incompatible inputs stop preview/export with an error explaining the required relationship. The solver also keeps the existing convex-shape, thickness, bevel, and printable-web checks. For example, base 80° is incompatible with a twenty-piece circle; shoulder 119° with tip 140° is a valid alternative at base 81°. Shoulder and tip are not uniquely fixed by ring closure alone.
+
+### What is exact?
+
+The constraint is on the **design-plan outline**, the same plane used by the existing face-angle controls. Twenty identical pentagons sit point-inward with their long sides touching. Each neighbour turns `180° − 2 × base = 18°`, and twenty turns give 360°. The outer heels form a regular twenty-sided polygon whose corners lie on a circle; straight-edged pieces do not produce a mathematically smooth circular perimeter.
+
+For heel width W and length L, the ring centre is W/(2 tan 9°) from the heel midpoint. L must be smaller than that distance, otherwise tips reach or cross the centre. The reported outer diameter is W/sin 9°; the inner tip-circle diameter is 2 × (W/(2 tan 9°) − L). Both reports include Model Scale and use mm.
+
+This derivation applies equally to twenty identical kings or other sizes. A normal set contains too few identical larger pieces for that demonstration. Mixing different dimensions does not have the same guarantee. Thickness-taper angles are independent and are not solved by this toggle. The inspection diagram omits bevels and thickness; placing a sloped back face flat on a table changes its projected footprint. Bevel seams, printed tolerances, warping, and final sanding still affect physical fit. The toggle guarantees the nominal plan geometry, not a gap-free three-dimensional ring in every resting orientation.
+
+Validation: all four angle modes, incompatible inputs, alternative compatible tip/shoulder angles, a watertight rendered STL, unchanged default geometry, and independent twenty-piece contact/overlap checks for pawn and king dimensions. Colour export uses the same validated geometry.
+
+
+## Mirror Front Settings — revision 3.3
+
+In **04 - Back layout**, enable **Mirror Front Settings** to make the back follow the front. This links settings; it does not reflect glyphs or make the letters read backwards. It is off by default.
+
+Linked settings: font override, font size, text and spacing scales, character spacing, centre fraction, X/Y offsets, width/height scales, rotation, all per-character adjustments, text style (recessed/raised/none), relief depth and stroke expansion. Shared model-wide controls already apply to both faces.
+
+The back keeps its own characters, filament/colour and body taper. A blank reverse stays blank. X remains the viewer's right on each face, so matching offsets look the same when each face is viewed directly. Per-character settings follow the character's position from tip to heel, including a third character.
+
+The back controls remain visible because OpenSCAD 2021.01 cannot dynamically hide them; they are ignored while the link is enabled. Their stored values are preserved, and disabling the toggle restores them. A Console message confirms that linking is active. Save your preset to use the link in the 3MF exporter.
+
+Automatic font sizing still adapts separately to each face's character count and length. For equal typographic sizes on a one-character front and three-character back, enter an explicit positive Front Font Size; likewise set Front Character Spacing explicitly if you want a fixed spacing. Inspect both faces for overflow. All size and position controls keep their existing units.
+
+
+## Colour assembly and F6 — revision 3.3.1
+
+Colour assembly is **F5 preview only**. F6 implicitly unions the touching material parts; it does not preserve material separation and can trigger a CGAL precondition failure. The model now blocks that route with an explanatory message before the assembly geometry is evaluated. Use Print for an engraved STL, or the Python exporter for multipart colour 3MF. Individual Colour body/front/back/signature modes still support F6 and aligned STL exports. Export metadata remains available to the Python exporter.
+
+This guard prevents the assembly union path; it does not repair every possible CGAL failure in a complex font or individual part. If an error also occurs in F5 or separate-part export, retain the selected preset and font details for diagnosis.
