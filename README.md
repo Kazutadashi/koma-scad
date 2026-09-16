@@ -23,7 +23,7 @@ The project consists of the piece generator, a base preset, an exporter for mult
 - Support for any installed font that contains the required characters.
 - Size, spacing, position and proportions set independently for each face, with further adjustment of individual characters.
 - Stroke expansion, which thickens or thins the strokes of the chosen font.
-- Recessed or raised lettering for single-filament printing, and flush inlaid lettering for multicolour printing.
+- Recessed or raised lettering for single-filament printing, with painted-groove or flush-inlay material regions for multicolour printing.
 - An option to apply the front's typography settings to the back.
 - A maker's signature inscribed on the heel.
 
@@ -71,14 +71,14 @@ To keep your design, save it as a named preset in the Customizer. [PRESETS.md](P
 | A single-filament piece with recessed or raised lettering | Print | Render (F6), then export STL |
 | A piece body without lettering | Blank | Render (F6), then export STL |
 | A layout check of the lettering, signature or pawn circle | An Inspect mode | Preview (F5) only |
-| A preview of multicolour inlaid lettering | Colour assembly | Preview (F5) only; export with `komascad_export.py` |
+| A preview of multicolour lettering | Colour assembly | Fast Preview (F5) only; export with `scripts/komascad_export.py` |
 | A single material part as a separate STL | Colour body, Colour front, Colour back or Colour signature | Render (F6), then export STL |
 
 Separately exported material parts share a common alignment. Import them together without moving them to reassemble the piece.
 
 ## Multicolour printing
 
-Colour assembly fills recessed lettering with separate material regions that sit flush with the face of the piece. The exporter writes the body, lettering and signature as named parts of a single 3MF file.
+Colour assembly previews the selected body, lettering and signature materials without building every exact export mesh. With the default **Painted grooves** treatment, the coloured material forms the floor and inner wall of the same recess used by Print. **Flush filled** instead replaces the recess with a flush inlay. The exporter writes the body, lettering and signature as named, aligned parts of a single 3MF file.
 
 1. Under **07 – Filament colours**, choose a colour for each part.
 2. Set the lettering to **Recessed** and keep **Protect Face Edges** enabled.
@@ -86,10 +86,10 @@ Colour assembly fills recessed lettering with separate material regions that sit
 4. Open a terminal in the project folder and run the exporter, replacing `00 Base - King` with your preset name. No render in OpenSCAD is needed first.
 
    ```bash
-   python3 komascad_export.py --preset '00 Base - King' --output king.3mf
+   python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
    ```
 
-5. Import `king.3mf` into your slicer as a single multipart object. Keep the parts in their original positions and assign a filament to each one.
+5. Import `king.3mf` into your slicer as a single multipart object. Keep the parts in their original positions. The material colours and part names are already stored in the 3MF, so you can map each named part to a loaded filament without painting individual strokes.
 
 > [!WARNING]
 > Colour assembly is a preview-only mode. Do not render it with F6 or export it with OpenSCAD's built-in 3MF export: OpenSCAD cannot reliably merge the touching material regions. The exporter avoids this by rendering each part separately.

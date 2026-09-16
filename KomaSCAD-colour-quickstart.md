@@ -1,15 +1,15 @@
-# KomaSCAD 3.3.1 — colours and multipart 3MF
+# KomaSCAD 3.4 — colours and multipart 3MF
 
-Keep **shogi_piece.scad**, **shogi_piece.json**, and **komascad_export.py** together. The exporter needs Python 3.8 or newer and OpenSCAD 2021.01 or newer; it uses only Python's standard library. Install the selected font before generating geometry. The supplied examples use Noto Serif CJK JP SemiBold.
+Keep **shogi_piece.scad** and **shogi_piece.json** in the project root and leave **komascad_export.py** in the **scripts** folder. The exporter needs Python 3.8 or newer and OpenSCAD 2021.01 or newer; it uses only Python's standard library. Install the selected font before generating geometry. The supplied examples use Noto Serif CJK JP SemiBold.
 
 ## Optional maker signature
 
-Expand **12 - Maker signature on heel** in Customizer, enable it, and enter your text. It appears on the broad bottom edge. **Inspect signature** checks its fit; **Print** engraves it, and **Colour assembly** adds a separate filled signature part. The default Signature Filament is **Same as front**, so it adds no new material unless you choose one. Empty or disabled signatures add no part. **Blank** remains unsigned.
+Expand **12 - Maker signature on heel** in Customizer, enable it, and enter your text. It appears on the broad bottom edge. **Inspect signature** checks its fit; **Print** engraves it, and **Colour assembly** adds a separate signature-material region beneath the groove (or a filled region in Flush filled mode). The default Signature Filament is **Same as front**, so it adds no new material unless you choose one. Empty or disabled signatures add no part. **Blank** remains unsigned.
 
 The existing exporter reads the signature from your saved preset. Alternatively:
 
 ```bash
-python3 komascad_export.py --preset '00 Base - King' --signature-text 'KomaSCAD' --signature-colour Gold --output signed-king.3mf
+python3 scripts/komascad_export.py --preset '00 Base - King' --signature-text 'KomaSCAD' --signature-colour Gold --output signed-king.3mf
 ```
 
 The heel touches the bed in Upright orientation. Check the signature in the first sliced layers before printing. See [KomaSCAD-guide.md](KomaSCAD-guide.md) for the size, spacing, depth, margin, position and rotation controls.
@@ -43,24 +43,25 @@ The existing neutral layout defaults, unit descriptions, and Print preview corre
 ## Export a colour-ready piece
 
 1. Choose your strings, dimensions, and filament colours in Customizer.
-2. Select **Colour assembly**, then press F5. Do not press F6 in this mode or use File → Export: the Python script below performs the separate renders itself. This previews a filled, flush inlay design. For this workflow use **Recessed** on active faces and leave **Protect Face Edges** enabled. Raised text remains available in the ordinary Print workflow.
-3. Check both Inspect views for overflow and check your font selection. Three-character layouts are supported; small intricate characters still require a slicer/print check.
-4. Save your settings as a named Customizer preset. The exporter cannot read unsaved settings from the GUI.
-5. From the folder containing the files, run:
+2. Select **Colour assembly**, then press F5. This is a lightweight material preview: it deliberately avoids generating every exact closed export mesh, so changing text, layout or colours stays responsive. Do not press F6 in this mode or use File → Export; the Python script below builds the exact parts. Leave **Protect Face Edges** enabled.
+3. Choose **Painted grooves** to retain the same recessed or raised surface geometry as Print while assigning material beneath it. Choose **Flush filled** for recessed text that finishes level with the face.
+4. Check both Inspect views for overflow and check your font selection. Three-character layouts are supported; small intricate characters still require a slicer/print check.
+5. Save your settings as a named Customizer preset. The exporter cannot read unsaved settings from the GUI.
+6. From the project folder, run:
 
 ```bash
-python3 komascad_export.py --preset 'My piece' --output my-piece.3mf
+python3 scripts/komascad_export.py --preset 'My piece' --output my-piece.3mf
 ```
 
 For the supplied base:
 
 ```bash
-python3 komascad_export.py --preset '00 Base - King' --output king.3mf
+python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
 ```
 
 Omit `--preset` to use the SCAD source defaults. An alternative JSON can be selected with `--parameters path/to/presets.json`. Use `--scad path/to/shogi_piece.scad` or `--openscad /path/to/openscad` when necessary.
 
-The exporter reads your saved settings, builds body/front/back/signature separately, and packages one aligned assembly with named colour/material resources. It deliberately controls the part-selection mode, regardless of the Output Mode saved in the preset. Explicit command-line colour/text overrides take precedence over the saved values.
+The exporter reads your saved settings, builds body/front/back/signature as closed solids, validates them, and packages one aligned assembly with named colour/material resources. It deliberately controls the part-selection mode, regardless of the Output Mode saved in the preset. Explicit command-line colour/text overrides take precedence over the saved values.
 
 **Do not use OpenSCAD 2021.01's native 3MF export for the colour assembly.** It drops the material assignments. F6 on Colour assembly is intentionally blocked: merging exactly touching material parts can fail in CGAL and loses their separation. Use Print for an engraved STL instead. If OpenSCAD says Nothing to export, use the script for colour output.
 
@@ -68,7 +69,7 @@ The exporter reads your saved settings, builds body/front/back/signature separat
 
 Open the 3MF as **one object with multiple parts/volumes**, preserving their relative positions. Do not place each lettering part separately on the bed: the files use a shared coordinate system, and lettering intentionally sits inside its matching body recesses.
 
-The intended part names are **Body | material**, **Front | material**, **Back | material**, and optional **Signature | material**. Map them to the filaments/extruders available in your printer profile. If your slicer ignores the standard 3MF colour resources, use those part names to assign the filaments once, then save a native slicer project for that configuration. You should not need to paint individual character strokes.
+The intended part names are **Body | material**, **Front | material**, **Back | material**, and optional **Signature | material**. Their display colours are stored in the 3MF. Map them to the filaments/extruders available in your printer profile; you should not need to use a paint bucket or paint individual character strokes. If your slicer ignores standard 3MF colour resources, use the part names to assign the filaments once, then save a native slicer project for that configuration.
 
 These are portable 3MF **models**, not printer-specific slicer projects or G-code. Colour and part preservation varies between slicers and versions. Once a target slicer is chosen and tested, a native project can retain its spool assignments, plate arrangement, and print settings. No such slicer-specific project has been qualified in this release.
 
@@ -88,14 +89,14 @@ Automatic font size accounts for the character count. Width Scale only changes w
 Reproduce the demonstration with:
 
 ```bash
-python3 komascad_export.py --body-colour Purple --front-colour Silver --back-colour 'Same as front' --front-text '大将軍' --back-text '大将軍' --output three-character-demo.3mf
+python3 scripts/komascad_export.py --body-colour Purple --front-colour Silver --back-colour 'Same as front' --front-text '大将軍' --back-text '大将軍' --output three-character-demo.3mf
 ```
 
 For black with glitter lettering, choose Body = Black and Front = Glitter silver or Glitter gold. Choose Back = Same as front if both faces use the same spool.
 
 ## Geometry and verification
 
-Inlays are the intersection of the original blank with the engraving cutter. The body is the original blank minus those inlays. This creates complementary volumes sharing exact boundaries, with no intentional air clearance or overlapping volume. They are **co-printed material regions, not press-fit inserts**. Engraving depth determines how far each inlay extends into the body. Existing text rounding, taper, scale, and face placement are reused.
+The exact export parts are complementary volumes sharing boundaries, with no intentional air clearance or overlapping volume. **Painted grooves** partitions material beneath and beside the original Print groove while leaving that groove open. **Flush filled** uses the intersection of the blank and engraving cutter as an inlay and subtracts it from the body. These are **co-printed material regions, not press-fit inserts**. Existing text rounding, taper, scale, and face placement are reused.
 
 The delivered base and three-character packages were checked for closed, consistently wound material meshes, expected part/material counts, and conserved total volume. Both were reimported through OpenSCAD/lib3mf with preserved bounds and total volume. A flattened STL of a multipart model can have shared internal surfaces; it is not the distribution format for these material regions. The ordinary Print STL remains the single watertight printable output.
 

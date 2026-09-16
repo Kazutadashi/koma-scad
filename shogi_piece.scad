@@ -16,7 +16,7 @@ Front_Characters = "王将";
 Back_Characters = "";
 // Install this font or select an installed Japanese font via Help > Font List.
 Font_Name = "Noto Serif CJK JP:style=SemiBold";
-// Print/Blank export ordinary STL. Colour assembly is F5-only and previews paint inside the actual Print grooves by default; use komascad_export.py for coloured 3MF. Colour body/front/back export aligned parts.
+// Print/Blank export ordinary STL. Colour assembly is a fast F5-only material preview; use scripts/komascad_export.py for coloured 3MF. Colour body/front/back export exact aligned parts.
 Output_Mode = "Print"; // [Print,Blank,Inspect front,Inspect back,Inspect signature,Inspect pawn circle,Colour assembly,Colour body,Colour front,Colour back,Colour signature]
 // Upright: broad heel on bed. Back face down: usually unsuitable for an engraved reverse.
 Print_Orientation = "Upright"; // [Upright,Back face down,Design coordinates]
@@ -509,16 +509,22 @@ module relief(f) {
         }
     }
 }
-module printed_geometry() {
-    // Evaluate booleans through CGAL even during F5. OpenCSG can hide the
-    // engraved polyhedron; STL/F6 alone does not exercise that preview path.
-    color(material_rgb(0)) render(convexity=30) union() {
+module printed_geometry_raw() {
+    union() {
         difference() {
             blank();
             for(f=[true,false]) if(style(f)=="Recessed") relief(f);
         }
         for(f=[true,false]) if(style(f)=="Raised") relief(f);
     }
+}
+module printed_geometry() {
+    // F5 needs one exact evaluation because OpenCSG can hide engraving in the
+    // polyhedron. F6/export already performs exact evaluation at the root, so
+    // an intermediate render there only duplicates expensive CGAL work.
+    color(material_rgb(0))
+    if($preview) render(convexity=30) printed_geometry_raw();
+    else printed_geometry_raw();
 }
 // Heel coordinates: local X = model X, local Y = model Z, local Z = -model Y.
 // This is a right-handed frame: the text is not mirrored. Upright puts this face on the bed.
@@ -552,8 +558,13 @@ module signature_cutter() {
 module signature_inlay() {
  if(signature_active()) intersection() { blank(); signature_cutter(); }
 }
+module printed_piece_raw() {
+ difference() { printed_geometry(); signature_cutter(); }
+}
 module printed_piece() {
- color(material_rgb(0)) render(convexity=30) difference() { printed_geometry(); signature_cutter(); }
+ color(material_rgb(0))
+ if($preview) render(convexity=30) printed_piece_raw();
+ else printed_piece_raw();
 }
 module signature_inspection() {
  assert($preview,"Inspection is F5-only. Select Print before F6 / STL export.");
@@ -570,16 +581,23 @@ module signature_inspection() {
 // floor / along its walls is assigned the lettering material. The backing is
 // inside printable geometry: it never adds coating on top of the model.
 module colour_inlay(f) { if(active(f)) difference() { intersection() { blank(); relief(f); } signature_cutter(); } }
+module paint_volume(f) {
+ on_face(f) translate([0,0,-depth(f)-Paint_Floor_Thickness])
+  linear_extrude(height=depth(f)+Paint_Floor_Thickness-Paint_Top_Lip,convexity=20)
+  offset(delta=Paint_Wall_Thickness) inscription(f);
+}
 module painted_face_region_raw(f) {
  if(active(f)) {
   if(style(f)=="Raised")
-   intersection() { printed_piece(); relief(f); }
+   difference() { relief(f); signature_cutter(); }
   else if(style(f)=="Recessed")
-   intersection() {
-    printed_piece();
-    on_face(f) translate([0,0,-depth(f)-Paint_Floor_Thickness])
-      linear_extrude(height=depth(f)+Paint_Floor_Thickness-Paint_Top_Lip,convexity=20)
-      offset(delta=Paint_Wall_Thickness) inscription(f);
+   difference() {
+    intersection() { blank(); paint_volume(f); }
+    // The painted volume is the printable solid inside the expanded local
+    // paint tool. Removing all recess cutters gives the same region without
+    // first evaluating and intersecting the complete printed piece.
+    for(g=[true,false]) if(style(g)=="Recessed") relief(g);
+    signature_cutter();
    }
  }
 }
@@ -612,23 +630,40 @@ module colour_output() {
  assert(Output_Mode!="Colour assembly" || $preview,
    "Colour assembly is F5 preview only. Use komascad_export.py for multipart colour 3MF; choose Print for engraved STL, or Colour body/front/back/signature for separate parts.");
  if(Text_Colour_Treatment=="Flush filled") {
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour body")
-   color(material_rgb(0)) render(convexity=30) flush_body_region();
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour front")
-   color(material_rgb(1)) render(convexity=30) colour_inlay(true);
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour back")
-   color(material_rgb(2)) render(convexity=30) colour_inlay(false);
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour signature")
-   color(material_rgb(3)) render(convexity=30) signature_inlay();
+  if(Output_Mode=="Colour assembly") {
+   // Keep F5 interactive: OpenCSG can display the aligned regions without
+   // converting every material part to an exact CGAL mesh. The exporter uses
+   // the individual modes below, which still render closed solids.
+   color(material_rgb(0)) flush_body_region();
+   color(material_rgb(1)) colour_inlay(true);
+   color(material_rgb(2)) colour_inlay(false);
+   color(material_rgb(3)) signature_inlay();
+  } else {
+   if(Output_Mode=="Colour body")
+    color(material_rgb(0)) render(convexity=30) flush_body_region();
+   if(Output_Mode=="Colour front")
+    color(material_rgb(1)) render(convexity=30) colour_inlay(true);
+   if(Output_Mode=="Colour back")
+    color(material_rgb(2)) render(convexity=30) colour_inlay(false);
+   if(Output_Mode=="Colour signature")
+    color(material_rgb(3)) render(convexity=30) signature_inlay();
+  }
  } else {
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour body")
-   color(material_rgb(0)) render(convexity=30) painted_body_region();
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour front")
-   color(material_rgb(1)) render(convexity=30) painted_face_region(true);
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour back")
-   color(material_rgb(2)) render(convexity=30) painted_face_region(false);
-  if(Output_Mode=="Colour assembly" || Output_Mode=="Colour signature")
-   color(material_rgb(3)) render(convexity=30) painted_signature_region();
+  if(Output_Mode=="Colour assembly") {
+   color(material_rgb(0)) painted_body_region();
+   color(material_rgb(1)) painted_face_region(true);
+   color(material_rgb(2)) painted_face_region(false);
+   color(material_rgb(3)) painted_signature_region();
+  } else {
+   if(Output_Mode=="Colour body")
+    color(material_rgb(0)) render(convexity=30) painted_body_region();
+   if(Output_Mode=="Colour front")
+    color(material_rgb(1)) render(convexity=30) painted_face_region(true);
+   if(Output_Mode=="Colour back")
+    color(material_rgb(2)) render(convexity=30) painted_face_region(false);
+   if(Output_Mode=="Colour signature")
+    color(material_rgb(3)) render(convexity=30) painted_signature_region();
+  }
  }
 }
 // Inspect is deliberately blocked at F6/export: the separate colours are not print geometry.

@@ -1,4 +1,4 @@
-# Parameter index — 3.3.1
+# Parameter index — 3.4
 
 All 88 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise.
 
@@ -12,7 +12,7 @@ See the [design guide](../KomaSCAD-guide.md) for geometry and the [colour quicks
 | `Front_Characters` | `"王将"` |  |
 | `Back_Characters` | `""` | Empty string makes a blank reverse. Characters are stacked from tip to heel. |
 | `Font_Name` | `"Noto Serif CJK JP:style=SemiBold"` | Install this font or select an installed Japanese font via Help > Font List. |
-| `Output_Mode` | `"Print"` | Print/Blank export ordinary STL. Colour assembly is F5-only and previews flush inlays; use komascad_export.py for coloured 3MF. Colour body/front/back export aligned parts. |
+| `Output_Mode` | `"Print"` | Print/Blank export ordinary STL. Colour assembly is a fast F5-only material preview; use scripts/komascad_export.py for coloured 3MF. Colour body/front/back export exact aligned parts. |
 | `Print_Orientation` | `"Upright"` | Upright: broad heel on bed. Back face down: usually unsuitable for an engraved reverse. |
 | `Model_Scale` | `1` | Multiplier (unitless) — 1 = original dimensions; 2 = double all lengths. |
 ## 02 - Piece dimensions
@@ -136,7 +136,7 @@ See the [design guide](../KomaSCAD-guide.md) for geometry and the [colour quicks
 | `Signature_X` | `0` | mm — horizontal shift from heel centre; positive = viewer's right. |
 | `Signature_Y` | `0` | mm — shift across heel thickness; positive = toward the front inscription face. |
 | `Signature_Rotation` | `0` | Degrees — rotation about the signature centre, counterclockwise as viewed. |
-| `Signature_Depth` | `0.4` | mm — depth into the heel, perpendicular to that edge. Print engraves; Colour assembly fills the same volume. |
+| `Signature_Depth` | `0.4` | mm — depth into the heel, perpendicular to that edge. Print engraves; Colour assembly paints the groove by default or fills it in Flush filled mode. |
 | `Signature_Margin` | `0.6` | mm — protective border around heel lettering. Overflow is clipped and shown red in Inspect signature. |
 | `Signature_Filament` | `"Same as front"` | Colour 3MF material; Same as front reuses its filament. Ordinary Print remains single-material engraving. |
 | `Signature_Colour` | `[0.08, 0.06, 0.04, 1]` | RGBA (unitless, 0-1) — used only when Signature Filament is Custom; alpha is preview-only. |

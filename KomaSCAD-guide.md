@@ -23,21 +23,21 @@ Use **Inspect signature** and F5, then a top view, to check the composition. The
 | `Signature_Filament` | Colour-workflow material; default Same as front. |
 | `Signature_Colour` | Custom RGBA swatch, used when Signature Filament is Custom. |
 
-**Print** engraves the mark; **Blank** remains completely unmarked. **Colour assembly** fills the mark as a fourth possible material part. It shares the front material by default, or can use another palette/custom choice. **Colour signature** exports just the aligned signature region. This is a co-printed region, not a loose insert. If signature and face engraving volumes intersect under unusual manual settings, the signature owns the intersection so material volumes do not overlap.
+**Print** engraves the mark; **Blank** remains completely unmarked. **Colour assembly** assigns the mark a fourth possible material region beneath the groove, or fills it when Flush filled is selected. It shares the front material by default, or can use another palette/custom choice. **Colour signature** exports just the aligned signature region. This is a co-printed region, not a loose insert. If signature and face engraving volumes intersect under unusual manual settings, the signature owns the intersection so material volumes do not overlap.
 
 In **Upright** orientation the heel faces the print bed. The signature therefore occupies the first layers; check those sliced layers for legible small features, bridging over recesses, or correct material assignment. The default shallow recess avoids protruding text on the base. Its physical print quality remains untested.
 
 The colour exporter accepts saved signature settings. You can also enable and set a mark directly:
 
 ```bash
-python3 komascad_export.py --preset '00 Base - King' --signature-text 'KomaSCAD' --output signed-king.3mf
+python3 scripts/komascad_export.py --preset '00 Base - King' --signature-text 'KomaSCAD' --output signed-king.3mf
 ```
 
 `--signature-colour Gold` can override its material. The supplied signed STL and 3MF are demonstrations using “KomaSCAD”; that name is not inserted into the base preset. Verification checks disabled/empty behaviour, a closed engraved solid with unchanged outer bounds, a signature that fits the safe heel, and colour-part volume conservation. The colour signature occupies 0–0.4 mm above the bed in the Upright demonstration.
 
 ## Colour workflow in 3.0
 
-See [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) for the complete multipart workflow and exporter commands. The three new **Body_Filament**, **Front_Filament**, and **Back_Filament** dropdowns choose preview swatches and named 3MF materials. Colour assembly previews flush inlays; Colour body/front/back select aligned export parts. Use **komascad_export.py** to retain these materials in a 3MF on OpenSCAD 2021.01. Standard Print/Blank STL exports are retained.
+See [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) for the complete multipart workflow and exporter commands. The **Body_Filament**, **Front_Filament**, and **Back_Filament** dropdowns choose preview swatches and named 3MF materials. Colour assembly uses a lightweight F5 material preview; Colour body/front/back select exact aligned export parts. Use **scripts/komascad_export.py** to retain these materials in a 3MF on OpenSCAD 2021.01. Standard Print/Blank STL exports are retained.
 
 Colour inlays require Recessed or None on active faces and Protect Face Edges enabled. Existing RGBA controls apply when the new Filament choice is Custom. Explicit Same as body/front choices reuse a material. Metallic and glitter finishes depend on filament selection, not rendered texture.
 
@@ -294,6 +294,6 @@ Automatic font sizing still adapts separately to each face's character count and
 
 ## Colour assembly and F6 — revision 3.3.1
 
-Colour assembly is **F5 preview only**. F6 implicitly unions the touching material parts; it does not preserve material separation and can trigger a CGAL precondition failure. The model now blocks that route with an explanatory message before the assembly geometry is evaluated. Use Print for an engraved STL, or the Python exporter for multipart colour 3MF. Individual Colour body/front/back/signature modes still support F6 and aligned STL exports. Export metadata remains available to the Python exporter.
+Colour assembly is **F5 preview only**. Its preview intentionally leaves the aligned material regions as interactive OpenCSG operations instead of converting every part to a closed CGAL mesh. F6 would union the touching material parts, lose their separation, and can trigger a CGAL precondition failure, so the model blocks that route. Use Print for an engraved STL, or the Python exporter for multipart colour 3MF. Individual Colour body/front/back/signature modes still produce exact closed, aligned STL geometry for the exporter.
 
 This guard prevents the assembly union path; it does not repair every possible CGAL failure in a complex font or individual part. If an error also occurs in F5 or separate-part export, retain the selected preset and font details for diagnosis.

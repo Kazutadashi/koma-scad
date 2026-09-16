@@ -48,8 +48,8 @@ openscad -o rook-study.stl -p my-presets.json -P 'My Rook Study' shogi_piece.sca
 For colour 3MF, use the exporter, not the GUI Export menu:
 
 ```bash
-python3 komascad_export.py --preset '00 Base - King' --output king.3mf
-python3 komascad_export.py --parameters my-presets.json --preset 'My Rook Study' --output rook-study.3mf
+python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
+python3 scripts/komascad_export.py --parameters my-presets.json --preset 'My Rook Study' --output rook-study.3mf
 ```
 
 The exporter controls the output-part mode even if the preset was saved in an Inspect view or Colour assembly. It reads saved values only. It starts with SCAD defaults for omitted keys and applies explicit CLI text/colour overrides last. Do not rely on the GUI retaining/resetting unspecified values the same way; distribute complete records.
