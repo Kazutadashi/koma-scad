@@ -1,6 +1,6 @@
 # Parameter index — 3.4
 
-All 88 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise.
+All 92 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise.
 
 See the [design guide](../KomaSCAD-guide.md) for geometry and the [colour quickstart](../KomaSCAD-colour-quickstart.md) for 3MF export.
 
@@ -84,10 +84,14 @@ See the [design guide](../KomaSCAD-guide.md) for geometry and the [colour quicks
 
 | Parameter | Default | Description |
 | --- | --- | --- |
+| `Text_Colour_Treatment` | `"Face only"` | Face only assigns a thin printable region directly behind the visible inscription surface and is the default. Painted grooves also assigns material beside recessed walls. Flush filled closes recessed text with a level inlay. |
+| `Paint_Floor_Thickness` | `0.2` | mm — Thickness of the printable colour region behind an inscription face. Also applies beneath painted grooves and the heel signature. It does not change relief depth. |
+| `Paint_Wall_Thickness` | `0.35` | mm — Painted grooves only: colour width inside the body beside recessed walls. |
+| `Paint_Top_Lip` | `0.03` | mm — Painted grooves only: body-material lip at the top of a recessed wall. |
 | `Front_Text_Style` | `"Recessed"` |  |
 | `Back_Text_Style` | `"Recessed"` |  |
-| `Front_Relief_Depth` | `0.8` | mm — Recess depth or raised height, perpendicular to the face. Recess depth OR raised height, perpendicular to face; independent of print orientation. |
-| `Back_Relief_Depth` | `0.8` | mm — Recess depth or raised height, perpendicular to the face. |
+| `Front_Relief_Depth` | `0.2` | mm — Recess depth or raised height, perpendicular to the face. Recess depth OR raised height, perpendicular to face; independent of print orientation. |
+| `Back_Relief_Depth` | `0.2` | mm — Recess depth or raised height, perpendicular to the face. |
 | `Front_Stroke_Expansion` | `0.12` | mm — Contour expansion; positive thickens strokes and narrows counters. Positive values thicken every outline. They also close small counters: inspect before printing. |
 | `Back_Stroke_Expansion` | `0.12` | mm — Contour expansion; positive thickens strokes and narrows counters. |
 | `Front_Font_Override` | `""` | Blank uses Font_Name. Override only when the reverse needs another typeface. |
@@ -136,7 +140,7 @@ See the [design guide](../KomaSCAD-guide.md) for geometry and the [colour quicks
 | `Signature_X` | `0` | mm — horizontal shift from heel centre; positive = viewer's right. |
 | `Signature_Y` | `0` | mm — shift across heel thickness; positive = toward the front inscription face. |
 | `Signature_Rotation` | `0` | Degrees — rotation about the signature centre, counterclockwise as viewed. |
-| `Signature_Depth` | `0.4` | mm — depth into the heel, perpendicular to that edge. Print engraves; Colour assembly paints the groove by default or fills it in Flush filled mode. |
+| `Signature_Depth` | `0.4` | mm — depth into the heel, perpendicular to that edge. Print engraves; Face only colours the visible groove floor by default, Painted grooves also colours material beside the walls, and Flush filled closes the recess. |
 | `Signature_Margin` | `0.6` | mm — protective border around heel lettering. Overflow is clipped and shown red in Inspect signature. |
 | `Signature_Filament` | `"Same as front"` | Colour 3MF material; Same as front reuses its filament. Ordinary Print remains single-material engraving. |
 | `Signature_Colour` | `[0.08, 0.06, 0.04, 1]` | RGBA (unitless, 0-1) — used only when Signature Filament is Custom; alpha is preview-only. |

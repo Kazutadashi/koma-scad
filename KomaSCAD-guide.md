@@ -23,7 +23,7 @@ Use **Inspect signature** and F5, then a top view, to check the composition. The
 | `Signature_Filament` | Colour-workflow material; default Same as front. |
 | `Signature_Colour` | Custom RGBA swatch, used when Signature Filament is Custom. |
 
-**Print** engraves the mark; **Blank** remains completely unmarked. **Colour assembly** assigns the mark a fourth possible material region beneath the groove, or fills it when Flush filled is selected. It shares the front material by default, or can use another palette/custom choice. **Colour signature** exports just the aligned signature region. This is a co-printed region, not a loose insert. If signature and face engraving volumes intersect under unusual manual settings, the signature owns the intersection so material volumes do not overlap.
+**Print** engraves the mark; **Blank** remains completely unmarked. By default, **Colour assembly** assigns the mark a thin fourth material region directly behind its visible groove floor while leaving the groove walls in the body material. Painted grooves can extend that material beside the walls; Flush filled closes the groove with a level inlay. The signature shares the front material by default, or can use another palette/custom choice. **Colour signature** exports just the aligned signature region. This is a co-printed region, not a loose insert. If signature and face engraving volumes intersect under unusual manual settings, the signature owns the intersection so material volumes do not overlap.
 
 In **Upright** orientation the heel faces the print bed. The signature therefore occupies the first layers; check those sliced layers for legible small features, bridging over recesses, or correct material assignment. The default shallow recess avoids protruding text on the base. Its physical print quality remains untested.
 
@@ -39,7 +39,7 @@ python3 scripts/komascad_export.py --preset '00 Base - King' --signature-text 'K
 
 See [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) for the complete multipart workflow and exporter commands. The **Body_Filament**, **Front_Filament**, and **Back_Filament** dropdowns choose preview swatches and named 3MF materials. Colour assembly uses a lightweight F5 material preview; Colour body/front/back select exact aligned export parts. Use **scripts/komascad_export.py** to retain these materials in a 3MF on OpenSCAD 2021.01. Standard Print/Blank STL exports are retained.
 
-Colour inlays require Recessed or None on active faces and Protect Face Edges enabled. Existing RGBA controls apply when the new Filament choice is Custom. Explicit Same as body/front choices reuse a material. Metallic and glitter finishes depend on filament selection, not rendered texture.
+Face only is the default: it preserves the Print relief geometry and assigns a thin closed material region directly behind the visible inscription surface. For recessed text this leaves groove walls in the body material; for raised text it produces a top cap. Painted grooves is an optional wider colour region and supports the same Recessed, Raised or None styles as Print. Flush filled requires Recessed or None on active faces. All treatments require Protect Face Edges enabled. Existing RGBA controls apply when the Filament choice is Custom. Explicit Same as body/front choices reuse a material. Metallic and glitter finishes depend on filament selection, not rendered texture.
 
 Per-character lists now expose three entries; defaults remain neutral. Older two-entry lists still work because missing entries use neutral values. The exporter accepts saved presets and can override body/front/back colours or strings from the command line.
 
@@ -86,13 +86,13 @@ openscad -o king.stl -p shogi_piece.json -P '00 Base - King' shogi_piece.scad
 | Typeface | Noto Serif CJK JP SemiBold | Reproducible serif starting point, not the photographed brush lettering |
 | Layout | Automatic size and spacing; identical front/back controls | Predictable starting point for any inscription |
 | Character proportions | All width/height multipliers are 1 | Preserves the font’s natural proportions |
-| Recess | 0.8 mm perpendicular to face | A starting depth for later hand colouring |
+| Recess | 0.2 mm perpendicular to face | A shallow starting depth for printing fine inscriptions |
 | Stroke expansion | 0.12 mm outward per contour | Gives fine outlines more presence, while requiring inspection of counters |
 | Bevel | 0.35 mm wide, 0.18 mm deep | A small edge break |
 | Safe margin | 0.8 mm beyond the flat-face edge | Keeps lettering away from the chamfer |
 | Orientation | Upright on the broad heel | Exposes both inscription faces without putting either inscription against the bed |
 
-The original side angles yield a point thickness of about 1.755 mm at the king dimensions. The new base deliberately changes this to 3 mm. The conservative two-sided 0.8 mm recess check leaves approximately 1.03 mm after also allowing for both bevel depths. This is a bound, not a measurement of the exact local web beneath every stroke.
+The original side angles yield a point thickness of about 1.755 mm at the king dimensions. The new base deliberately changes this to 3 mm. The conservative two-sided 0.2 mm recess check leaves approximately 2.24 mm after also allowing for both bevel depths. This is a bound, not a measurement of the exact local web beneath every stroke.
 
 ## Tune the composition
 
@@ -294,6 +294,6 @@ Automatic font sizing still adapts separately to each face's character count and
 
 ## Colour assembly and F6 — revision 3.3.1
 
-Colour assembly is **F5 preview only**. Its preview intentionally leaves the aligned material regions as interactive OpenCSG operations instead of converting every part to a closed CGAL mesh. F6 would union the touching material parts, lose their separation, and can trigger a CGAL precondition failure, so the model blocks that route. Use Print for an engraved STL, or the Python exporter for multipart colour 3MF. Individual Colour body/front/back/signature modes still produce exact closed, aligned STL geometry for the exporter.
+Colour assembly is **F5 preview only**. Its preview renders the exact Print exterior once and adds surface-only colour overlays instead of converting every material region to a closed CGAL mesh. The overlays do not alter relief depth, bevels, or export geometry. F6 would union touching material parts and lose their separation, so the model blocks that route. Use Print for an engraved STL, or the Python exporter for multipart colour 3MF. Individual Colour body/front/back/signature modes still produce exact closed, aligned STL geometry for the exporter.
 
 This guard prevents the assembly union path; it does not repair every possible CGAL failure in a complex font or individual part. If an error also occurs in F5 or separate-part export, retain the selected preset and font details for diagnosis.

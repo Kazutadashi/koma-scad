@@ -4,7 +4,7 @@ Keep **shogi_piece.scad** and **shogi_piece.json** in the project root and leave
 
 ## Optional maker signature
 
-Expand **12 - Maker signature on heel** in Customizer, enable it, and enter your text. It appears on the broad bottom edge. **Inspect signature** checks its fit; **Print** engraves it, and **Colour assembly** adds a separate signature-material region beneath the groove (or a filled region in Flush filled mode). The default Signature Filament is **Same as front**, so it adds no new material unless you choose one. Empty or disabled signatures add no part. **Blank** remains unsigned.
+Expand **12 - Maker signature on heel** in Customizer, enable it, and enter your text. It appears on the broad bottom edge. **Inspect signature** checks its fit; **Print** engraves it, and **Colour assembly** adds a separate signature-material region directly behind the visible groove floor. Painted grooves can also colour material beside its walls, while Flush filled closes it with a level inlay. The default Signature Filament is **Same as front**, so it adds no new material unless you choose one. Empty or disabled signatures add no part. **Blank** remains unsigned.
 
 The existing exporter reads the signature from your saved preset. Alternatively:
 
@@ -42,9 +42,9 @@ The existing neutral layout defaults, unit descriptions, and Print preview corre
 
 ## Export a colour-ready piece
 
-1. Choose your strings, dimensions, and filament colours in Customizer.
-2. Select **Colour assembly**, then press F5. This is a lightweight material preview: it deliberately avoids generating every exact closed export mesh, so changing text, layout or colours stays responsive. Do not press F6 in this mode or use File → Export; the Python script below builds the exact parts. Leave **Protect Face Edges** enabled.
-3. Choose **Painted grooves** to retain the same recessed or raised surface geometry as Print while assigning material beneath it. Choose **Flush filled** for recessed text that finishes level with the face.
+1. Finish the strings, dimensions and relief in **Print** and the Inspect modes, then choose the body/front/back filament colours in Customizer.
+2. Optionally select **Colour assembly** and press F5. This is a lightweight material preview: it renders the exact Print exterior once, then draws only the visible colour surfaces instead of generating every closed material volume. Changing text, layout or colours therefore stays responsive. You may leave the saved Output Mode set to Print because the exporter selects the required part modes itself. Do not press F6 in Colour assembly or use File → Export; the Python script below builds the exact parts. Leave **Protect Face Edges** enabled.
+3. Keep the default **Face only** to place a thin printable colour region behind the visible inscription face. For recessed text this leaves the groove walls in the body material and retains exactly the same depth as Print. Choose **Painted grooves** if you also want coloured material beside those walls, or **Flush filled** for recessed text that finishes level with the face.
 4. Check both Inspect views for overflow and check your font selection. Three-character layouts are supported; small intricate characters still require a slicer/print check.
 5. Save your settings as a named Customizer preset. The exporter cannot read unsaved settings from the GUI.
 6. From the project folder, run:
@@ -71,7 +71,11 @@ Open the 3MF as **one object with multiple parts/volumes**, preserving their rel
 
 The intended part names are **Body | material**, **Front | material**, **Back | material**, and optional **Signature | material**. Their display colours are stored in the 3MF. Map them to the filaments/extruders available in your printer profile; you should not need to use a paint bucket or paint individual character strokes. If your slicer ignores standard 3MF colour resources, use the part names to assign the filaments once, then save a native slicer project for that configuration.
 
-These are portable 3MF **models**, not printer-specific slicer projects or G-code. Colour and part preservation varies between slicers and versions. Once a target slicer is chosen and tested, a native project can retain its spool assignments, plate arrangement, and print settings. No such slicer-specific project has been qualified in this release.
+These are portable 3MF **models**, not printer-specific slicer projects or G-code. The exporter uses standard 3MF Core components and base materials; it does not identify the archive as a vendor slicer's project or add proprietary printer configuration. Colour and part preservation varies between slicers and versions. Once a target slicer is chosen and tested, a native project can retain its spool assignments, plate arrangement, and print settings. Any vendor adapter belongs outside the core exporter.
+
+### Bambu Studio 2.8.2.60 warning
+
+Bambu Studio 2.8.2.60 displays **“The 3mf file has invalid config, load geometry data only”** for ordinary standards-based 3MF model files that contain no Bambu project configuration. Dismiss the dialog to continue loading the geometry. This is a [reported Bambu Studio issue](https://github.com/bambulab/BambuStudio/issues/11927), not a request to add proprietary data to the portable export.
 
 A single nozzle without a filament-changing mechanism still needs manual filament changes. The upright two-sided design shares many layers between body and lettering, so automated switching is the practical colour-print path. Multiple colours do not require a proprietary printer brand, but they do require a way to supply those filaments.
 
@@ -96,7 +100,7 @@ For black with glitter lettering, choose Body = Black and Front = Glitter silver
 
 ## Geometry and verification
 
-The exact export parts are complementary volumes sharing boundaries, with no intentional air clearance or overlapping volume. **Painted grooves** partitions material beneath and beside the original Print groove while leaving that groove open. **Flush filled** uses the intersection of the blank and engraving cutter as an inlay and subtracts it from the body. These are **co-printed material regions, not press-fit inserts**. Existing text rounding, taper, scale, and face placement are reused.
+The exact export parts are complementary volumes sharing boundaries, with no intentional air clearance or overlapping volume. **Face only** partitions a thin closed material region immediately behind the exposed inscription surface; for recessed text, the original groove and its body-coloured walls remain unchanged. **Painted grooves** extends that partition beneath and beside the original Print groove while leaving the groove open. **Flush filled** uses the intersection of the blank and engraving cutter as an inlay and subtracts it from the body. These are **co-printed material regions, not press-fit inserts**. Existing text rounding, taper, scale, and face placement are reused.
 
 The delivered base and three-character packages were checked for closed, consistently wound material meshes, expected part/material counts, and conserved total volume. Both were reimported through OpenSCAD/lib3mf with preserved bounds and total volume. A flattened STL of a multipart model can have shared internal surfaces; it is not the distribution format for these material regions. The ordinary Print STL remains the single watertight printable output.
 

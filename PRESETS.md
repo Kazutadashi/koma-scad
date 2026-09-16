@@ -1,6 +1,6 @@
-# Presets — KomaSCAD 3.3.1
+# Presets — KomaSCAD 3.4
 
-The bundled `shogi_piece.json` contains **one complete preset: 00 Base - King**. Keep it beside `shogi_piece.scad`. This release establishes the base before building reviewed Shogi, Chu and Taikyoku catalogues. It does not contain the former 9 Shogi / 207 Taikyoku presets.
+Keep the bundled `shogi_piece.json` beside `shogi_piece.scad`. It contains complete base and test records, including **00 Base - King**, **01 Shogi - Pawn**, and **30 Taikyoku - Fire Demon**, plus experimental typography presets. The Fire Demon uses the attributed dataset's `火鬼` front and `奔火` promoted back. Its dimensions and typography are project test defaults, not verified historical measurements.
 
 ## Save and share
 

@@ -7,9 +7,9 @@ see unsaved settings in the GUI. The 3MF contains aligned parts and material
 names, but printer and filament settings belong in your slicer.
 
 Examples:
-    python3 komascad_export.py --preset "00 Base - King"
-    python3 komascad_export.py --target /path/to/KomaSCAD --preset "My piece"
-    python3 komascad_export.py --body-colour Purple --output ~/king.3mf
+    python3 scripts/komascad_export.py --preset "00 Base - King"
+    python3 scripts/komascad_export.py --target /path/to/KomaSCAD --preset "My piece"
+    python3 scripts/komascad_export.py --body-colour Purple --output ~/king.3mf
 """
 
 import argparse
@@ -153,6 +153,63 @@ def run_scad(executable, scad, output, common, mode, metadata=False):
     if not output.exists():
         raise RuntimeError("OpenSCAD did not create " + str(output) + "\n" + log)
     return log
+
+
+def run_scad_batch(executable, scad, output, common, roles):
+    """Render all enabled material roles in one cache-preserving OpenSCAD run.
+
+    OpenSCAD animation frames share geometry and CGAL caches. Selecting one
+    output mode per frame avoids restarting OpenSCAD and rebuilding the same
+    printable piece independently for body, front, back, and signature.
+
+    Args:
+        executable: OpenSCAD command or executable path.
+        scad: Source SCAD file.
+        output: Base temporary STL path. OpenSCAD inserts a frame number.
+        common: Shared ``-D`` parameter arguments from preset and CLI options.
+        roles: Enabled material role names in export order.
+
+    Returns:
+        Frame STL paths in the same order as ``roles``.
+
+    Raises:
+        RuntimeError: OpenSCAD reports a warning/error or omits a frame.
+    """
+    if not roles:
+        raise ValueError("No enabled material parts to export")
+    modes = ["Colour " + role for role in roles]
+    last_frame = len(modes) - 1
+    mode_expression = (
+        json.dumps(modes, ensure_ascii=False)
+        + "[min(floor($t*" + str(len(modes)) + ")," + str(last_frame) + ")]"
+    )
+    command = [
+        executable, "--hardwarnings", "--animate", str(len(modes)),
+        "-o", str(output), "--export-format", "binstl",
+    ]
+    command.extend(common)
+    command.extend([
+        "-D", "Output_Mode=" + mode_expression,
+        "-D", "Export_Metadata=false", str(scad),
+    ])
+
+    environment = os.environ.copy()
+    if sys.platform.startswith("linux") and not environment.get("DISPLAY"):
+        environment.setdefault("QT_QPA_PLATFORM", "offscreen")
+
+    result = subprocess.run(command, capture_output=True, text=True, env=environment)
+    log = result.stdout + "\n" + result.stderr
+    if result.returncode or "ERROR:" in log or "WARNING:" in log:
+        raise RuntimeError("OpenSCAD could not export colour parts:\n" + log[-8000:])
+
+    frames = [
+        output.with_name(output.stem + ("%05d" % index) + output.suffix)
+        for index in range(len(modes))
+    ]
+    missing = [str(frame) for frame in frames if not frame.exists()]
+    if missing:
+        raise RuntimeError("OpenSCAD did not create batch frame(s): " + ", ".join(missing) + "\n" + log)
+    return frames
 
 
 def create_3mf(destination, parts, title):
@@ -314,16 +371,22 @@ def load_preset(scad, parameters, preset, parser):
 
     # OpenSCAD 2021.01 preset loading can override -D public parameters. Read
     # the values ourselves so explicit CLI choices always take precedence.
-    public_source = scad.read_text(encoding="utf-8").split("/* [Hidden] */")[0]
+    source = scad.read_text(encoding="utf-8")
+    public_source, marker, hidden_source = source.partition("/* [Hidden] */")
     defaults = {
         name: json.loads(value)
         for name, value in re.findall(r"^([A-Za-z_]\w*)\s*=\s*(.+?);", public_source, re.M)
     }
+    # OpenSCAD 2021.01 can leak literal variables declared after its Hidden
+    # marker into a saved Customizer preset. They are implementation details,
+    # not user controls, so ignore declared hidden names while retaining the
+    # error for genuinely unknown or misspelled public parameters.
+    hidden_names = set(re.findall(
+        r"^([A-Za-z_]\w*)\s*=", hidden_source if marker else "", re.M,
+    ))
     values = {}
     for name, value in parameter_sets[preset].items():
-        # OpenSCAD 2021 GUI sometimes saves this hidden exporter-only switch.
-        # The exporter supplies its own value on every OpenSCAD run.
-        if name == "Export_Metadata":
+        if name in hidden_names:
             continue
         if name not in defaults:
             parser.error("Preset has an unsupported parameter: " + name)
@@ -398,7 +461,7 @@ def check_fonts(log):
 
 
 def export_parts(executable, scad, common, folder):
-    """Ask OpenSCAD which material parts exist and export each enabled mesh.
+    """Discover enabled materials and export their meshes in one cached batch.
 
     Args:
         executable: OpenSCAD command or executable path.
@@ -418,13 +481,17 @@ def export_parts(executable, scad, common, folder):
         raise ValueError("SCAD does not provide KomaSCAD v3 export metadata")
     check_fonts(log)
 
-    parts = []
-    for role, name, rgba, enabled in json.loads(match.group(1)):
-        if not enabled:
-            continue
+    enabled_parts = [part for part in json.loads(match.group(1)) if part[3]]
+    for role, name, rgba, _enabled in enabled_parts:
         print("Preparing " + role + " — " + name, flush=True)
-        stl = folder / (role + ".stl")
-        run_scad(executable, scad, stl, common, "Colour " + role)
+    print("Rendering all parts in one cached OpenSCAD run", flush=True)
+    stls = run_scad_batch(
+        executable, scad, folder / "part.stl", common,
+        [role for role, name, rgba, _enabled in enabled_parts],
+    )
+
+    parts = []
+    for (role, name, rgba, _enabled), stl in zip(enabled_parts, stls):
         vertices, faces = read_stl(stl)
         parts.append((role, name, rgba, vertices, faces))
     return parts

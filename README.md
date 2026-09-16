@@ -23,7 +23,7 @@ The project consists of the piece generator, a base preset, an exporter for mult
 - Support for any installed font that contains the required characters.
 - Size, spacing, position and proportions set independently for each face, with further adjustment of individual characters.
 - Stroke expansion, which thickens or thins the strokes of the chosen font.
-- Recessed or raised lettering for single-filament printing, with painted-groove or flush-inlay material regions for multicolour printing.
+- Recessed or raised lettering for single-filament printing, with face-only, painted-groove or flush-inlay material regions for multicolour printing.
 - An option to apply the front's typography settings to the back.
 - A maker's signature inscribed on the heel.
 
@@ -78,25 +78,27 @@ Separately exported material parts share a common alignment. Import them togethe
 
 ## Multicolour printing
 
-Colour assembly previews the selected body, lettering and signature materials without building every exact export mesh. With the default **Painted grooves** treatment, the coloured material forms the floor and inner wall of the same recess used by Print. **Flush filled** instead replaces the recess with a flush inlay. The exporter writes the body, lettering and signature as named, aligned parts of a single 3MF file.
+Colour assembly previews the selected body, lettering and signature materials without building every exact export mesh. It renders the Print exterior once and adds lightweight colour overlays to the visible lettering surfaces; the individual Colour modes still build the complete closed material volumes for export. The default **Face only** treatment puts a thin printable colour region directly behind each visible inscription face. On recessed text, the groove walls remain body material and the surface geometry stays identical to Print. **Painted grooves** optionally extends the colour region beside those walls while retaining the same open recess. **Flush filled** instead closes a recessed inscription with a level inlay. The exporter writes the body, lettering and signature as named, aligned parts of a single 3MF file.
 
-1. Under **07 – Filament colours**, choose a colour for each part.
-2. Set the lettering to **Recessed** and keep **Protect Face Edges** enabled.
+1. Finish and inspect the geometry in **Print** mode. Under **07 – Filament colours**, choose a material colour for the body and each inscription.
+2. Keep the default **Face only** for colour at the inscription face without coloured groove walls. Choose **Painted grooves** if you also want colour beside the groove walls, or **Flush filled** for a level recessed inlay. Keep **Protect Face Edges** enabled.
 3. Save your settings as a named preset. The exporter reads saved presets only, so unsaved changes are not exported.
-4. Open a terminal in the project folder and run the exporter, replacing `00 Base - King` with your preset name. No render in OpenSCAD is needed first.
+4. Optionally select **Colour assembly** and press F5 for a fast material preview. You can also leave the saved Output Mode set to Print; the exporter chooses the required part modes itself.
+5. Open a terminal in the project folder and run the exporter, replacing `00 Base - King` with your preset name. No F6 render in OpenSCAD is needed first.
 
    ```bash
    python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
    ```
 
-5. Import `king.3mf` into your slicer as a single multipart object. Keep the parts in their original positions. The material colours and part names are already stored in the 3MF, so you can map each named part to a loaded filament without painting individual strokes.
+6. Import `king.3mf` into your slicer as a single multipart object. Keep the parts in their original positions. The material colours and part names are already stored in the 3MF, so you can map each named part to a loaded filament without painting individual strokes.
 
 > [!WARNING]
-> Colour assembly is a preview-only mode. Do not render it with F6 or export it with OpenSCAD's built-in 3MF export: OpenSCAD cannot reliably merge the touching material regions. The exporter avoids this by rendering each part separately.
+> Colour assembly is a preview-only mode. Do not render it with F6 or export it with OpenSCAD's built-in 3MF export: OpenSCAD cannot reliably merge the touching material regions. The exporter preserves them as separate meshes while sharing one cached render batch.
 
 Before printing, note the following:
 
 - The exported file is a 3MF model, not G-code or a slicer project. Some slicers require you to assign filaments to the named parts manually.
+- The exporter uses standard 3MF Core components and base materials. It does not claim to be a vendor slicer or embed proprietary printer/project configuration.
 - The colours chosen in the Customizer identify each part. The printed finish, including any metallic or glitter effect, depends on the filament you load.
 - In Upright orientation, the front and back lettering share layers with the body, so a single filament change at one layer height cannot colour both inscriptions.
 - A single-nozzle printer requires a filament-change workflow that supports multicolour printing.
@@ -131,7 +133,8 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 
 | Problem | Solution |
 | --- | --- |
-| Nothing to export in Colour assembly | Colour assembly is preview-only. Export with `komascad_export.py`. |
+| Nothing to export in Colour assembly | Colour assembly is preview-only. Export with `scripts/komascad_export.py`. |
+| Bambu Studio 2.8.2.60 says the 3MF has “invalid config” | This version reports the same warning for ordinary geometry-only 3MF files. Dismiss the dialog to load the geometry; the KomaSCAD export intentionally contains no Bambu project config. See [BambuStudio issue #11927](https://github.com/bambulab/BambuStudio/issues/11927). |
 | Render fails with a CGAL error | Keep the preset and the full console output, and report the problem as described in [Contributing](#contributing). |
 | Previews are slow | Use the Inspect modes while adjusting. Set Text Edge Radius to 0 and Text Curve Resolution to 24 while working, then restore your Text Edge Radius and set Text Curve Resolution to 48 before exporting. If necessary, disable Automatic Preview. |
 | Kanji appear as boxes, or the wrong font is used | Check the font name against Help → Font List and confirm that the font contains the characters. Restart OpenSCAD after installing a font. |
@@ -147,7 +150,7 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | --- | --- |
 | `shogi_piece.scad` | Piece generator |
 | `shogi_piece.json` | Presets, including the base king |
-| `komascad_export.py` | Multicolour 3MF exporter |
+| `scripts/komascad_export.py` | Multicolour 3MF exporter |
 | [docs/parameters.md](docs/parameters.md) | Parameter reference: every configurable parameter, with defaults and descriptions |
 | [KomaSCAD-guide.md](KomaSCAD-guide.md) | Design guide: piece geometry, typography and features |
 | [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) | Multicolour export in detail |
