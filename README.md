@@ -8,7 +8,7 @@ KomaSCAD is an open-source parametric generator for shogi pieces, written in Ope
 
 The project consists of the piece generator, a base preset, an exporter for multicolour models, and documentation covering piece geometry, typography and every configurable parameter.
 
-![OpenSCAD preview of a KomaSCAD king](images/KomaSCAD-base-preview.png)
+![OpenSCAD preview of a KomaSCAD king](images/preview.png)
 
 ## Features
 
