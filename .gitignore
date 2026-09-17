@@ -6,6 +6,11 @@
 *.bgcode
 *.3mf
 *.csg
+# Intentionally released print files are documented and licensed in models/.
+!models/
+!models/**/*.stl
+!models/**/*.3mf
+!models/**/*.license
 # Python and editor artifacts
 __pycache__/
 *.py[cod]

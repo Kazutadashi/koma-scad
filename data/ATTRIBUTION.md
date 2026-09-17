@@ -39,4 +39,8 @@ The MIT license in the repository root applies to the project's own code and ori
 
 ## Generated preset adaptations
 
-`../presets/taikyoku.json` and `../shogi_piece.json` include this adapted character data and are distributed under CC BY-SA 4.0. Preset names normalize hyphens and capitalization; IDS entries are omitted. Size assignments and typography are new project defaults, not source measurements.
+`../presets/taikyoku.json` includes adaptations of this character data and is
+distributed under CC BY-SA 4.0. It is deliberately separate from the MIT
+generator presets in `../shogi_piece.json`. Preset names normalize hyphens and
+capitalization; IDS entries are omitted. Size assignments and typography are
+new project defaults, not source measurements.

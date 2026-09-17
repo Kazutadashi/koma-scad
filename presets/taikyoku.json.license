@@ -1,0 +1,5 @@
+SPDX-License-Identifier: CC-BY-SA-4.0
+
+This preset file contains adaptations of the Taikyoku character data in
+../data/taikyoku_piece_characters.csv. Retain ../data/ATTRIBUTION.md and the
+CC BY-SA 4.0 license notice when sharing it or print files derived from it.

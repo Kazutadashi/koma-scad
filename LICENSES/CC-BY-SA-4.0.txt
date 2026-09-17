@@ -1,0 +1,12 @@
+Creative Commons Attribution-ShareAlike 4.0 International
+
+Canonical legal code:
+https://creativecommons.org/licenses/by-sa/4.0/legalcode.en
+
+Canonical license URI:
+https://creativecommons.org/licenses/by-sa/4.0/
+
+The Taikyoku materials named in ../LICENSES.md are licensed under this
+license. The complete official legal code is incorporated by the canonical URI
+above. Recipients must retain the attribution and change notice in
+../data/ATTRIBUTION.md when sharing those materials or adaptations.

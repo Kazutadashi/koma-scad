@@ -34,12 +34,14 @@ The project consists of the piece generator, a base preset, an exporter for mult
 - Multicolour export to a single 3MF file containing aligned, named parts for the body, front lettering, back lettering and signature.
 - Named presets that store a complete piece design for reuse and sharing.
 
-Every configurable parameter is documented, with its default value, in the [parameter reference](docs/parameters.md).
+Every configurable parameter is documented, with its default value, in the
+[parameter reference](docs/parameters.md). The [documentation index](docs/README.md)
+links the longer guides.
 
 ## Requirements
 
 - [OpenSCAD 2021.01](https://openscad.org/downloads.html).
-- A font containing the Japanese characters you intend to use. The default is Noto Serif CJK JP SemiBold, available from [Noto CJK](https://github.com/notofonts/noto-cjk). Fonts are not included with KomaSCAD.
+- A font containing the Japanese characters you intend to use. The default is Noto Serif CJK JP SemiBold, available from [Noto CJK](https://github.com/notofonts/noto-cjk). Six optional, redistributable OFL fonts are bundled in [fonts](fonts/suggested_fonts.md); install one and restart OpenSCAD before use.
 - A filament 3D printer and a slicer. KomaSCAD does not depend on any particular brand.
 - For multicolour export only: Python 3.8 or later, with the `openscad` command available on your PATH. The exporter uses only the Python standard library.
 
@@ -62,7 +64,8 @@ Keep `shogi_piece.scad` and `shogi_piece.json` in the same folder. OpenSCAD load
 6. Return to **Model** and leave **Print Orientation** at **Upright**. For one single-material file, press F6 and choose **File → Export → Export as STL**. For the shown colours, use the 3MF exporter below instead.
 7. Open the STL in your slicer, check the toolpaths, and print one test piece before printing a full set.
 
-To keep your design, save it as a named preset in the Customizer. [PRESETS.md](PRESETS.md) explains how to save, share and extend presets.
+To keep your design, save it as a named preset in the Customizer. The
+[preset guide](docs/presets.md) explains how to save, share and extend presets.
 
 ## Export modes
 
@@ -100,7 +103,7 @@ Before printing, note the following:
 - A single-nozzle printer requires a filament-change workflow that supports multicolour printing.
 - As an alternative on any printer, print the piece with recessed lettering in one filament and fill the lettering by hand.
 
-The [colour quickstart](KomaSCAD-colour-quickstart.md) covers material mapping and limitations in more detail.
+The [colour quickstart](docs/colour-quickstart.md) covers material mapping and limitations in more detail.
 
 ## Customizer reference
 
@@ -147,16 +150,18 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | Path | Description |
 | --- | --- |
 | `shogi_piece.scad` | Piece generator |
-| `shogi_piece.json` | Presets, including the base king |
+| `shogi_piece.json` | MIT-licensed base and Shogi presets, including the base king |
+| `presets/taikyoku.json` | Separately licensed CC BY-SA Taikyoku presets |
 | `scripts/komascad_export.py` | Multicolour 3MF exporter |
+| [fonts/suggested_fonts.md](fonts/suggested_fonts.md) | Bundled open fonts, licenses, and font recommendations |
 | [docs/parameters.md](docs/parameters.md) | Parameter reference: every configurable parameter, with defaults and descriptions |
-| [KomaSCAD-guide.md](KomaSCAD-guide.md) | Design guide: piece geometry, typography and features |
-| [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) | Multicolour export in detail |
-| [PRESETS.md](PRESETS.md) | Saving, sharing and extending presets |
+| [docs/design-guide.md](docs/design-guide.md) | Design guide: piece geometry, typography and features |
+| [docs/colour-quickstart.md](docs/colour-quickstart.md) | Multicolour export in detail |
+| [docs/presets.md](docs/presets.md) | Saving, sharing and extending presets |
 | [CONTRIBUTORS.md](CONTRIBUTORS.md) | Project contributors and their work |
 | [examples/README.md](examples/README.md) | Example STL and 3MF files and what each demonstrates |
-| [CHANGELOG.md](CHANGELOG.md) | Changes in each release |
-| [MIGRATION.md](MIGRATION.md) | Upgrading from earlier releases |
+| [LICENSES.md](LICENSES.md) | License map for code, fonts, data, images, and shared print files |
+| [docs/print-file-licenses.md](docs/print-file-licenses.md) | Required license sidecar and attribution policy for shared STL/3MF files |
 
 The example files demonstrate KomaSCAD's output. They are not tuned for any particular printer or slicer.
 
@@ -180,6 +185,10 @@ Special thanks to [@imtrmu](https://github.com/imtrmu). KomaSCAD's parametric di
 
 ## Licence
 
-Code and original documentation are released under the [MIT License](LICENSE). Retain existing copyright notices when redistributing or modifying the project.
-
-Historical datasets and presets derived from Wikipedia are licensed under CC BY-SA 4.0 and must retain their attribution. Fonts and external tools are covered by their own licences.
+The generator, exporter, original documentation, images, and ordinary Shogi
+presets are released under the [MIT License](LICENSE). Taikyoku data and its
+separate presets are [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt), with required
+attribution in [data/ATTRIBUTION.md](data/ATTRIBUTION.md). Bundled fonts remain
+under their individual OFL notices. Shared STL and 3MF files require a
+per-file license sidecar. See [LICENSES.md](LICENSES.md) and
+[the print-file policy](docs/print-file-licenses.md) before publishing a model.

@@ -29,9 +29,10 @@ def main():
             skipped.append(row["piece_name"]); continue
         name = "Taikyoku " + row["piece_name"].replace("-", " ").title()
         taikyoku[name] = preset(categories[row["piece_name"]], row["front_characters"], row["back_characters"])
+    # Keep the MIT generator presets separate from Wikipedia-derived data.
     write(ROOT/"presets/shogi.json",shogi)
     write(ROOT/"presets/taikyoku.json",taikyoku)
-    write(ROOT/"shogi_piece.json",{**shogi,**taikyoku})
+    write(ROOT/"shogi_piece.json",shogi)
     (ROOT/"presets/omitted-pieces.txt").write_text("Require custom glyph artwork (IDS in source front or back):\n"+"\n".join(skipped)+"\n")
     print(f"Generated {len(shogi)} Shogi and {len(taikyoku)} Taikyoku presets; {len(skipped)} IDS entries omitted.")
 

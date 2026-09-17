@@ -2,7 +2,7 @@
 
 All 89 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise. Colour-support thickness is an internal slicer-safe default rather than a user adjustment.
 
-See the [design guide](../KomaSCAD-guide.md) for geometry and the [colour quickstart](../KomaSCAD-colour-quickstart.md) for 3MF export.
+See the [design guide](design-guide.md) for geometry and the [colour quickstart](colour-quickstart.md) for 3MF export.
 
 ## 01 - Start here
 

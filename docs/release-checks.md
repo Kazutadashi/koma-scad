@@ -1,5 +1,13 @@
 # Release 3.4 packaging checks
 
+- LICENSES.md maps every shipped code, data, font, image, preset, and print-file
+  category to its license. All bundled font binaries have their upstream OFL
+  notice in fonts/licenses/.
+- Wikipedia-derived Taikyoku data and presets are isolated under CC BY-SA 4.0;
+  the main shogi_piece.json contains no Taikyoku inscription data.
+- Every intentionally released STL or 3MF belongs in models/ and has the
+  sidecar required by [print-file licensing](print-file-licenses.md).
+- Preview images are declared original project renders in images/NOTICE.md.
 - All 89 public SCAD defaults match the complete base preset.
 - All relative Markdown links in the distribution resolve to included files.
 - The exporter passes Python compilation.
