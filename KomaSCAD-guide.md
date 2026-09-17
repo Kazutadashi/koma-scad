@@ -23,7 +23,7 @@ Use **Inspect signature** and F5, then a top view, to check the composition. The
 | `Signature_Filament` | Colour-workflow material; default Same as front. |
 | `Signature_Colour` | Custom RGBA swatch, used when Signature Filament is Custom. |
 
-**Print** engraves the mark; **Blank** remains completely unmarked. By default, **Colour assembly** assigns the mark a thin fourth material region directly behind its visible groove floor while leaving the groove walls in the body material. Painted grooves can extend that material beside the walls; Flush filled closes the groove with a level inlay. The signature shares the front material by default, or can use another palette/custom choice. **Colour signature** exports just the aligned signature region. This is a co-printed region, not a loose insert. If signature and face engraving volumes intersect under unusual manual settings, the signature owns the intersection so material volumes do not overlap.
+**Model** is the unified geometry, font and material workspace; **Blank** remains completely unmarked. By default, Face only assigns each inscription a slicer-safe supporting material region behind its visible groove floor while leaving the groove walls in the body material. Painted grooves can colour those walls; Flush filled closes the groove with a level inlay. The signature shares the front material by default or can use another palette/custom choice. Export parts are internal implementation modes rather than Customizer choices. These are co-printed regions, not loose inserts; explicit material priority prevents overlap where unusual manual settings make regions meet.
 
 In **Upright** orientation the heel faces the print bed. The signature therefore occupies the first layers; check those sliced layers for legible small features, bridging over recesses, or correct material assignment. The default shallow recess avoids protruding text on the base. Its physical print quality remains untested.
 
@@ -37,15 +37,15 @@ python3 scripts/komascad_export.py --preset '00 Base - King' --signature-text 'K
 
 ## Colour workflow in 3.0
 
-See [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) for the complete multipart workflow and exporter commands. The **Body_Filament**, **Front_Filament**, and **Back_Filament** dropdowns choose preview swatches, named 3MF materials, and standard object-level colour properties. Compatible slicers use those properties to create logical filament assignments automatically. Colour assembly uses a lightweight F5 material preview; Colour body/front/back select exact aligned export parts. Use **scripts/komascad_export.py** to retain these materials in a 3MF on OpenSCAD 2021.01. Standard Print/Blank STL exports are retained.
+See [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) for exporter commands. The **Body_Filament**, **Front_Filament**, and **Back_Filament** dropdowns update Model immediately and become named 3MF materials with standard object-level colour properties. Compatible slicers use those properties to create logical filament assignments automatically. Use **scripts/komascad_export.py** for colour 3MF; use F6 Model for one single-material STL.
 
-Face only is the default: it preserves the Print relief geometry and assigns a thin closed material region directly behind the visible inscription surface. For recessed text this leaves groove walls in the body material; for raised text it produces a top cap. Painted grooves is an optional wider colour region and supports the same Recessed, Raised or None styles as Print. Flush filled requires Recessed or None on active faces. All treatments require Protect Face Edges enabled. Existing RGBA controls apply when the Filament choice is Custom. Explicit Same as body/front choices reuse a material. Metallic and glitter finishes depend on filament selection, not rendered texture.
+Face only is the default: it preserves Model's relief geometry and assigns a closed `0.8 mm` supporting region behind the visible inscription surface. Recessed walls remain body material; raised text continues inward into the body instead of becoming a fragile `0.2 mm` cap. Painted grooves colours the walls too. Flush filled requires Recessed or None and extends the level inlay inward to the same printable thickness. These internal dimensions require no user tuning. Existing RGBA controls apply when the Filament choice is Custom. Explicit Same as body/front choices reuse a material. Metallic and glitter finishes depend on filament selection, not rendered texture.
 
 Per-character lists now expose three entries; defaults remain neutral. Older two-entry lists still work because missing entries use neutral values. The exporter accepts saved presets and can override body/front/back colours or strings from the command line.
 
 ## Opening the file and units in 2.3
 
-The SCAD contains complete standalone defaults and generates the king without loading JSON or changing a preset. **Print is the main working mode**, and every bundled preset is saved in Print. With Customizer's **Automatic Preview** enabled, opening the file or selecting a preset immediately requests the fast Print preview; F5 is only the manual fallback when that application setting is disabled. SCAD code cannot turn an OpenSCAD application setting back on. If geometry has been compiled but is off screen, use **View > View All**.
+The SCAD contains complete standalone defaults and generates the king without loading JSON or changing a preset. **Model is the main workspace**, and every bundled preset is saved in Model. With Customizer's **Automatic Preview** enabled, opening the file or selecting a preset immediately requests its fast geometry-and-material preview; F5 is only the manual fallback when that application setting is disabled. SCAD code cannot turn an OpenSCAD application setting back on. If geometry has been compiled but is off screen, use **View > View All**.
 
 In Customizer select **Show Details**. Each numeric control now has an adjacent description starting with its units: **mm**, **Degrees**, **Multiplier**, **Fraction**, **Count**, or **RGBA**. Parameter identifiers are unchanged so existing presets continue to work. Unless stated otherwise, mm values are before Model Scale; Minimum Web and Reference Line Width describe final-size mm. Glyph size/width/height entries are multipliers, not millimetres.
 
@@ -53,20 +53,20 @@ In Customizer select **Show Details**. Each numeric control now has an adjacent 
 
 Front and back now start with identical layout controls: all size/width/height multipliers are 1, and all character offsets and rotations are 0. No king-specific reshaping is applied. Width Scale now changes only glyph width; it no longer reduces automatic font size or changes character spacing. Automatic size still responds to body dimensions and character count. Different glyphs retain their natural font proportions.
 
-Existing saved custom presets can retain the old multipliers. Select the updated **00 Base - King** preset or explicitly reset Front Width Scale to 1 and Front Glyph Width / Height to [1, 1]. These changes preserve the Print preview correction.
+Existing saved custom presets can retain the old multipliers. Select the updated **00 Base - King** preset or explicitly reset Front Width Scale to 1 and Front Glyph Width / Height to [1, 1].
 
-## Print preview path
+## Model preview path
 
-Print mode uses a driver-safe visual proxy during automatic/F5 preview and leaves exact solid evaluation to F6 or the exporter. For each recessed side, the proxy omits that broad face from an open body shell, rebuilds it as a thin face skin with a fast 2D glyph cutout, and draws the groove wall and floor at the selected relief depth. The heel signature uses the same treatment at Signature Depth. Face opening and floor outlines also respond to Text Edge Radius; raised relief remains additive. This avoids the driver-dependent blank viewport that some OpenSCAD 2021/OpenCSG combinations produce after 3D transformed-text subtraction while preserving useful depth feedback during modeling. Inspect modes remain available for flat lettering and safe-margin checks.
+Model uses a driver-safe visual proxy during automatic/F5 preview and leaves exact solid evaluation to F6 or the exporter. For each recessed side, it rebuilds an open face as a thin skin with a fast 2D glyph cutout, then draws the walls and colour floor at the selected relief depth. The heel signature uses the same treatment. Face opening and floor outlines respond to Text Edge Radius; raised relief remains additive. Body, front, back and signature surfaces use their selected material colours. This avoids the driver-dependent blank viewport that some OpenSCAD 2021/OpenCSG combinations produce after 3D transformed-text subtraction while retaining useful modeling feedback.
 
 The preview-only proxy does not change the body, text depth, face placement, or exact export geometry. Existing JSON presets remain compatible. Automatic display still depends on OpenSCAD's Automatic Preview setting; the SCAD model cannot enable that application preference itself.
 
 ## Start in five steps
 
-1. Keep **shogi_piece.scad** and **shogi_piece.json** together. Open the SCAD in OpenSCAD 2021.01 and show Customizer. The model starts in Print and displays automatically when **Design → Automatic Preview** is enabled; F5 is only the manual fallback. Selecting **00 Base - King** is optional because the source defaults match it. If an already-open session shows old presets, reopen the file.
+1. Keep **shogi_piece.scad** and **shogi_piece.json** together. Open the SCAD in OpenSCAD 2021.01 and show Customizer. It starts in Model and displays automatically when **Design → Automatic Preview** is enabled; F5 is only the manual fallback. Selecting **00 Base - King** is optional because the source defaults match it. If an already-open session shows old presets, reopen the file.
 2. Install **Noto Serif CJK JP SemiBold**, or choose your own Japanese font from **Help > Font List**. On Arch, `noto-fonts-cjk` is the official package. The [Arch package page](https://archlinux.org/packages/extra/any/noto-fonts-cjk/) and [upstream font download guide](https://github.com/notofonts/noto-cjk/blob/main/Serif/README.md) provide the sources. Restart OpenSCAD after installing fonts. `fc-match 'Noto Serif CJK JP:style=SemiBold'` should identify the intended family and style. A missing font can silently fall back; rectangles or unexpected Latin shapes are not valid inscriptions.
 3. Select **Inspect front**, then F5 and a top view. The black shapes are the actual font outlines. Blue marks the safe margin and centreline; red marks lettering outside that margin. Inspect the back the same way. The external blue bar represents `Reference_Line_Width` at final size; it is not a measured minimum stroke test.
-4. Select **Print**, use **Upright**, press F6, then export STL. Inspection is intentionally F5-only: F6 and geometry export reject it. **Blank** exports just the body. In Print/Blank, colours do not create a second material; use the separate colour workflow for multipart output.
+4. Return to **Model** and choose the material colours. For a single-material file, use Upright, press F6, then export STL. For the displayed materials, save the preset and run the Python 3MF exporter. Inspection is intentionally F5-only; **Blank** exports just the unlettered body.
 5. Slice and print one piece before building a set. Judge its lettering at arm's length, the counters between strokes, the edge feel, and its balance on the board.
 
 Command-line export from the folder containing the two files:
@@ -148,7 +148,7 @@ For stronger visual contrast with one filament, test sealing and hand filling th
 | `Category` | Informational string only. Never selects hidden dimensions. |
 | `Front_Characters`, `Back_Characters` | Unicode strings, stacked in order from point to heel; empty means blank. |
 | `Font_Name` | Shared installed font family and optional Fontconfig style. |
-| `Output_Mode` | Print/Blank; Inspect front/back/signature/pawn circle; Colour assembly/body/front/back/signature. All Inspect views and Colour assembly are F5-only. Use the exporter for colour 3MF. |
+| `Output_Mode` | Model/Blank or Inspect front/back/signature/pawn circle. Model combines geometry and material preview. Inspect views are F5-only. Exporter-only material part modes are hidden. |
 | `Print_Orientation` | Upright, Back face down, or Design coordinates; ignored by flat inspection views. Raised reverse text cannot use Back face down. |
 | `Model_Scale` | Uniformly scales body, lettering, offsets, bevel, and relief. Does not resize only the blank. |
 | `Piece_Length`, `Base_Width`, `Rear_Thickness` | Authoritative dimensions in all categories. |
@@ -214,7 +214,7 @@ This is a deliberate preset-schema revision. Do not load the old 216-entry JSON 
 | `Front_Side_Base_Angle`, `Back_Side_Base_Angle` | Retained in explicit reference-angle mode; simple tip-thickness mode is the default. |
 | `Face_Base_Angle`, `Face_Shoulder_Angle`, `Face_Tip_Angle` | Retained and validated. |
 | `Angle_Mode` | Default changed from Check all three to Derive shoulder; inactive input documented and resolved values echoed. |
-| `Output_Mode` | Replaced ambiguous Printable engraved with Print; kept blank output and added individual face inspection. Inspection export is blocked. |
+| `Output_Mode` | Model is now the unified geometry/material workspace; Blank and individual inspections remain. Exporter part modes are hidden. |
 | `Print_Orientation` | Retained Upright / Design coordinates; added Back face down with reverse-relief checks. Typos now reject instead of silently selecting another orientation. |
 | `Curve_Resolution` | Removed redundant body-quality control; the pentagonal body has no curved tessellation to tune. |
 | `Body_Colour` | Retained, with a wood-toned base. |
@@ -253,7 +253,7 @@ Revision 2.2 verification: matching front/back strings produce identical raw 2D 
 
 ## Pawn Circle — revision 3.2
 
-Enable **Pawn Circle** in **10 - Advanced shape angles**. It is off by default, so existing designs stay unchanged. The default 81° / 117° / 144° base already satisfies it. Select **Inspect pawn circle** and press F5 (then View All if needed) for a diagram of twenty copies of the current outline. This view is deliberately blocked from STL export; choose Print to export one piece.
+Enable **Pawn Circle** in **10 - Advanced shape angles**. It is off by default, so existing designs stay unchanged. The default 81° / 117° / 144° base already satisfies it. Select **Inspect pawn circle** and press F5 (then View All if needed) for a diagram of twenty copies of the current outline. This view is deliberately blocked from STL export; return to Model to export one piece.
 
 The name is descriptive: we could not verify a formal Japanese name for this arrangement. [Itsutsu's explanation](https://www.i-tsu-tsu.co.jp/blog/tools-of/) describes twenty pieces and ideal face angles of 81°, 117°, and 144°. Twenty pawns means eighteen playing pawns plus two spares; the [Japan Shogi Association's title-match report](https://kifulog.shogi.or.jp/oui/2018/08/post-db22.html) notes that two spare pawns are usual for title-match sets. This is a useful geometric check, not a complete certification of craftsmanship.
 
@@ -292,10 +292,10 @@ The back controls remain visible because OpenSCAD 2021.01 cannot dynamically hid
 Automatic font sizing still adapts separately to each face's character count and length. For equal typographic sizes on a one-character front and three-character back, enter an explicit positive Front Font Size; likewise set Front Character Spacing explicitly if you want a fixed spacing. Inspect both faces for overflow. All size and position controls keep their existing units.
 
 
-## Colour assembly and F6 — revision 3.3.1
+## Unified Model and colour export
 
-Colour assembly is **F5 preview only**. Its preview reuses Print's open-face shell and places the selected material colours on the visible groove floors instead of converting material regions to closed CGAL meshes. Flush filled is displayed at the original face plane. The preview does not alter relief depth, bevels, or export geometry. F6 would union touching material parts and lose their separation, so the model blocks that route. Use Print for an engraved STL, or the Python exporter for multipart colour 3MF. Individual Colour body/front/back/signature modes still produce exact closed, aligned geometry for the exporter.
+Users no longer switch to Colour assembly or individual material-part modes. Model already shows the selected materials on its open-face preview. F6 Model produces the exact one-piece solid for STL; the Python exporter privately selects the body/front/back/signature modes and packages their aligned closed meshes as 3MF components. This separation prevents OpenSCAD from unioning touching materials while keeping technical modes out of the normal workflow.
 
-The default recessed, zero-rounding Face only export uses a direct partition: the body receives a matching pocket extended by Paint Floor Thickness, and the colour part occupies only that extension. This preserves the Print surface while avoiding repeated whole-piece intersections. Raised, rounded, thin-web or unusually edge-adjacent configurations automatically use the general exact path instead; there is no performance switch for the user to manage.
+The default Face only export uses a direct complementary partition. A recessed floor gets `0.8 mm` of inward material support beyond the visible cavity; raised text includes the relief plus the same inward support. Flush inlays also extend `0.8 mm` inward. Front, back and signature priority prevents overlap, and the parts conserve Model's total volume. Rounded or unusually edge-adjacent configurations automatically use the general exact path; there is no performance switch for the user to manage.
 
 This guard prevents the assembly union path; it does not repair every possible CGAL failure in a complex font or individual part. If an error also occurs in F5 or separate-part export, retain the selected preset and font details for diagnosis.

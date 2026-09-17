@@ -4,7 +4,7 @@ Keep **shogi_piece.scad** and **shogi_piece.json** in the project root and leave
 
 ## Optional maker signature
 
-Expand **12 - Maker signature on heel** in Customizer, enable it, and enter your text. It appears on the broad bottom edge. **Inspect signature** checks its fit; **Print** engraves it, and **Colour assembly** adds a separate signature-material region directly behind the visible groove floor. Painted grooves can also colour material beside its walls, while Flush filled closes it with a level inlay. The default Signature Filament is **Same as front**, so it adds no new material unless you choose one. Empty or disabled signatures add no part. **Blank** remains unsigned.
+Expand **12 - Maker signature on heel** in Customizer, enable it, and enter your text. It appears on the broad bottom edge. **Inspect signature** checks its fit; **Model** shows both the engraving and selected signature material. Painted grooves can colour its walls, while Flush filled closes it with a level inlay. The default Signature Filament is **Same as front**, so it adds no new material unless you choose one. Empty or disabled signatures add no part. **Blank** remains unsigned.
 
 The existing exporter reads the signature from your saved preset. Alternatively:
 
@@ -34,17 +34,17 @@ For a spool not represented by the palette, choose Filament 1/2/3 and assign you
 
 ## Keep using STL
 
-- **Print** produces the original engraved or raised single-material solid. Export STL normally. Colour dropdowns do not turn STL into a colour format.
+- **Model** previews geometry and selected colours together. F6 exports the engraved or raised geometry as one ordinary single-material STL; use the Python exporter for the shown colours.
 - **Blank** produces the unlettered body.
 - **Inspect front/back** remain F5-only flat composition views, using the selected swatches. Blue guides and bright-red overflow are not printable materials.
 
-The existing neutral layout defaults, unit descriptions, and Print preview correction are retained.
+The existing neutral layout defaults and unit descriptions are retained.
 
 ## Export a colour-ready piece
 
-1. Finish the strings, dimensions and relief in **Print** and the Inspect modes, then choose the body/front/back filament colours in Customizer.
-2. Optionally select **Colour assembly** and press F5. This is a lightweight open-face preview: a fast 2D cutout exposes the colour surface at the selected recess depth without generating the expensive exact 3D subtraction or any closed material mesh. Changing text, depth, layout or colours therefore stays responsive even for detailed fonts. The exporter and F6 Print still use the exact solid geometry. You may leave the saved Output Mode set to Print because the exporter selects the required part modes itself. Do not press F6 in Colour assembly or use File → Export; the Python script below builds the exact parts. Leave **Protect Face Edges** enabled.
-3. Keep the default **Face only** to place a thin printable colour region behind the visible inscription face. For recessed text this leaves the groove walls in the body material and retains exactly the same depth as Print. Choose **Painted grooves** if you also want coloured material beside those walls, or **Flush filled** for recessed text that finishes level with the face.
+1. Finish the strings, dimensions and relief in **Model**, using the Inspect modes for flat safe-area checks. Choose the body/front/back/signature filament colours in Customizer; Model shows them immediately.
+2. Keep the default **Face only** for colour on the visible inscription floor with body-coloured walls. Choose **Painted grooves** if you also want coloured walls, or **Flush filled** for a level inlay. Leave **Protect Face Edges** enabled.
+3. The visible relief depth and printable material thickness are separate. Bundled recesses remain `0.2 mm` deep, while the exporter automatically provides `0.8 mm` of supporting colour material inside the body for ordinary 0.4 mm extrusion systems. No thickness tuning is required.
 4. Check both Inspect views for overflow and check your font selection. Three-character layouts are supported; small intricate characters still require a slicer/print check.
 5. Save your settings as a named Customizer preset. The exporter cannot read unsaved settings from the GUI.
 6. From the project folder, run:
@@ -63,7 +63,7 @@ Omit `--preset` to use the SCAD source defaults. An alternative JSON can be sele
 
 The exporter reads your saved settings, builds body/front/back/signature as closed solids, validates them, and packages one aligned assembly with named colour/material resources. It deliberately controls the part-selection mode, regardless of the Output Mode saved in the preset. Explicit command-line colour/text overrides take precedence over the saved values.
 
-**Do not use OpenSCAD 2021.01's native 3MF export for the colour assembly.** It drops the material assignments. F6 on Colour assembly is intentionally blocked: merging exactly touching material parts can fail in CGAL and loses their separation. Use Print for an engraved STL instead. If OpenSCAD says Nothing to export, use the script for colour output.
+**Do not use OpenSCAD 2021.01's native 3MF export for colour.** It drops the multipart material assignments. Use F6 Model only for a single-material STL; use the script for colour 3MF.
 
 ## In the slicer
 
@@ -100,8 +100,8 @@ For black with glitter lettering, choose Body = Black and Front = Glitter silver
 
 ## Geometry and verification
 
-The exact export parts are complementary volumes sharing boundaries, with no intentional air clearance or overlapping volume. **Face only** partitions a thin closed material region immediately behind the exposed inscription surface; for ordinary recessed, sharp-edged text, the exporter constructs this efficiently as the lower portion of a deeper matching pocket. The visible groove, its depth and its body-coloured walls remain unchanged. Rounded, raised or unusually edge-adjacent designs automatically retain the general complementary-volume calculation. **Painted grooves** extends that partition beneath and beside the original Print groove while leaving the groove open. **Flush filled** uses the intersection of the blank and engraving cutter as an inlay and subtracts it from the body. These are **co-printed material regions, not press-fit inserts**. Existing text rounding, taper, scale, and face placement are reused.
+The exact export parts are complementary volumes sharing boundaries, with no intentional air clearance or overlapping volume. **Face only** partitions a closed `0.8 mm` supporting material region behind the exposed inscription floor while leaving the visible groove depth and body-coloured walls unchanged. Raised text receives the same inward backing rather than an unprintably thin cap. **Painted grooves** colours the walls and retains the inward support. **Flush filled** closes the recess and extends the inlay inward to the same printable thickness. These are **co-printed material regions, not press-fit inserts**. Existing text rounding, taper, scale, and face placement are reused.
 
-The delivered base and three-character packages were checked for closed, consistently wound material meshes, expected part/material counts, and conserved total volume. Both were reimported through OpenSCAD/lib3mf with preserved bounds and total volume. A flattened STL of a multipart model can have shared internal surfaces; it is not the distribution format for these material regions. The ordinary Print STL remains the single watertight printable output.
+The delivered packages were checked for closed, consistently wound material meshes, expected part/material counts, minimum backing thickness, and conserved total volume. A flattened STL of a multipart model can have shared internal surfaces; it is not the distribution format for these material regions. F6 Model remains the single watertight STL output.
 
-The standard colour assignments and multipart structure have been inspected in the generated XML and through independent 3MF/mesh readers. Physical spool matching, toolpaths, and multicolour printing have not been tested here. On systems with Fontconfig tools, the exporter rejects an obvious font-family substitution; this is not a complete rare-glyph or style-coverage check. Review the preview and sliced toolpaths before distributing a whole set.
+The standard colour assignments and multipart structure have been inspected in the generated XML and through independent 3MF/mesh readers. A generated Fire Demon was also sliced successfully with an ordinary 0.4 mm nozzle / 0.20 mm layer profile. Physical spool matching, multicolour tool switching, and a physical print have not been tested here. On systems with Fontconfig tools, the exporter rejects an obvious font-family substitution; this is not a complete rare-glyph or style-coverage check. Review the preview and sliced toolpaths before distributing a whole set.

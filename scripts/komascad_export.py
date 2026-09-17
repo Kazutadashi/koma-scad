@@ -3,16 +3,17 @@
 
 Requires Python 3.8+ (standard library only) and OpenSCAD 2021.01+.
 Save Customizer changes as a preset first: a separate OpenSCAD process cannot
-see unsaved settings in the GUI. The 3MF contains aligned parts and material
-names, but printer and filament settings belong in your slicer.
+see unsaved settings in the GUI. The 3MF contains aligned, slicer-safe parts
+and standard material colours, but printer and filament profiles belong in
+your slicer.
 
 OpenSCAD remains the geometry engine: this script asks the model for each
 closed material part, validates those STL meshes, and packages them with the
 open 3MF Core and Materials and Properties specifications. Each part carries
 its selected standard colour property so compatible slicers can create and
-assign logical filament slots automatically. The script does not modify,
-approximate, or regenerate the geometry and contains no slicer- or
-printer-specific project data.
+assign logical filament slots automatically, without surface painting. The
+script does not modify, approximate, or regenerate the geometry and contains
+no slicer- or printer-specific project data.
 
 Examples:
     python3 scripts/komascad_export.py --preset "00 Base - King"
@@ -322,7 +323,8 @@ def create_3mf(destination, parts, title):
     node(model, "metadata", name="Application").text = "KomaSCAD colour exporter 3.4"
     node(model, "metadata", name="Description").text = (
         "One aligned multipart koma with standard 3MF material and colour "
-        "assignments for body/front/back/signature parts. Glitter/metallic "
+        "assignments and printable supporting volumes for body/front/back/"
+        "signature parts. Glitter/metallic "
         "labels describe filament choice, not surface textures."
     )
     resources = node(model, "resources")
@@ -650,7 +652,7 @@ def main():
     print("Open as ONE multipart object; standard logical filament assignments are embedded:")
     for part in manifest:
         print("  " + part["part"] + ": " + part["material"] + " (" + part["display_colour"] + ")")
-    print("A compatible slicer should assign these parts without painting. Confirm that "
+    print("No paint bucket is required in a compatible slicer. Confirm that "
           "its logical colours match your physically loaded spools before printing. "
           "No printer profile or physical glitter/metallic texture is encoded.")
 

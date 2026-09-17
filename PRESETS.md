@@ -27,7 +27,7 @@ base.update({
     'Front_Characters': '飛車',
     'Back_Characters': '龍王',
     'Mirror_Front_Settings': 'true',
-    'Output_Mode': 'Print',
+    'Output_Mode': 'Model',
 })
 source['parameterSets'] = {'My Rook Study': base}
 Path('my-presets.json').write_text(json.dumps(source, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
@@ -38,7 +38,7 @@ This is a lettering study on the base king body, not a validated rook size profi
 
 ## Export
 
-For STL, save the preset with Output Mode set to Print (or Blank):
+For STL, save the preset with Output Mode set to Model (or Blank):
 
 ```bash
 openscad -o king.stl -p shogi_piece.json -P '00 Base - King' shogi_piece.scad
@@ -52,7 +52,7 @@ python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
 python3 scripts/komascad_export.py --parameters my-presets.json --preset 'My Rook Study' --output rook-study.3mf
 ```
 
-The exporter controls the output-part mode even if the preset was saved in an Inspect view or Colour assembly. It reads saved values only. It starts with SCAD defaults for omitted keys and applies explicit CLI text/colour overrides last. Do not rely on the GUI retaining/resetting unspecified values the same way; distribute complete records.
+The exporter privately controls the material-part modes even if the preset was saved in an Inspect view. It reads saved values only, starts with SCAD defaults for omitted keys, and applies explicit CLI text/colour overrides last. Keep distributed presets in Model so opening them immediately shows the complete design.
 
 OpenSCAD 2021.01 can give `-p` preset values priority over public `-D` arguments. For ordinary CLI STL variations, edit a copied preset rather than assuming `-D` will override it.
 
