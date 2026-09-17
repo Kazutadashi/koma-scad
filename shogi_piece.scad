@@ -1,8 +1,8 @@
 // KomaSCAD — community base, revision 3.4
 // OpenSCAD 2021.01. Units: mm / degrees, BEFORE Model_Scale.
-// Start: choose inscriptions, dimensions, font; inspect both faces; F6; export STL.
+// Start in Print: choose inscriptions, dimensions and font; the piece updates automatically when Automatic Preview is enabled.
 // Standalone defaults already produce a piece; selecting a preset is optional.
-// On opening: press F5 if OpenSCAD has not previewed yet. No preset change needed.
+// All bundled presets open in Print. F5 is only a fallback if Automatic Preview is disabled.
 // Customizer: select Show Details to display units beside the controls.
 // Keep shogi_piece.json beside this file only if you want the saved base preset.
 // Font sizes are OpenSCAD typographic sizes, NOT measured glyph heights.
@@ -110,11 +110,11 @@ Back_Glyph_Y = [0, 0, 0]; // [-10:0.1:10]
 Back_Glyph_Rotation = [0, 0, 0]; // [-180:1:180]
 
 /* [07 - Filament colours] */
-// Preview swatch and 3MF material label, not a printer slot. Custom uses Body Colour below.
+// Preview swatch and standard 3MF logical colour, not a physical printer slot. Custom uses Body Colour below.
 Body_Filament = "Wood"; // [Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 // Same as body shares its material. Metallic/glitter appearance comes from the actual filament.
 Front_Filament = "Black"; // [Same as body,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
-// Same as front shares the front material. Map these material labels to loaded spools in your slicer.
+// Same as front shares its logical filament. Confirm logical colours against loaded physical spools in your slicer.
 Back_Filament = "Red"; // [Same as body,Same as front,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 
 /* [08 - Engraving and stroke weight] */
@@ -509,14 +509,25 @@ module relief(f) {
         }
     }
 }
+function raised_text_active() =
+ (active(true) && style(true)=="Raised") ||
+ (active(false) && style(false)=="Raised");
+module recessed_piece_raw() {
+ difference() {
+  blank();
+  for(f=[true,false]) if(style(f)=="Recessed") relief(f);
+ }
+}
 module printed_geometry_raw() {
-    union() {
-        difference() {
-            blank();
-            for(f=[true,false]) if(style(f)=="Recessed") relief(f);
-        }
-        for(f=[true,false]) if(style(f)=="Raised") relief(f);
-    }
+ // Avoid wrapping the usual all-recessed piece in a union with empty raised
+ // children. Some OpenCSG drivers display that normalized tree as empty even
+ // though exact CGAL export succeeds. The direct difference is equivalent and
+ // appears immediately in automatic/F5 preview.
+ if(raised_text_active()) union() {
+  recessed_piece_raw();
+  for(f=[true,false]) if(style(f)=="Raised") relief(f);
+ }
+ else recessed_piece_raw();
 }
 // Heel coordinates: local X = model X, local Y = model Z, local Z = -model Y.
 // This is a right-handed frame: the text is not mirrored. Upright puts this face on the bed.
@@ -551,12 +562,113 @@ module signature_inlay() {
  if(signature_active()) intersection() { blank(); signature_cutter(); }
 }
 module printed_piece_raw() {
- difference() { printed_geometry_raw(); signature_cutter(); }
+ // Likewise, do not emit an empty second child when the signature is off.
+ if(signature_active()) difference() { printed_geometry_raw(); signature_cutter(); }
+ else printed_geometry_raw();
+}
+// OpenSCAD 2021's OpenCSG preview can discard an otherwise valid polyhedron
+// after subtracting transformed text on some graphics drivers. F5 therefore
+// uses a display-only open-face shell. Its face skin gets a fast 2D cutout,
+// while separate walls and a floor show the recess at its selected depth.
+// F6 and every export mode still use printed_piece_raw().
+function preview_mark_rgb() = let(
+ body=material_rgb(0), luminance=0.299*body[0]+0.587*body[1]+0.114*body[2])
+ luminance>0.45 ? [0.035,0.035,0.035,1] : [0.88,0.88,0.88,1];
+function preview_wall_rgb() = let(body=material_rgb(0),mark=preview_mark_rgb())
+ [(2*body[0]+mark[0])/3,(2*body[1]+mark[1])/3,
+  (2*body[2]+mark[2])/3,1];
+function recessed_preview_active(f) = active(f) && style(f)=="Recessed";
+module preview_opening(f) {
+ r=min(Text_Edge_Radius,depth(f)/2);
+ if(r==0) inscription(f);
+ else rounded_outline(f,r,r);
+}
+module preview_floor_outline(f) {
+ r=min(Text_Edge_Radius,depth(f)/2);
+ if(r==0) inscription(f);
+ else rounded_outline(f,r,0);
+}
+module preview_body_shell() {
+ omit_back=recessed_preview_active(false);
+ omit_front=recessed_preview_active(true);
+ omit_heel=signature_active();
+ if(!omit_back && !omit_front && !omit_heel) blank();
+ else if(has_bezel)
+  polyhedron(
+   points=bezel_vertices,
+   faces=[for(i=[0:len(bezel_faces)-1],triangle=triangulate(bezel_faces[i]))
+    if(!(omit_back && i==0) && !(omit_front && i==len(bezel_faces)-1)
+       && !(omit_heel && i==6))
+     [triangle[2],triangle[1],triangle[0]]],convexity=10);
+ else
+  polyhedron(
+   points=plain_vertices,
+   faces=[for(i=[0:len(plain_faces)-1],triangle=triangulate(plain_faces[i]))
+    if(!(omit_back && i==0) && !(omit_front && i==len(plain_faces)-1)
+       && !(omit_heel && i==1))
+     [triangle[2],triangle[1],triangle[0]]],convexity=10);
+}
+module preview_face_skin(f) {
+ if(recessed_preview_active(f)) on_face(f)
+  translate([0,0,-epsilon/2]) linear_extrude(height=epsilon/2,convexity=20)
+   difference() { flat_face(f); preview_opening(f); }
+}
+module preview_recess_wall(f) {
+ if(recessed_preview_active(f)) on_face(f) translate([0,0,-depth(f)])
+  linear_extrude(height=depth(f),convexity=20)
+   difference() {
+    offset(delta=epsilon/2) preview_opening(f);
+    offset(delta=-epsilon/2) preview_opening(f);
+   }
+}
+module preview_heel_skin() {
+ if(signature_active()) on_heel() translate([0,0,-epsilon/2])
+  linear_extrude(height=epsilon/2,convexity=20)
+   difference() {
+    translate([-Base_Width/2,-Rear_Thickness/2+(has_bezel?Bevel_Depth:0)])
+     square([Base_Width,Rear_Thickness-2*(has_bezel?Bevel_Depth:0)]);
+    signature_outline();
+   }
+}
+module preview_signature_wall() {
+ if(signature_active()) on_heel() translate([0,0,-Signature_Depth])
+  linear_extrude(height=Signature_Depth,convexity=20)
+   difference() {
+    offset(delta=epsilon/2) signature_outline();
+    offset(delta=-epsilon/2) signature_outline();
+   }
+}
+module preview_face_mark(f) {
+ if(active(f)) {
+  mark_z=style(f)=="Raised" ? depth(f) : -depth(f);
+  on_face(f) translate([0,0,mark_z])
+   linear_extrude(height=epsilon/2,convexity=20) preview_floor_outline(f);
+ }
+}
+module preview_signature_mark() {
+ if(signature_active()) on_heel() translate([0,0,-Signature_Depth])
+  linear_extrude(height=epsilon/2,convexity=20) signature_outline();
+}
+module print_preview(show_marks=true) {
+ color(material_rgb(0)) preview_body_shell();
+ color(material_rgb(0)) preview_face_skin(true);
+ color(material_rgb(0)) preview_face_skin(false);
+ color(material_rgb(0)) preview_heel_skin();
+ color(preview_wall_rgb()) preview_recess_wall(true);
+ color(preview_wall_rgb()) preview_recess_wall(false);
+ color(preview_wall_rgb()) preview_signature_wall();
+ // Raised text is already additive and needs no unreliable preview Boolean.
+ for(f=[true,false]) if(active(f) && style(f)=="Raised")
+  color(material_rgb(0)) relief(f);
+ if(show_marks) {
+  color(preview_mark_rgb()) preview_face_mark(true);
+  color(preview_mark_rgb()) preview_face_mark(false);
+  color(preview_mark_rgb()) preview_signature_mark();
+ }
 }
 module printed_piece() {
- color(material_rgb(0))
- if($preview) render(convexity=30) printed_piece_raw();
- else printed_piece_raw();
+ if($preview) print_preview();
+ else color(material_rgb(0)) printed_piece_raw();
 }
 module signature_inspection() {
  assert($preview,"Inspection is F5-only. Select Print before F6 / STL export.");
@@ -587,6 +699,37 @@ module face_only_volume(f) {
    linear_extrude(height=Paint_Floor_Thickness+epsilon,convexity=20)
    offset(delta=epsilon/2) inscription(f);
 }
+// The common recessed, sharp-edged Face only case can be partitioned directly:
+// deepen each Print cavity by the colour thickness and fill only that added
+// depth. This avoids reconstructing and intersecting the finished piece for
+// every material. Unusual rounded, raised, edge-adjacent, or thin-web designs
+// retain the general complementary-volume path below.
+function face_only_extra_cut_z(f) = active(f) && style(f)=="Recessed"
+ ? Paint_Floor_Thickness*sqrt(1+pow(f?front_slope:back_slope,2)) : 0;
+function fast_face_only_path() = Text_Edge_Radius==0
+ && (!active(true) || style(true)=="Recessed")
+ && (!active(false) || style(false)=="Recessed")
+ && Text_Margin>Paint_Floor_Thickness*max(front_slope,back_slope)+epsilon
+ && (!signature_active() || Signature_Margin>
+     Paint_Floor_Thickness*max(tan(90-A),front_slope,back_slope)+epsilon)
+ && (tip_thickness-bevel_loss-cut_z(true)-cut_z(false)
+     -face_only_extra_cut_z(true)-face_only_extra_cut_z(false))*Model_Scale>epsilon;
+module fast_face_only_volume(f) {
+ if(active(f)) on_face(f) translate([0,0,-depth(f)-Paint_Floor_Thickness])
+  linear_extrude(height=Paint_Floor_Thickness,convexity=20) inscription(f);
+}
+module fast_face_only_cutter(f) {
+ if(active(f)) on_face(f) translate([0,0,-depth(f)-Paint_Floor_Thickness])
+  linear_extrude(height=depth(f)+Paint_Floor_Thickness+epsilon,convexity=20) inscription(f);
+}
+module fast_face_only_signature_volume() {
+ if(signature_active()) on_heel() translate([0,0,-Signature_Depth-Paint_Floor_Thickness])
+  linear_extrude(height=Paint_Floor_Thickness,convexity=20) signature_outline();
+}
+module fast_face_only_signature_cutter() {
+ if(signature_active()) on_heel() translate([0,0,-Signature_Depth-Paint_Floor_Thickness])
+  linear_extrude(height=Signature_Depth+Paint_Floor_Thickness+epsilon,convexity=20) signature_outline();
+}
 module face_only_region_raw(f) {
  if(active(f)) difference() {
   if(style(f)=="Raised") intersection() { relief(f); face_only_volume(f); }
@@ -596,14 +739,16 @@ module face_only_region_raw(f) {
  }
 }
 module face_only_region(f) {
- if(active(f)) difference() {
+ if(fast_face_only_path()) fast_face_only_volume(f);
+ else if(active(f)) difference() {
   face_only_region_raw(f);
   if(!f) face_only_region_raw(true);
   face_only_signature_region();
  }
 }
 module face_only_signature_region() {
- if(signature_active()) difference() {
+ if(fast_face_only_path()) fast_face_only_signature_volume();
+ else if(signature_active()) difference() {
   intersection() {
    blank();
    on_heel() translate([0,0,-Signature_Depth-Paint_Floor_Thickness])
@@ -615,7 +760,19 @@ module face_only_signature_region() {
  }
 }
 module face_only_body_region() {
- difference() { printed_piece(); face_only_region(true); face_only_region(false); face_only_signature_region(); }
+ if(fast_face_only_path()) difference() {
+  difference() {
+   blank();
+   fast_face_only_cutter(true);
+   fast_face_only_cutter(false);
+  }
+  fast_face_only_signature_cutter();
+ } else difference() {
+  printed_piece();
+  face_only_region(true);
+  face_only_region(false);
+  face_only_signature_region();
+ }
 }
 module paint_volume(f) {
  on_face(f) translate([0,0,-depth(f)-Paint_Floor_Thickness])
@@ -660,11 +817,10 @@ module painted_body_region() {
 module flush_body_region() {
  difference() { blank(); colour_inlay(true); colour_inlay(false); signature_inlay(); }
 }
-// Colour assembly is a visual check, not export geometry. Draw the exact
-// exterior used by Print once, then add only the exposed colour surfaces. The
-// closed complementary volumes remain available in the individual Colour
-// modes used by the exporter. This keeps F5 quick without changing any depth,
-// bevel, relief, or exported mesh.
+// Colour assembly is a visual check, not export geometry. Reuse the
+// driver-safe Print preview and add only display surfaces for the selected
+// colours. Exact closed complementary volumes remain available in the
+// individual Colour modes used by the exporter.
 module preview_face_colour(f) {
  if(active(f)) {
   if(style(f)=="Raised" && Text_Colour_Treatment=="Painted grooves") relief(f);
@@ -674,19 +830,20 @@ module preview_face_colour(f) {
     linear_extrude(height=epsilon,convexity=20) inscription(f);
   }
   else if(Text_Colour_Treatment=="Flush filled")
-   on_face(f) translate([0,0,-epsilon/2])
-    linear_extrude(height=epsilon,convexity=20) inscription(f);
+   on_face(f) translate([0,0,0])
+    linear_extrude(height=epsilon/2,convexity=20) preview_opening(f);
   else
-   on_face(f) translate([0,0,-depth(f)-epsilon/2])
-    linear_extrude(height=epsilon,convexity=20)
-    offset(delta=Text_Colour_Treatment=="Painted grooves" ? Paint_Wall_Thickness : 0) inscription(f);
+   on_face(f) translate([0,0,-depth(f)])
+    linear_extrude(height=epsilon/2,convexity=20)
+    offset(delta=Text_Colour_Treatment=="Painted grooves" ? Paint_Wall_Thickness : 0)
+    preview_floor_outline(f);
  }
 }
 module preview_signature_colour() {
  if(signature_active())
   on_heel() translate([0,0,
-   Text_Colour_Treatment=="Flush filled" ? -epsilon/2 : -Signature_Depth-epsilon/2])
-   linear_extrude(height=epsilon,convexity=20)
+   Text_Colour_Treatment=="Flush filled" ? 0 : -Signature_Depth])
+   linear_extrude(height=epsilon/2,convexity=20)
    offset(delta=Text_Colour_Treatment=="Painted grooves" ? Paint_Wall_Thickness : 0)
    signature_outline();
 }
@@ -696,9 +853,9 @@ module colour_output() {
  assert(Output_Mode!="Colour assembly" || $preview,
    "Colour assembly is F5 preview only. Use scripts/komascad_export.py for multipart colour 3MF; choose Print for engraved STL, or Colour body/front/back/signature for separate parts.");
  if(Output_Mode=="Colour assembly") {
-  // The outside is exactly Print geometry. The coloured slivers are preview
-  // overlays on its raised, flush, or recessed exposed surfaces only.
-  color(material_rgb(0)) printed_piece();
+  // Avoid all subtractive OpenCSG operations. The exact printable outside is
+  // produced by the individual Colour modes used by the exporter.
+  print_preview(false);
   color(material_rgb(1)) preview_face_colour(true);
   color(material_rgb(2)) preview_face_colour(false);
   color(material_rgb(3)) preview_signature_colour();
@@ -776,7 +933,10 @@ for(f=[true,false]) if(len(chars(f))>0) {
     if(Text_Edge_Radius>depth(f)/2) echo("NOTE: text radius capped at half relief depth.");
 }
 if(signature_active()) echo("Signature is on the heel (bed-facing in Upright). Check Inspect signature, then check the first layers in your slicer.");
-if(Output_Mode=="Print") echo("Check both F5 Inspect views for red overflow and slicer paths for fine strokes before printing.");
+if(Output_Mode=="Print" && $preview)
+ echo("KOMASCAD PRINT PREVIEW: driver-safe open-face shell with recess floors at the selected depths; F6/export use exact geometry.");
+if(Output_Mode=="Print" && !$preview)
+ echo("Check both F5 Inspect views for red overflow and slicer paths for fine strokes before printing.");
 if(!Protect_Face_Edges) echo("CAUTION: edge protection disabled; lettering can breach edges or form detached raised fragments.");
 if(Print_Orientation=="Back face down" && active(false) && Output_Mode=="Print") echo("CAUTION: reverse relief faces the bed. Upright is the base orientation for two-sided pieces.");
 if(colour_mode) echo("COLOUR 3MF: use scripts/komascad_export.py; native OpenSCAD 2021 export does not retain material assignments. Treatment:",Text_Colour_Treatment);

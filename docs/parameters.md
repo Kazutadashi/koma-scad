@@ -77,9 +77,9 @@ See the [design guide](../KomaSCAD-guide.md) for geometry and the [colour quicks
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Body_Filament` | `"Wood"` | Preview swatch and 3MF material label, not a printer slot. Custom uses Body Colour below. |
+| `Body_Filament` | `"Wood"` | Preview swatch and standard 3MF logical colour, not a physical printer slot. Custom uses Body Colour below. |
 | `Front_Filament` | `"Black"` | Same as body shares its material. Metallic/glitter appearance comes from the actual filament. |
-| `Back_Filament` | `"Red"` | Same as front shares the front material. Map these material labels to loaded spools in your slicer. |
+| `Back_Filament` | `"Red"` | Same as front shares its logical filament. Confirm logical colours against loaded physical spools in your slicer. |
 ## 08 - Engraving and stroke weight
 
 | Parameter | Default | Description |

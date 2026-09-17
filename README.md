@@ -52,10 +52,10 @@ Keep `shogi_piece.scad` and `shogi_piece.json` in the same folder. OpenSCAD load
 
 ## Getting started
 
-This walkthrough produces a single-filament king. It uses OpenSCAD's two display commands: **Preview (F5)** draws a fast approximation for checking layout, and **Render (F6)** builds the exact geometry required for export.
+This walkthrough produces a single-filament king. **Print is the main working mode**, and every bundled preset is saved in Print. With Customizer's **Automatic Preview** enabled (the normal OpenSCAD setting), opening the file or choosing a preset displays the printable piece immediately. **Render (F6)** builds the exact geometry required for STL export.
 
 1. Open `shogi_piece.scad` in OpenSCAD. If the Customizer panel is not visible, uncheck **Window → Hide Customizer**.
-2. At the top of the Customizer, select the preset **00 Base - King**. A preset is a saved set of Customizer values. Press F5 if the preview does not update.
+2. At the top of the Customizer, select the preset **00 Base - King**. A preset is a saved set of Customizer values. It opens in Print and updates automatically. F5 is only a fallback if you have disabled Automatic Preview in OpenSCAD.
 3. Find the exact name of your font under **Help → Font List**, and enter it in the Customizer's font setting without quotation marks.
 4. Enter the inscriptions in **Front Characters** and **Back Characters**. Characters are stacked from the point of the piece towards the heel. Leave Back Characters empty for a blank reverse side.
 5. Set the mode to **Inspect front** and press F5. The blue area is the safe lettering region; lettering highlighted in red extends beyond it and will be clipped. Repeat with **Inspect back**.
@@ -78,7 +78,7 @@ Separately exported material parts share a common alignment. Import them togethe
 
 ## Multicolour printing
 
-Colour assembly previews the selected body, lettering and signature materials without building every exact export mesh. It renders the Print exterior once and adds lightweight colour overlays to the visible lettering surfaces; the individual Colour modes still build the complete closed material volumes for export. The default **Face only** treatment puts a thin printable colour region directly behind each visible inscription face. On recessed text, the groove walls remain body material and the surface geometry stays identical to Print. **Painted grooves** optionally extends the colour region beside those walls while retaining the same open recess. **Flush filled** instead closes a recessed inscription with a level inlay. The exporter writes the body, lettering and signature as named, aligned parts of a single 3MF file.
+Colour assembly previews the selected body, lettering and signature materials without building every exact export mesh. It uses the same driver-safe open-face preview as Print, then applies the selected colour swatches at the selected recess depths; the individual Colour modes still build the complete closed material volumes for export. The default **Face only** treatment puts a thin printable colour region directly behind each visible inscription face. On recessed text, the groove walls remain body material and the surface geometry stays identical to Print. **Painted grooves** optionally extends the colour region beside those walls while retaining the same open recess. **Flush filled** instead closes the recess with a level inlay. The exporter writes the body, lettering and signature as named, aligned parts of a single 3MF file.
 
 1. Finish and inspect the geometry in **Print** mode. Under **07 – Filament colours**, choose a material colour for the body and each inscription.
 2. Keep the default **Face only** for colour at the inscription face without coloured groove walls. Choose **Painted grooves** if you also want colour beside the groove walls, or **Flush filled** for a level recessed inlay. Keep **Protect Face Edges** enabled.
@@ -90,15 +90,15 @@ Colour assembly previews the selected body, lettering and signature materials wi
    python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
    ```
 
-6. Import `king.3mf` into your slicer as a single multipart object. Keep the parts in their original positions. The material colours and part names are already stored in the 3MF, so you can map each named part to a loaded filament without painting individual strokes.
+6. Import `king.3mf` into your slicer as a single multipart object. Keep the parts in their original positions. Standard colour properties are already attached to the named parts, so compatible slicers create the logical filament assignments without painting strokes or selecting each part. Confirm that those colours match the spools physically loaded in your printer.
 
 > [!WARNING]
 > Colour assembly is a preview-only mode. Do not render it with F6 or export it with OpenSCAD's built-in 3MF export: OpenSCAD cannot reliably merge the touching material regions. The exporter preserves them as separate meshes while sharing one cached render batch.
 
 Before printing, note the following:
 
-- The exported file is a 3MF model, not G-code or a slicer project. Some slicers require you to assign filaments to the named parts manually.
-- The exporter uses standard 3MF Core components and base materials. It does not claim to be a vendor slicer or embed proprietary printer/project configuration.
+- The exported file is a 3MF model, not G-code or a slicer project. Slicers that ignore standard colour properties may still require assignment by part name.
+- The exporter uses standard 3MF Core and Materials and Properties resources. It does not claim to be a vendor slicer or embed proprietary printer/project configuration.
 - The colours chosen in the Customizer identify each part. The printed finish, including any metallic or glitter effect, depends on the filament you load.
 - In Upright orientation, the front and back lettering share layers with the body, so a single filament change at one layer height cannot colour both inscriptions.
 - A single-nozzle printer requires a filament-change workflow that supports multicolour printing.
@@ -133,10 +133,12 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 
 | Problem | Solution |
 | --- | --- |
+| Print is empty | Current Print preview avoids subtractive 3D OpenCSG operations: it opens only the broad preview face, applies a fast 2D glyph cutout, and displays its floor at the selected recess depth. F6/export retains the exact solid. Reopen the updated SCAD, enable **Design → Automatic Preview**, and select the preset again. Use **View → View All** if needed. |
 | Nothing to export in Colour assembly | Colour assembly is preview-only. Export with `scripts/komascad_export.py`. |
+| A coloured 3MF is invisible in a neutral viewer | Regenerate it with the current exporter. It stores explicit opaque alpha in both standard 3MF colour resources; older generated files may be interpreted as transparent by some viewers. |
 | Bambu Studio 2.8.2.60 says the 3MF has “invalid config” | This version reports the same warning for ordinary geometry-only 3MF files. Dismiss the dialog to load the geometry; the KomaSCAD export intentionally contains no Bambu project config. See [BambuStudio issue #11927](https://github.com/bambulab/BambuStudio/issues/11927). |
 | Render fails with a CGAL error | Keep the preset and the full console output, and report the problem as described in [Contributing](#contributing). |
-| Previews are slow | Use the Inspect modes while adjusting. Set Text Edge Radius to 0 and Text Curve Resolution to 24 while working, then restore your Text Edge Radius and set Text Curve Resolution to 48 before exporting. If necessary, disable Automatic Preview. |
+| Previews are slow | Print and Colour assembly use an open-face F5 display proxy with only fast 2D cutouts; use the Inspect modes for flat layout work. Very detailed fonts can still benefit from Text Curve Resolution 24 while composing, then 48 for final export. |
 | Kanji appear as boxes, or the wrong font is used | Check the font name against Help → Font List and confirm that the font contains the characters. Restart OpenSCAD after installing a font. |
 | Lettering is too heavy | Reduce Front or Back Stroke Expansion, then check thin strokes in the slicer. |
 | Lettering is highlighted in red | Reduce the text size or adjust spacing or position. Lettering outside the safe region is clipped, not scaled to fit. |

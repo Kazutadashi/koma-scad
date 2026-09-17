@@ -6,6 +6,14 @@ Save Customizer changes as a preset first: a separate OpenSCAD process cannot
 see unsaved settings in the GUI. The 3MF contains aligned parts and material
 names, but printer and filament settings belong in your slicer.
 
+OpenSCAD remains the geometry engine: this script asks the model for each
+closed material part, validates those STL meshes, and packages them with the
+open 3MF Core and Materials and Properties specifications. Each part carries
+its selected standard colour property so compatible slicers can create and
+assign logical filament slots automatically. The script does not modify,
+approximate, or regenerate the geometry and contains no slicer- or
+printer-specific project data.
+
 Examples:
     python3 scripts/komascad_export.py --preset "00 Base - King"
     python3 scripts/komascad_export.py --target /path/to/KomaSCAD --preset "My piece"
@@ -28,7 +36,9 @@ from pathlib import Path
 
 
 MODEL_NAMESPACE = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
+MATERIAL_NAMESPACE = "http://schemas.microsoft.com/3dmanufacturing/material/2015/02"
 ET.register_namespace("", MODEL_NAMESPACE)
+ET.register_namespace("m", MATERIAL_NAMESPACE)
 
 CONTENT_TYPES = b'''<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="json" ContentType="application/json"/></Types>'''
 RELATIONSHIPS = b'''<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>'''
@@ -64,7 +74,10 @@ def read_stl(path):
     """Read and validate one nonempty, closed binary STL mesh.
 
     Shared coordinates become shared vertex IDs. Each edge must appear in two
-    triangles with opposite directions, including for disconnected glyphs.
+    triangles with opposite directions. If independently closed glyph shells
+    merely touch along an edge, their vertex IDs are separated without moving
+    coordinates; this preserves the exact outline while keeping each shell
+    topologically manifold.
 
     Args:
         path: Path to the STL produced by OpenSCAD.
@@ -103,13 +116,69 @@ def read_stl(path):
             raise ValueError("Degenerate STL triangle")
         faces.append(face)
 
-    # Edge count checks closure; direction balance checks consistent winding.
-    edges = {}
-    for a, b, c in faces:
-        for start, end in ((a, b), (b, c), (c, a)):
-            edge = (min(start, end), max(start, end))
-            count, balance = edges.get(edge, (0, 0))
-            edges[edge] = (count + 1, balance + (1 if start < end else -1))
+    def edge_statistics(mesh_faces):
+        statistics = {}
+        for a, b, c in mesh_faces:
+            for start, end in ((a, b), (b, c), (c, a)):
+                edge = (min(start, end), max(start, end))
+                count, balance = statistics.get(edge, (0, 0))
+                statistics[edge] = (
+                    count + 1, balance + (1 if start < end else -1),
+                )
+        return statistics
+
+    edges = edge_statistics(faces)
+    if any(count != 2 or balance != 0 for count, balance in edges.values()):
+        # Font outlines can form separate closed extrusions that touch at an
+        # exact edge. STL has coordinates but no vertex topology, so global
+        # coordinate deduplication makes that edge appear four-sided. Discover
+        # shells through ordinary two-face edges, then give touching shells
+        # independent IDs at the same coordinates. Truly open or inconsistently
+        # wound input still fails the closure check below.
+        edge_faces = {}
+        face_edges = []
+        for face_index, (a, b, c) in enumerate(faces):
+            local_edges = []
+            for start, end in ((a, b), (b, c), (c, a)):
+                edge = (min(start, end), max(start, end))
+                edge_faces.setdefault(edge, []).append(face_index)
+                local_edges.append(edge)
+            face_edges.append(local_edges)
+
+        components = [-1] * len(faces)
+        component = 0
+        for seed in range(len(faces)):
+            if components[seed] != -1:
+                continue
+            components[seed] = component
+            pending = [seed]
+            while pending:
+                face_index = pending.pop()
+                for edge in face_edges[face_index]:
+                    incident = edge_faces[edge]
+                    if len(incident) != 2:
+                        continue
+                    other = incident[0] if incident[1] == face_index else incident[1]
+                    if components[other] == -1:
+                        components[other] = component
+                        pending.append(other)
+            component += 1
+
+        separated_vertices = []
+        separated_faces = []
+        separated_ids = {}
+        for face_index, face in enumerate(faces):
+            separated_face = []
+            for vertex_id in face:
+                key = (components[face_index], vertex_id)
+                if key not in separated_ids:
+                    separated_ids[key] = len(separated_vertices)
+                    separated_vertices.append(vertices[vertex_id])
+                separated_face.append(separated_ids[key])
+            separated_faces.append(separated_face)
+        vertices, faces = separated_vertices, separated_faces
+        edges = edge_statistics(faces)
+
     if any(count != 2 or balance != 0 for count, balance in edges.values()):
         raise ValueError("Part is not a closed, consistently wound mesh: " + str(path))
 
@@ -184,7 +253,7 @@ def run_scad_batch(executable, scad, output, common, roles):
         + "[min(floor($t*" + str(len(modes)) + ")," + str(last_frame) + ")]"
     )
     command = [
-        executable, "--hardwarnings", "--animate", str(len(modes)),
+        executable, "--animate", str(len(modes)),
         "-o", str(output), "--export-format", "binstl",
     ]
     command.extend(common)
@@ -199,7 +268,20 @@ def run_scad_batch(executable, scad, output, common, roles):
 
     result = subprocess.run(command, capture_output=True, text=True, env=environment)
     log = result.stdout + "\n" + result.stderr
-    if result.returncode or "ERROR:" in log or "WARNING:" in log:
+    # A direct extrusion can contain independently closed font shells that
+    # touch at an exact edge. OpenSCAD warns because STL carries no topology;
+    # read_stl() separates their vertex IDs and then performs the strict mesh
+    # check. All other OpenSCAD warnings remain fatal.
+    allowed_warnings = (
+        "Object may not be a valid 2-manifold and may need repair",
+        "Exported object may not be a valid 2-manifold and may need repair",
+    )
+    warning_lines = [line for line in log.splitlines() if "WARNING:" in line]
+    unexpected_warnings = [
+        line for line in warning_lines
+        if not any(message in line for message in allowed_warnings)
+    ]
+    if result.returncode or "ERROR:" in log or unexpected_warnings:
         raise RuntimeError("OpenSCAD could not export colour parts:\n" + log[-8000:])
 
     frames = [
@@ -213,7 +295,13 @@ def run_scad_batch(executable, scad, output, common, roles):
 
 
 def create_3mf(destination, parts, title):
-    """Package aligned meshes and named RGB material swatches into a 3MF.
+    """Package aligned meshes and standard material/colour data into a 3MF.
+
+    Core ``basematerials`` retain human-readable filament names. One
+    Materials and Properties ``colorgroup`` per selected material also gives
+    every mesh an object-level colour property. Popular slicers that ignore
+    Core base-material assignments can use this open-standard property to
+    create and assign logical filament slots without per-part painting.
 
     Args:
         destination: Final ``.3mf`` path. A temporary ZIP is staged beside it.
@@ -233,30 +321,58 @@ def create_3mf(destination, parts, title):
     node(model, "metadata", name="Title").text = title
     node(model, "metadata", name="Application").text = "KomaSCAD colour exporter 3.4"
     node(model, "metadata", name="Description").text = (
-        "One aligned multipart koma. Map named body/front/back/signature "
-        "materials to slicer filaments. Glitter/metallic labels describe "
-        "filament choice, not surface textures."
+        "One aligned multipart koma with standard 3MF material and colour "
+        "assignments for body/front/back/signature parts. Glitter/metallic "
+        "labels describe filament choice, not surface textures."
     )
     resources = node(model, "resources")
     materials = node(resources, "basematerials", id=1)
     material_ids = {}
-    component_ids = []
-    manifest = []
+    prepared_parts = []
 
-    for index, (role, name, rgba, vertices, faces) in enumerate(parts):
-        # A 3MF swatch uses RGB; physical opacity and finish come from filament.
+    # Discover materials first so every kind of resource receives a unique
+    # 3MF resource ID. The material key deliberately includes the name: two
+    # visually equal swatches may still describe different physical filaments.
+    for role, name, rgba, vertices, faces in parts:
         rgb = "#" + "".join("%02X" % round(255 * channel) for channel in rgba[:3])
         material_key = (name, rgb)
         if material_key not in material_ids:
             material_ids[material_key] = len(material_ids)
-            node(materials, "base", name=name, displaycolor=rgb)
+            # Explicit opaque alpha avoids readers that incorrectly interpret
+            # a legal six-digit 3MF colour as transparent RGBA.
+            node(materials, "base", name=name, displaycolor=rgb + "FF")
+        prepared_parts.append((role, name, rgb, material_key, vertices, faces))
 
-        object_id = index + 2  # Object 1 is reserved for the materials table.
+    # Base materials are useful to standards-aware manufacturing tools, but
+    # several FDM slicers treat them as display-only. Object-level colour-group
+    # properties are also standard 3MF and are commonly converted to logical
+    # filament assignments on generic-model import. Separate one-colour groups
+    # retain compatibility with consumers that do not implement pindex fully.
+    next_resource_id = 2
+    colour_group_ids = {}
+    for material_key in material_ids:
+        colour_group_ids[material_key] = next_resource_id
+        colour_group = ET.SubElement(
+            resources, "{%s}colorgroup" % MATERIAL_NAMESPACE,
+            {"id": str(next_resource_id)},
+        )
+        ET.SubElement(
+            colour_group, "{%s}color" % MATERIAL_NAMESPACE,
+            {"color": material_key[1] + "FF"},
+        )
+        next_resource_id += 1
+
+    component_ids = []
+    manifest = []
+
+    for role, name, rgb, material_key, vertices, faces in prepared_parts:
+        object_id = next_resource_id
+        next_resource_id += 1
         component_ids.append(object_id)
         part_object = node(
             resources, "object", id=object_id, type="model",
             name=role.title() + " | " + name,
-            pid=1, pindex=material_ids[material_key],
+            pid=colour_group_ids[material_key], pindex=0,
         )
         mesh = node(part_object, "mesh")
         xml_vertices = node(mesh, "vertices")
@@ -270,7 +386,7 @@ def create_3mf(destination, parts, title):
             "material_index": material_ids[material_key],
         })
 
-    assembly_id = len(parts) + 2
+    assembly_id = next_resource_id
     assembly = node(resources, "object", id=assembly_id, type="model", name=title)
     components = node(assembly, "components")
     for object_id in component_ids:
@@ -288,7 +404,10 @@ def create_3mf(destination, parts, title):
             archive.writestr("3D/3dmodel.model", ET.tostring(model, encoding="utf-8", xml_declaration=True))
             archive.writestr("Metadata/KomaSCAD.json", json.dumps({
                 "version": "3.4", "units": "mm", "parts": manifest,
-                "type": "portable multipart model; no printer settings",
+                "type": (
+                    "portable multipart model with standard colour assignments; "
+                    "no printer settings"
+                ),
             }, ensure_ascii=False, indent=2))
         with zipfile.ZipFile(staged) as archive:
             if archive.testzip() is not None:
@@ -443,7 +562,12 @@ def check_fonts(log):
         return
 
     generic_families = {"sans", "sans-serif", "serif", "monospace", "system-ui"}
-    for requested in set(json.loads(match.group(1))):
+    # OpenSCAD echoes a literal backslash in some registered font family names
+    # (for example ``A\-OTF``), while JSON requires that backslash to be
+    # escaped. Preserve OpenSCAD's text and make only those literal slashes
+    # JSON-safe before decoding the simple string array.
+    encoded_fonts = re.sub(r'\\(?!["\\])', r'\\\\', match.group(1))
+    for requested in set(json.loads(encoded_fonts)):
         wanted = subprocess.check_output(
             ["fc-pattern", "-f", "%{family}", requested], text=True,
         ).strip()
@@ -523,11 +647,12 @@ def main():
         manifest = create_3mf(output, parts, args.preset or "KomaSCAD")
 
     print("Saved " + str(output))
-    print("Open as ONE multipart object; keep part alignment and map these materials to your filaments:")
+    print("Open as ONE multipart object; standard logical filament assignments are embedded:")
     for part in manifest:
         print("  " + part["part"] + ": " + part["material"] + " (" + part["display_colour"] + ")")
-    print("Printer settings and filament swapping must be configured in your slicer. "
-          "No physical glitter/metallic texture is encoded.")
+    print("A compatible slicer should assign these parts without painting. Confirm that "
+          "its logical colours match your physically loaded spools before printing. "
+          "No printer profile or physical glitter/metallic texture is encoded.")
 
 
 if __name__ == "__main__":
