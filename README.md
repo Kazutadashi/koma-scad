@@ -153,6 +153,7 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | [KomaSCAD-guide.md](KomaSCAD-guide.md) | Design guide: piece geometry, typography and features |
 | [KomaSCAD-colour-quickstart.md](KomaSCAD-colour-quickstart.md) | Multicolour export in detail |
 | [PRESETS.md](PRESETS.md) | Saving, sharing and extending presets |
+| [CONTRIBUTORS.md](CONTRIBUTORS.md) | Project contributors and their work |
 | [examples/README.md](examples/README.md) | Example STL and 3MF files and what each demonstrates |
 | [CHANGELOG.md](CHANGELOG.md) | Changes in each release |
 | [MIGRATION.md](MIGRATION.md) | Upgrading from earlier releases |
@@ -169,9 +170,13 @@ Bug reports, print results and improvements are welcome through GitHub issues an
 
 **Historical glyphs and promotion mappings.** Contributions must cite their sources.
 
+## Contributors
+
+[@imtrmu](https://github.com/imtrmu) is a KomaSCAD contributor focused on parametric design and practical 3D printing. He proposed turning the original models into a parametric system and has continued to work closely on the printing side: testing models, trying alternative methods, assessing what will and will not print reliably, and providing detailed feedback that has shaped the geometry and workflow. See [CONTRIBUTORS.md](CONTRIBUTORS.md) for the contributor record.
+
 ## Acknowledgements
 
-Thanks to [@imtrmu](https://github.com/imtrmu), whose work inspired KomaSCAD's parametric design approach.
+Special thanks to [@imtrmu](https://github.com/imtrmu). KomaSCAD's parametric direction began with his suggestion, and his sustained hands-on testing and practical advice have been central to refining the project. His willingness to test supplied models, explore different approaches, explain slicer and printer constraints, and give candid feedback about what works and what does not has helped turn the project into a more reliable model-to-print system. KomaSCAD is substantially better because of his collaboration, patience, and attention to the real-world details of 3D printing.
 
 ## Licence
 

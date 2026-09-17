@@ -1,4 +1,5 @@
 // KomaSCAD — community base, revision 3.4
+// Contributors and acknowledgements: see CONTRIBUTORS.md and README.md.
 // OpenSCAD 2021.01. Units: mm / degrees, BEFORE Model_Scale.
 // Start in Model: shape the piece, choose the font and choose colours in one live preview.
 // Standalone defaults already produce a piece; selecting a preset is optional.
