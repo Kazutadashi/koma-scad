@@ -56,16 +56,16 @@ openscad -o rook-study.stl -p my-presets.json -P 'My Rook Study' shogi_piece.sca
 For colour 3MF, use the exporter, not the GUI Export menu:
 
 ```bash
-python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
-python3 scripts/komascad_export.py --parameters my-presets.json --preset 'My Rook Study' --output rook-study.3mf
-python3 scripts/komascad_export.py --parameters presets/taikyoku.json --preset '30 Taikyoku - Fire Demon' --output fire-demon.3mf
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece '00 Base - King' --out exports
+python3 scripts/komascad_export.py --preset-file my-presets.json --piece 'My Rook Study' --out exports
+python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --piece '30 Taikyoku - Fire Demon' --out exports
 ```
 
 To export every selected record as a separate 3MF in one named delivery
 folder, use the [batch exporter](batch-export.md):
 
 ```bash
-python3 scripts/komascad_export.py --set --parameters presets/taikyoku.json --set-name 'Taikyoku Shogi'
+python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --set-name 'Taikyoku Shogi' --out exports
 ```
 
 The exporter privately controls the material-part modes even if the preset was saved in an Inspect view. It reads saved values only, starts with SCAD defaults for omitted keys, and applies explicit CLI text/colour overrides last. Keep distributed presets in Model so opening them immediately shows the complete design.

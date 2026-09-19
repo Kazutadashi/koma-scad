@@ -86,7 +86,7 @@ Model displays the selected body, front, back and signature materials directly. 
 5. Open a terminal in the project folder and run the exporter. No F6 render is needed first.
 
    ```bash
-   python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
+   python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece '00 Base - King' --out exports
    ```
 
 6. Import `king.3mf` into your slicer as a single multipart object. Keep the parts in their original positions. Standard colour properties are already attached to the named parts, so compatible slicers create the logical filament assignments without painting strokes or selecting each part. Confirm that those colours match the spools physically loaded in your printer.
@@ -109,7 +109,7 @@ To export every piece in a preset collection, create a named folder containing
 one 3MF per preset with the batch wrapper:
 
 ```bash
-python3 scripts/komascad_export.py --set --parameters presets/taikyoku.json --set-name "Taikyoku Shogi"
+python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --set-name "Taikyoku Shogi" --out exports
 ```
 
 Use `--dry-run` to inspect all planned filenames before rendering. The
@@ -188,7 +188,7 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | `shogi_piece.json` | MIT-licensed base and Shogi presets, including the base king |
 | `presets/taikyoku.json` | Separately licensed CC BY-SA Taikyoku presets |
 | `scripts/komascad_export.py` | Multicolour 3MF exporter |
-| `scripts/komascad_export.py --set` | Exports preset collections into named 3MF folders |
+| `scripts/komascad_export.py` | Exports one named preset or every preset in a JSON file into a chosen directory |
 | [fonts/suggested_fonts.md](fonts/suggested_fonts.md) | Bundled open fonts, licenses, and font recommendations |
 | [docs/parameters.md](docs/parameters.md) | Parameter reference: every configurable parameter, with defaults and descriptions |
 | [docs/design-guide.md](docs/design-guide.md) | Design guide: piece geometry, typography and features |

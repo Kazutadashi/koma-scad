@@ -1,174 +1,62 @@
-# Batch-exporting a preset collection
+# Exporting preset files
 
-`komascad_export.py --set` turns a JSON collection of saved Customizer presets
-into a named folder containing one multipart colour 3MF per preset. It is a
-coordinator: each piece is rendered by the existing `komascad_export.py`
-single-piece exporter, so batch and individual exports use the same geometry,
-mesh validation, materials, and 3MF packaging.
+`komascad_export.py` uses one simple rule: point `--preset-file` at a
+Customizer JSON file. Add `--piece` to export one exact named preset; omit it
+to export every preset in that file.
 
-## Collection format
+## Export one piece
 
-The input is an ordinary OpenSCAD preset JSON file. Every entry under
-`parameterSets` is one piece to export:
-
-```json
-{
-  "fileFormatVersion": "1",
-  "parameterSets": {
-    "01 Chu - Pawn": {
-      "Front_Characters": "歩兵",
-      "Back_Characters": "金将"
-    },
-    "02 Chu - Lion": {
-      "Front_Characters": "獅子",
-      "Back_Characters": ""
-    }
-  }
-}
-```
-
-Distributed presets should remain complete flat records, as described in the
-[preset guide](presets.md). The shortened records above only illustrate the
-collection structure.
-
-Preset names become filenames, so use stable, descriptive names. Numeric
-prefixes are useful when the output should sort in a deliberate order. Unsafe
-filesystem punctuation is converted to a readable separator, and the command
-stops if two names would produce the same filename.
-
-## Export an entire collection
-
-Run the command from the repository root:
+First discover the exact saved name:
 
 ```bash
-python3 scripts/komascad_export.py --set \
-  --parameters presets/chu-shogi.json \
-  --set-name "Chu Shogi"
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --list
 ```
 
-When every export succeeds, the result has this structure:
-
-```text
-exports/
-└── Chu Shogi/
-    ├── 01 Chu - Pawn.3mf
-    ├── 02 Chu - Lion.3mf
-    └── manifest.json
-```
-
-The script stages the complete collection first. If any individual export
-fails, it removes the incomplete staged files and does not publish a partial
-set folder.
-
-The manifest records the set name, source files, preset-to-filename mapping,
-file sizes, and SHA-256 checksums. This makes the delivered folder easy to
-audit without changing the printable 3MF files.
-
-## Preview before rendering
-
-Rendering a large collection can take time. First list the selected presets:
+Then export that one piece into a directory. The output filename is the preset
+name plus `.3mf`:
 
 ```bash
-python3 scripts/komascad_export.py --set \
-  --parameters presets/chu-shogi.json \
-  --list
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece "King - Professional Grid 02 - Yuji Syuku - Narrow - Thin - Deep" --out exports
 ```
 
-Then preview the folder and filenames without invoking OpenSCAD:
+## Export a whole preset file
+
+Omit `--piece` to export every saved preset:
 
 ```bash
-python3 scripts/komascad_export.py --set \
-  --parameters presets/chu-shogi.json \
-  --set-name "Chu Shogi" \
-  --dry-run
+python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --set-name "Taikyoku Shogi" --out exports
 ```
 
-## Export part of a collection
+`--set-name` is only the human-readable name recorded in `manifest.json`; it
+does not create another folder.
 
-Use repeatable, case-sensitive `--include` and `--exclude` glob patterns. This
-example exports all Professional King grid-search records from the main preset
-file:
+## Preview and resume
+
+Preview output paths without starting OpenSCAD:
 
 ```bash
-python3 scripts/komascad_export.py --set \
-  --parameters shogi_piece.json \
-  --include "King - Professional Grid *" \
-  --set-name "Professional King Grid Search"
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --out exports --dry-run
 ```
 
-Multiple include patterns are combined. Excludes are applied afterward:
+`--out` is always the actual directory containing the 3MF files. Completed
+same-named files are skipped by default, so cancelling and running the command
+again resumes the remaining work. Use `--replace` only when you want to
+overwrite existing matching files:
 
 ```bash
-python3 scripts/komascad_export.py --set \
-  --parameters shogi_piece.json \
-  --include "King - Professional Grid *" \
-  --include "King - Font *" \
-  --exclude "*Retired*" \
-  --set-name "King Studies"
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --out exports --replace
 ```
 
-For a hand-picked set, repeat `--preset` with exact names. Exact selections
-are exported in command-line order:
+Completed pieces are written immediately. A piece in progress uses a hidden
+`.partial` filename and only becomes a `.3mf` after its export completes.
+
+## Paths
+
+Use absolute paths whenever the model and preset file are outside the current
+project. `--preset-file` and `--out` resolve from the directory where you run
+the command, so `../shogi_piece.json` means “one directory above here.”
+`--target` only controls where a relative `--scad` file resolves.
 
 ```bash
-python3 scripts/komascad_export.py --set \
-  --preset "00 Base - King" \
-  --preset "King - Professional Yuji Syuku" \
-  --set-name "King Comparison"
+python3 scripts/komascad_export.py --target /path/to/KomaSCAD --preset-file /path/to/KomaSCAD/my-presets.json --out /path/to/print-order
 ```
-
-Use either exact `--preset` values or `--include` patterns in one command, not
-both. `--exclude` can be used with either selection style.
-
-## Taikyoku and generated collections
-
-To export every record currently stored in the Taikyoku preset file:
-
-```bash
-python3 scripts/komascad_export.py --set \
-  --parameters presets/taikyoku.json \
-  --set-name "Taikyoku Shogi"
-```
-
-The same command works when an LLM or another generator creates a new preset
-collection. A reliable automation flow is:
-
-1. Generate complete, uniquely named records under `parameterSets`.
-2. Validate the selection with `--list` and `--dry-run`.
-3. Install every font referenced by the selected records and restart any open
-   OpenSCAD process.
-4. Run the batch export.
-5. Open representative 3MF files in the target slicer and confirm part and
-   material assignments before ordering or printing the full collection.
-
-Each preset produces one 3MF model. The script does not infer game-specific
-piece quantities or duplicate a model automatically. If a manufacturing order
-needs several copies of one piece, set that quantity in the slicer or the
-print provider's order.
-
-## Output and replacement options
-
-The default parent folder is `exports/`. Choose another location with
-`--output-root`:
-
-```bash
-python3 scripts/komascad_export.py --set \
-  --parameters presets/chu-shogi.json \
-  --set-name "Chu Shogi" \
-  --output-root /path/to/print-orders
-```
-
-An existing set folder is never changed by default. After reviewing the exact
-destination, pass `--replace` to replace it only after the new collection has
-exported successfully:
-
-```bash
-python3 scripts/komascad_export.py --set \
-  --parameters presets/chu-shogi.json \
-  --set-name "Chu Shogi" \
-  --replace
-```
-
-Use `--scad` and `--target` for another compatible model checkout, and
-`--openscad` when the OpenSCAD executable is not named `openscad` on `PATH`.
-Run `python3 scripts/komascad_export.py --set --help` for the complete interface.

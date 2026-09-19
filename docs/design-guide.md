@@ -30,7 +30,7 @@ In **Upright** orientation the heel faces the print bed. The signature therefore
 The colour exporter accepts saved signature settings. You can also enable and set a mark directly:
 
 ```bash
-python3 scripts/komascad_export.py --preset '00 Base - King' --signature-text 'KomaSCAD' --output signed-king.3mf
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece '00 Base - King' --signature-text 'KomaSCAD' --out exports
 ```
 
 `--signature-colour Gold` can override its material. The supplied signed STL and 3MF are demonstrations using “KomaSCAD”; that name is not inserted into the base preset. Verification checks disabled/empty behaviour, a closed engraved solid with unchanged outer bounds, a signature that fits the safe heel, and colour-part volume conservation. The colour signature occupies 0–0.4 mm above the bed in the Upright demonstration.

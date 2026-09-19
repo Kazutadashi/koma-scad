@@ -9,7 +9,7 @@ Expand **12 - Maker signature on heel** in Customizer, enable it, and enter your
 The existing exporter reads the signature from your saved preset. Alternatively:
 
 ```bash
-python3 scripts/komascad_export.py --preset '00 Base - King' --signature-text 'KomaSCAD' --signature-colour Gold --output signed-king.3mf
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece '00 Base - King' --signature-text 'KomaSCAD' --signature-colour Gold --out exports
 ```
 
 The heel touches the bed in Upright orientation. Check the signature in the first sliced layers before printing. See [the design guide](design-guide.md) for the size, spacing, depth, margin, position and rotation controls.
@@ -50,16 +50,16 @@ The existing neutral layout defaults and unit descriptions are retained.
 6. From the project folder, run:
 
 ```bash
-python3 scripts/komascad_export.py --preset 'My piece' --output my-piece.3mf
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece 'My piece' --out exports
 ```
 
 For the supplied base:
 
 ```bash
-python3 scripts/komascad_export.py --preset '00 Base - King' --output king.3mf
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece '00 Base - King' --out exports
 ```
 
-Omit `--preset` to use the SCAD source defaults. An alternative JSON can be selected with `--parameters path/to/presets.json`. Use `--scad path/to/shogi_piece.scad` or `--openscad /path/to/openscad` when necessary.
+Use `--preset-file path/to/presets.json` to choose the saved collection and `--piece 'Exact preset name'` to choose one record. Omit `--piece` to export the entire file. Use `--scad path/to/shogi_piece.scad` or `--openscad /path/to/openscad` when necessary.
 
 The exporter reads your saved settings, builds body/front/back/signature as closed solids, validates them, and packages one aligned assembly with named colour/material resources. It deliberately controls the part-selection mode, regardless of the Output Mode saved in the preset. Explicit command-line colour/text overrides take precedence over the saved values.
 
@@ -93,7 +93,7 @@ Automatic font size accounts for the character count. Width Scale only changes w
 Reproduce the demonstration with:
 
 ```bash
-python3 scripts/komascad_export.py --body-colour Purple --front-colour Silver --back-colour 'Same as front' --front-text '大将軍' --back-text '大将軍' --output three-character-demo.3mf
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece '00 Base - King' --body-colour Purple --front-colour Silver --back-colour 'Same as front' --front-text '大将軍' --back-text '大将軍' --out exports
 ```
 
 For black with glitter lettering, choose Body = Black and Front = Glitter silver or Glitter gold. Choose Back = Same as front if both faces use the same spool.
