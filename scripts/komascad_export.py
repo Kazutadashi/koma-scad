@@ -25,6 +25,9 @@ QUICK START
     Preview every filename and destination without starting OpenSCAD:
         python3 scripts/komascad_export.py --preset-file /path/to/shogi_piece.json --out /path/to/3mf --dry-run
 
+    Make printer-neutral import layouts with eight placed presets per 3MF:
+        python3 scripts/komascad_export.py --preset-file /path/to/shogi_piece.json --out /path/to/3mf --layout-size 8
+
     List exact piece names before exporting one:
         python3 scripts/komascad_export.py --preset-file /path/to/shogi_piece.json --list
 
@@ -33,6 +36,9 @@ PATHS AND PRESETS
     name for one 3MF; omit --piece for the whole collection. --out is always a
     directory that directly receives the 3MF files. Existing same-named files
     are skipped, making all exports safe to resume; add --replace to overwrite.
+
+    --layout-size combines that many presets into each portable 3MF and lays
+    them out without embedding printer, filament, or slicing settings.
 
     --preset-file and --out use paths exactly as your shell sees them: a
     relative path starts from the directory where you run the command.
@@ -443,6 +449,131 @@ def create_3mf(destination, parts, title):
     return manifest
 
 
+def create_layout_3mf(destination, pieces, title):
+    """Write several named presets as separately placed objects in one 3MF.
+
+    The result deliberately uses only standard 3MF geometry and colour data.
+    It is an import layout, not a printer project: Bambu Studio, OrcaSlicer,
+    and other slicers remain free to select the printer, nozzle, filament, and
+    process settings after opening it.
+
+    Args:
+        destination: Completed layout ``.3mf`` path.
+        pieces: ``(preset_name, parts)`` pairs returned from OpenSCAD.
+        title: Human-readable layout name.
+    """
+    model = ET.Element(
+        "{%s}model" % MODEL_NAMESPACE,
+        {"unit": "millimeter", "{http://www.w3.org/XML/1998/namespace}lang": "en-US"},
+    )
+    node(model, "metadata", name="Title").text = title
+    node(model, "metadata", name="Application").text = "KomaSCAD layout exporter 3.4"
+    node(model, "metadata", name="Description").text = (
+        "Several separately selectable KomaSCAD presets placed for import. "
+        "No printer, filament, or slicing settings are embedded."
+    )
+    resources = node(model, "resources")
+    materials = node(resources, "basematerials", id=1)
+    material_ids = {}
+    prepared = []
+    bounds = []
+
+    for preset, parts in pieces:
+        prepared_parts = []
+        xs = []
+        ys = []
+        for role, name, rgba, vertices, faces in parts:
+            rgb = "#" + "".join("%02X" % round(255 * channel) for channel in rgba[:3])
+            material_key = (name, rgb)
+            if material_key not in material_ids:
+                material_ids[material_key] = len(material_ids)
+                node(materials, "base", name=name, displaycolor=rgb + "FF")
+            prepared_parts.append((role, name, rgb, material_key, vertices, faces))
+            xs.extend(vertex[0] for vertex in vertices)
+            ys.extend(vertex[1] for vertex in vertices)
+        if not xs or not ys:
+            raise ValueError("Preset has no printable geometry: " + repr(preset))
+        prepared.append((preset, prepared_parts))
+        bounds.append((min(xs), max(xs), min(ys), max(ys)))
+
+    next_resource_id = 2
+    colour_group_ids = {}
+    for material_key in material_ids:
+        colour_group_ids[material_key] = next_resource_id
+        colour_group = ET.SubElement(
+            resources, "{%s}colorgroup" % MATERIAL_NAMESPACE,
+            {"id": str(next_resource_id)},
+        )
+        ET.SubElement(colour_group, "{%s}color" % MATERIAL_NAMESPACE,
+                      {"color": material_key[1] + "FF"})
+        next_resource_id += 1
+
+    # A shared cell size keeps the grid regular and guarantees no overlap.
+    # The extra margin makes individual presets easy to click in a slicer.
+    margin = 6.0
+    cell_width = max(maximum - minimum for minimum, maximum, _, _ in bounds) + margin
+    cell_depth = max(maximum - minimum for _, _, minimum, maximum in bounds) + margin
+    columns = max(1, math.ceil(math.sqrt(len(prepared))))
+    rows = math.ceil(len(prepared) / columns)
+    build = node(model, "build")
+    manifest = []
+
+    for index, ((preset, parts), (min_x, max_x, min_y, max_y)) in enumerate(zip(prepared, bounds)):
+        component_ids = []
+        for role, name, rgb, material_key, vertices, faces in parts:
+            object_id = next_resource_id
+            next_resource_id += 1
+            component_ids.append(object_id)
+            part_object = node(
+                resources, "object", id=object_id, type="model",
+                name=role.title() + " | " + name,
+                pid=colour_group_ids[material_key], pindex=0,
+            )
+            mesh = node(part_object, "mesh")
+            xml_vertices = node(mesh, "vertices")
+            xml_faces = node(mesh, "triangles")
+            for x, y, z in vertices:
+                node(xml_vertices, "vertex", x=format(x, ".9g"), y=format(y, ".9g"), z=format(z, ".9g"))
+            for a, b, c in faces:
+                node(xml_faces, "triangle", v1=a, v2=b, v3=c)
+
+        assembly_id = next_resource_id
+        next_resource_id += 1
+        assembly = node(resources, "object", id=assembly_id, type="model", name=preset)
+        components = node(assembly, "components")
+        for object_id in component_ids:
+            node(components, "component", objectid=object_id)
+
+        column, row = index % columns, index // columns
+        # Centre each model in its cell, then centre the full grid at origin.
+        x = (column - (columns - 1) / 2) * cell_width - (min_x + max_x) / 2
+        y = ((rows - 1) / 2 - row) * cell_depth - (min_y + max_y) / 2
+        transform = "1 0 0 0 1 0 0 0 1 %s %s 0" % (format(x, ".9g"), format(y, ".9g"))
+        node(build, "item", objectid=assembly_id, transform=transform)
+        manifest.append({"preset": preset, "object_id": assembly_id, "x": x, "y": y})
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=destination.parent, suffix=".3mf", delete=False) as temp:
+        staged = Path(temp.name)
+    try:
+        with zipfile.ZipFile(staged, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("[Content_Types].xml", CONTENT_TYPES)
+            archive.writestr("_rels/.rels", RELATIONSHIPS)
+            archive.writestr("3D/3dmodel.model", ET.tostring(model, encoding="utf-8", xml_declaration=True))
+            archive.writestr("Metadata/KomaSCAD.json", json.dumps({
+                "version": "3.4", "units": "mm", "pieces": manifest,
+                "type": "portable placed layout; no printer settings",
+            }, ensure_ascii=False, indent=2))
+        with zipfile.ZipFile(staged) as archive:
+            if archive.testzip() is not None:
+                raise ValueError("3MF ZIP validation failed")
+        os.replace(staged, destination)
+    finally:
+        if staged.exists():
+            staged.unlink()
+    return manifest
+
+
 def default_target():
     """Find the project directory when no ``--target`` is given.
 
@@ -488,6 +619,8 @@ def build_parser():
                         help="directory receiving 3MF files; relative paths use the current directory")
     parser.add_argument("--set-name",
                         help="collection name stored in manifest.json when exporting every preset")
+    parser.add_argument("--layout-size", type=int,
+                        help="combine this many presets into each printer-neutral, placed layout 3MF")
     parser.add_argument("--replace", action="store_true",
                         help="overwrite existing same-named 3MF files; otherwise they are skipped")
     parser.add_argument("--list", action="store_true",
@@ -651,12 +784,16 @@ def export_parts(executable, scad, common, folder):
     return parts
 
 
-def export_piece(args, scad, parameters, piece, output, parser):
-    """Render one named preset and package it as a completed 3MF file."""
+def render_piece(args, scad, parameters, piece, parser):
+    """Render one preset and return its aligned printable material parts."""
     common = scad_arguments(args, scad, parameters, piece, parser)
     with tempfile.TemporaryDirectory(prefix="komascad-") as temporary:
-        parts = export_parts(args.openscad, scad, common, Path(temporary))
-        return create_3mf(output, parts, piece)
+        return export_parts(args.openscad, scad, common, Path(temporary))
+
+
+def export_piece(args, scad, parameters, piece, output, parser):
+    """Render one named preset and package it as a completed 3MF file."""
+    return create_3mf(output, render_piece(args, scad, parameters, piece, parser), piece)
 
 
 
@@ -828,6 +965,27 @@ def write_set_manifest(
     path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def write_layout_manifest(path, set_name, parameters, scad, layouts):
+    """Record the portable layout files and the preset names inside each."""
+    document = {
+        "format_version": 1,
+        "set_name": set_name,
+        "source_parameters": str(parameters),
+        "source_scad": str(scad),
+        "type": "portable placed layouts; no printer settings",
+        "layouts": [
+            {
+                "file": filename,
+                "bytes": (path.parent / filename).stat().st_size,
+                "sha256": sha256_file(path.parent / filename),
+                "presets": presets,
+            }
+            for filename, presets in layouts
+        ],
+    }
+    path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 
 
 
@@ -862,11 +1020,28 @@ def export_set(args, parser) -> int:
         set_name = args.set_name or default_name
         destination = args.out.resolve()
 
+        if args.layout_size is not None and args.layout_size < 1:
+            raise ValueError("--layout-size must be at least 1")
+        if args.layout_size:
+            layout_jobs = []
+            for first in range(0, len(jobs), args.layout_size):
+                members = jobs[first:first + args.layout_size]
+                filename = "%s - Layout %02d.3mf" % (
+                    safe_name(set_name), len(layout_jobs) + 1,
+                )
+                layout_jobs.append((filename, members))
+        else:
+            layout_jobs = []
+
         if args.dry_run:
             print("Set: " + set_name)
             print("Folder: " + str(destination))
-            for job in jobs:
-                print("  " + job.preset + " -> " + job.filename)
+            if layout_jobs:
+                for filename, members in layout_jobs:
+                    print("  " + filename + " <- " + ", ".join(job.preset for job in members))
+            else:
+                for job in jobs:
+                    print("  " + job.preset + " -> " + job.filename)
             return 0
 
         if destination.exists() and not destination.is_dir():
@@ -874,6 +1049,40 @@ def export_set(args, parser) -> int:
         destination.mkdir(parents=True, exist_ok=True)
         exported = 0
         skipped = 0
+        if layout_jobs:
+            completed_layouts = []
+            for index, (filename, members) in enumerate(layout_jobs, 1):
+                output = destination / filename
+                if output.exists() and not args.replace:
+                    if not output.is_file():
+                        raise ValueError("Output path is not a file: " + str(output))
+                    print("[%d/%d] Skipping existing %s" % (index, len(layout_jobs), filename), flush=True)
+                    completed_layouts.append((filename, [job.preset for job in members]))
+                    skipped += 1
+                    continue
+                print("[%d/%d] Exporting %s" % (
+                    index, len(layout_jobs), ", ".join(job.preset for job in members),
+                ), flush=True)
+                rendered = [
+                    (job.preset, render_piece(args, scad, parameters, job.preset, parser))
+                    for job in members
+                ]
+                temporary_output = output.with_name("." + output.name + ".partial")
+                if temporary_output.exists():
+                    temporary_output.unlink()
+                create_layout_3mf(temporary_output, rendered, filename[:-4])
+                if not temporary_output.is_file():
+                    raise RuntimeError("Exporter reported success but created no layout for " + filename)
+                os.replace(temporary_output, output)
+                completed_layouts.append((filename, [job.preset for job in members]))
+                exported += 1
+            write_layout_manifest(destination / "manifest.json", set_name, parameters, scad, completed_layouts)
+            print("Saved %d new layout 3MF file(s); skipped %d existing file(s) in %s" % (
+                exported, skipped, destination,
+            ))
+            print("Layout manifest: " + str(destination / "manifest.json"))
+            return 0
+
         for index, job in enumerate(jobs, 1):
             output = destination / job.filename
             if output.exists() and not args.replace:
@@ -921,6 +1130,9 @@ def main(argv=None):
         if any(getattr(args, option) is not None for option in CUSTOM_PARAMETERS):
             parser.error("Text and colour overrides require --piece; save set-wide changes in the preset file")
         return export_set(args, parser)
+
+    if args.layout_size is not None:
+        parser.error("--layout-size exports a whole --preset-file; omit --piece")
 
     target = args.target.resolve()
     scad = target_path(args.scad, target)
