@@ -65,7 +65,7 @@ To export every selected record as a separate 3MF in one named delivery
 folder, use the [batch exporter](batch-export.md):
 
 ```bash
-python3 scripts/komascad_export_set.py --parameters presets/taikyoku.json --set-name 'Taikyoku Shogi'
+python3 scripts/komascad_export.py --set --parameters presets/taikyoku.json --set-name 'Taikyoku Shogi'
 ```
 
 The exporter privately controls the material-part modes even if the preset was saved in an Inspect view. It reads saved values only, starts with SCAD defaults for omitted keys, and applies explicit CLI text/colour overrides last. Keep distributed presets in Model so opening them immediately shows the complete design.

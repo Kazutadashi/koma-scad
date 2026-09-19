@@ -9,10 +9,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
-    "komascad_export_set", ROOT / "scripts" / "komascad_export_set.py",
+    "komascad_export", ROOT / "scripts" / "komascad_export.py",
 )
-BATCH = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(BATCH)
+EXPORT = importlib.util.module_from_spec(SPEC)
+SPEC.loader.exec_module(EXPORT)
 
 
 class SetExportTests(unittest.TestCase):
@@ -20,7 +20,7 @@ class SetExportTests(unittest.TestCase):
 
     def test_select_presets_keeps_source_order(self):
         """Include and exclude globs retain the JSON collection's order."""
-        selected = BATCH.select_presets(
+        selected = EXPORT.select_presets(
             ["King", "Grid 01", "Grid 02", "Grid 03"],
             [], ["Grid *"], ["*02"],
         )
@@ -29,7 +29,7 @@ class SetExportTests(unittest.TestCase):
 
     def test_explicit_presets_keep_command_line_order(self):
         """Exact selections preserve the order supplied by the caller."""
-        selected = BATCH.select_presets(
+        selected = EXPORT.select_presets(
             ["Pawn", "King", "Lion"], ["Lion", "Pawn"], [], [],
         )
 
@@ -38,18 +38,18 @@ class SetExportTests(unittest.TestCase):
     def test_safe_names_are_readable_and_collision_checked(self):
         """Unsafe punctuation is normalized and ambiguous files are rejected."""
         self.assertEqual(
-            BATCH.safe_name("Chu Shogi: Lion / Kirin"),
+            EXPORT.safe_name("Chu Shogi: Lion / Kirin"),
             "Chu Shogi - Lion - Kirin",
         )
         with self.assertRaisesRegex(ValueError, "colliding filenames"):
-            BATCH.plan_exports(["Lion/Pawn", "Lion:Pawn"])
+            EXPORT.plan_exports(["Lion/Pawn", "Lion:Pawn"])
 
     def test_export_command_delegates_one_preset(self):
         """Each job becomes one invocation of the existing piece exporter."""
-        command = BATCH.build_export_command(
+        command = EXPORT.build_export_command(
             "python3", Path("export.py"), Path("/project"),
             Path("/project/piece.scad"), Path("/project/piece.json"),
-            "openscad-nightly", BATCH.ExportJob("Lion", "Lion.3mf"),
+            "openscad-nightly", EXPORT.ExportJob("Lion", "Lion.3mf"),
             Path("/tmp/Lion.3mf"),
         )
 
@@ -77,7 +77,8 @@ class SetExportTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            result = BATCH.main([
+            result = EXPORT.main([
+                "--set",
                 "--target", str(root),
                 "--scad", scad.name,
                 "--parameters", parameters.name,
@@ -127,7 +128,8 @@ class SetExportTests(unittest.TestCase):
                 encoding="utf-8",
             )
 
-            result = BATCH.main([
+            result = EXPORT.main([
+                "--set",
                 "--target", str(root),
                 "--scad", scad.name,
                 "--parameters", parameters.name,
@@ -153,7 +155,8 @@ class SetExportTests(unittest.TestCase):
             )
             exporter.write_text("# test exporter\n", encoding="utf-8")
 
-            result = BATCH.main([
+            result = EXPORT.main([
+                "--set",
                 "--target", str(root),
                 "--scad", scad.name,
                 "--parameters", parameters.name,

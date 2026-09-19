@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export a KomaSCAD piece as a colour-coded, multipart 3MF model.
+"""Export one KomaSCAD piece or a complete preset set as multipart 3MF files.
 
 Requires Python 3.8+ (standard library only) and OpenSCAD 2021.01+.
 Save Customizer changes as a preset first: a separate OpenSCAD process cannot
@@ -15,13 +15,39 @@ assign logical filament slots automatically, without surface painting. The
 script does not modify, approximate, or regenerate the geometry and contains
 no slicer- or printer-specific project data.
 
-Examples:
-    python3 scripts/komascad_export.py --preset "00 Base - King"
-    python3 scripts/komascad_export.py --target /path/to/KomaSCAD --preset "My piece"
-    python3 scripts/komascad_export.py --body-colour Purple --output ~/king.3mf
+QUICK START
+    Export one saved preset from this project into the exports directory:
+        python3 scripts/komascad_export.py --preset "00 Base - King" --output exports/base-king.3mf
+
+    Export a saved preset from another KomaSCAD project directory:
+        python3 scripts/komascad_export.py --target /path/to/KomaSCAD --preset "My piece" --output /path/to/3mf/my-piece.3mf
+
+    Export a preset from a specific JSON file (relative to --target):
+        python3 scripts/komascad_export.py --parameters presets/taikyoku.json --preset "01 Taikyoku - King" --output exports/taikyoku-king.3mf
+
+    Export the SCAD defaults, changing only values supplied on this command:
+        python3 scripts/komascad_export.py --front-text "王将" --body-colour Purple --output exports/purple-king.3mf
+
+    Export every preset in a collection as its own 3MF file:
+        python3 scripts/komascad_export.py --set --parameters presets/taikyoku.json --set-name "Taikyoku Shogi" --output-root exports
+
+    Preview matching collection exports without starting OpenSCAD:
+        python3 scripts/komascad_export.py --set --parameters shogi_piece.json --include "King - Professional Grid *" --set-name "Grid Search" --output-root exports --dry-run
+
+PATHS AND PRESETS
+    --target is the KomaSCAD project directory. Relative --scad and
+    --parameters paths are read from that directory. --output is the complete
+    output filename; a relative --output path is relative to the directory in
+    which you run this command. Parent directories are created automatically.
+
+    Use --preset with the exact saved Customizer preset name. Add --set to
+    export a collection, then use --include/--exclude filters, repeat
+    --preset for an exact selection, and use --list to discover matching names.
 """
 
 import argparse
+import fnmatch
+import hashlib
 import json
 import math
 import os
@@ -33,7 +59,9 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Dict, Iterable, List, Sequence
 
 
 MODEL_NAMESPACE = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
@@ -460,9 +488,28 @@ def build_parser():
                         help="SCAD source, relative to --target unless absolute")
     parser.add_argument("--parameters", type=Path,
                         help="Preset JSON, relative to --target unless absolute (default: same stem as SCAD)")
-    parser.add_argument("--preset", help="Saved Customizer preset; omit for SCAD defaults")
+    parser.add_argument("--preset", action="append", default=[],
+                        help="exact saved preset name; repeat only with --set")
     parser.add_argument("--output", type=Path,
-                        help="Destination 3MF (default: KomaSCAD-colour.3mf in --target)")
+                        help="complete destination 3MF path; relative paths use the current directory")
+    parser.add_argument("--set", action="store_true",
+                        help="export a collection instead of one piece; enables the collection options below")
+    parser.add_argument("--set-name",
+                        help="collection output folder name (only with --set)")
+    parser.add_argument("--output-root", type=Path, default=Path("exports"),
+                        help="parent folder for a collection (only with --set; relative to current directory)")
+    parser.add_argument("--include", action="append", default=[],
+                        help="case-sensitive preset glob for collection mode; may be repeated")
+    parser.add_argument("--exclude", action="append", default=[],
+                        help="case-sensitive preset glob to omit in collection mode; may be repeated")
+    parser.add_argument("--replace", action="store_true",
+                        help="replace an existing completed collection folder after success (only with --set)")
+    parser.add_argument("--list", action="store_true",
+                        help="list collection presets selected by filters, then exit (only with --set)")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="show collection output paths without exporting (only with --set)")
+    parser.add_argument("--exporter", type=Path, default=Path(__file__),
+                        help="single-piece exporter used by --set (advanced/testing option)")
     parser.add_argument("--openscad", default="openscad", help="OpenSCAD executable")
     for option in CUSTOM_PARAMETERS:
         parser.add_argument("--" + option.replace("_", "-"))
@@ -531,11 +578,13 @@ def scad_arguments(args, scad, target, parser):
     """
     if args.parameters and not args.preset:
         parser.error("--parameters requires --preset")
+    if len(args.preset) > 1:
+        parser.error("Repeat --preset only with --set")
 
     values = {}
     if args.preset:
         parameters = target_path(args.parameters, target) if args.parameters else scad.with_suffix(".json")
-        values = load_preset(scad, parameters, args.preset, parser)
+        values = load_preset(scad, parameters, args.preset[0], parser)
     for option, parameter in CUSTOM_PARAMETERS.items():
         choice = getattr(args, option)
         if choice is not None:
@@ -623,7 +672,402 @@ def export_parts(executable, scad, common, folder):
     return parts
 
 
-def main():
+
+@dataclass(frozen=True)
+class ExportJob:
+    """Describe one preset-to-file export in a batch.
+
+    Attributes:
+        preset: Exact, case-sensitive preset name from ``parameterSets``.
+        filename: Filesystem-safe output filename ending in ``.3mf``.
+
+    Examples:
+        >>> job = ExportJob("30 Taikyoku - Fire Demon", "30 Taikyoku - Fire Demon.3mf")
+        >>> job.filename
+        '30 Taikyoku - Fire Demon.3mf'
+    """
+
+    preset: str
+    filename: str
+
+
+def load_parameter_sets(path: Path) -> Dict[str, object]:
+    """Load the named parameter sets from an OpenSCAD preset JSON file.
+
+    Args:
+        path: JSON file containing a top-level ``parameterSets`` object.
+
+    Returns:
+        A dictionary retaining the source file's preset order.
+
+    Raises:
+        ValueError: The file is malformed or has no nonempty parameter sets.
+
+    Examples:
+        >>> import tempfile
+        >>> folder = Path(tempfile.mkdtemp())
+        >>> sample = folder / "sample.json"
+        >>> _ = sample.write_text('{"parameterSets":{"Pawn":{}}}', encoding="utf-8")
+        >>> list(load_parameter_sets(sample))
+        ['Pawn']
+    """
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ValueError("Could not read preset JSON %s: %s" % (path, error))
+    parameter_sets = document.get("parameterSets") if isinstance(document, dict) else None
+    if not isinstance(parameter_sets, dict) or not parameter_sets:
+        raise ValueError("Preset JSON has no nonempty parameterSets object: " + str(path))
+    if not all(isinstance(name, str) and name for name in parameter_sets):
+        raise ValueError("Every preset name must be a nonempty string: " + str(path))
+    if not all(isinstance(values, dict) for values in parameter_sets.values()):
+        raise ValueError("Every parameter set must be a JSON object: " + str(path))
+    return parameter_sets
+
+
+def matches_any(name: str, patterns: Sequence[str]) -> bool:
+    """Return whether a name matches at least one case-sensitive glob.
+
+    Args:
+        name: Preset name to test.
+        patterns: Shell-style patterns such as ``King - Grid *``.
+
+    Returns:
+        ``True`` when at least one pattern matches; otherwise ``False``.
+
+    Examples:
+        >>> matches_any("King - Grid 01", ["King - Grid *"])
+        True
+    """
+    return any(fnmatch.fnmatchcase(name, pattern) for pattern in patterns)
+
+
+def select_presets(
+        available: Iterable[str], explicit: Sequence[str],
+        includes: Sequence[str], excludes: Sequence[str]) -> List[str]:
+    """Select ordered preset names using explicit names or glob filters.
+
+    Explicit ``--preset`` values preserve command-line order. Otherwise,
+    ``--include`` patterns filter the source JSON order, and no include pattern
+    means all presets. Excludes are applied last in both modes.
+
+    Args:
+        available: Preset names in their desired source order.
+        explicit: Exact preset names requested by the user.
+        includes: Case-sensitive glob patterns to include.
+        excludes: Case-sensitive glob patterns to remove.
+
+    Returns:
+        Selected preset names in deterministic order.
+
+    Raises:
+        ValueError: An explicit name is missing, duplicated, or selection is empty.
+
+    Examples:
+        >>> names = ["Pawn", "Grid 01", "Grid 02"]
+        >>> select_presets(names, [], ["Grid *"], ["*02"])
+        ['Grid 01']
+    """
+    ordered = list(available)
+    available_names = set(ordered)
+    if explicit:
+        missing = [name for name in explicit if name not in available_names]
+        if missing:
+            raise ValueError("Unknown preset(s): " + ", ".join(missing))
+        if len(set(explicit)) != len(explicit):
+            raise ValueError("Each explicit --preset may be listed only once")
+        selected = list(explicit)
+    else:
+        selected = [
+            name for name in ordered
+            if not includes or matches_any(name, includes)
+        ]
+    if excludes:
+        selected = [name for name in selected if not matches_any(name, excludes)]
+    if not selected:
+        raise ValueError("No presets matched the requested selection")
+    return selected
+
+
+def safe_name(name: str) -> str:
+    """Convert a human name into a safe cross-platform file component.
+
+    Unicode letters and numbers are retained. Reserved punctuation, control
+    characters, repeated whitespace, and trailing Windows separators are
+    normalized without obscuring the original preset name.
+
+    Args:
+        name: Human-readable preset or set name.
+
+    Returns:
+        A safe filename component.
+
+    Raises:
+        ValueError: Normalization would produce an empty or reserved name.
+
+    Examples:
+        >>> safe_name('Chu Shogi: Lion / Kirin')
+        'Chu Shogi - Lion - Kirin'
+    """
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1f]', " - ", name)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" .")
+    cleaned = re.sub(r"(?:\s*-\s*){2,}", " - ", cleaned)
+    reserved = {
+        "con", "prn", "aux", "nul",
+        *("com%d" % number for number in range(1, 10)),
+        *("lpt%d" % number for number in range(1, 10)),
+    }
+    if not cleaned or cleaned.casefold() in reserved:
+        raise ValueError("Name cannot be converted to a safe filename: " + repr(name))
+    return cleaned
+
+
+def plan_exports(presets: Sequence[str]) -> List[ExportJob]:
+    """Create one collision-free 3MF export job per preset.
+
+    Args:
+        presets: Ordered preset names selected for the set.
+
+    Returns:
+        Export jobs whose filenames preserve the human-readable preset names.
+
+    Raises:
+        ValueError: Two preset names normalize to the same filename.
+
+    Examples:
+        >>> plan_exports(["Chu - Lion"])
+        [ExportJob(preset='Chu - Lion', filename='Chu - Lion.3mf')]
+    """
+    jobs = [ExportJob(preset, safe_name(preset) + ".3mf") for preset in presets]
+    folded_names = [job.filename.casefold() for job in jobs]
+    collisions = sorted({name for name in folded_names if folded_names.count(name) > 1})
+    if collisions:
+        raise ValueError("Preset names produce colliding filenames: " + ", ".join(collisions))
+    return jobs
+
+
+def build_export_command(
+        python: str, exporter: Path, target: Path, scad: Path,
+        parameters: Path, openscad: str, job: ExportJob, output: Path) -> List[str]:
+    """Build the single-piece exporter command for one batch job.
+
+    Args:
+        python: Python interpreter used to launch the exporter.
+        exporter: Path to ``komascad_export.py``.
+        target: KomaSCAD project directory.
+        scad: SCAD source path.
+        parameters: Preset JSON path.
+        openscad: OpenSCAD executable name or path.
+        job: Preset and filename being exported.
+        output: Destination 3MF path for this job.
+
+    Returns:
+        Argument vector suitable for ``subprocess.run``.
+
+    Examples:
+        >>> job = ExportJob("Pawn", "Pawn.3mf")
+        >>> command = build_export_command(
+        ...     "python3", Path("export.py"), Path("/p"), Path("/p/a.scad"),
+        ...     Path("/p/a.json"), "openscad", job, Path("/tmp/Pawn.3mf"),
+        ... )
+        >>> command[-4:]
+        ['--output', '/tmp/Pawn.3mf', '--openscad', 'openscad']
+    """
+    return [
+        python, str(exporter),
+        "--target", str(target),
+        "--scad", str(scad),
+        "--parameters", str(parameters),
+        "--preset", job.preset,
+        "--output", str(output),
+        "--openscad", openscad,
+    ]
+
+
+def run_export(command: Sequence[str], preset: str) -> None:
+    """Run one single-piece export and turn failure into batch context.
+
+    Args:
+        command: Argument vector produced by ``build_export_command``.
+        preset: Human-readable preset name used in an error message.
+
+    Raises:
+        RuntimeError: The single-piece exporter exits unsuccessfully.
+
+    Examples:
+        ``run_export([sys.executable, "scripts/komascad_export.py", ...],
+        "Chu - Lion")`` delegates one piece to the existing exporter.
+    """
+    result = subprocess.run(command)
+    if result.returncode:
+        raise RuntimeError(
+            "Single-piece export failed for %r with exit code %d"
+            % (preset, result.returncode)
+        )
+
+
+def sha256_file(path: Path) -> str:
+    """Calculate a SHA-256 checksum without loading a whole 3MF into memory.
+
+    Args:
+        path: File whose contents should be hashed.
+
+    Returns:
+        Lowercase hexadecimal SHA-256 digest.
+
+    Examples:
+        >>> import tempfile
+        >>> sample = Path(tempfile.mkstemp()[1])
+        >>> _ = sample.write_bytes(b"KomaSCAD")
+        >>> len(sha256_file(sample))
+        64
+    """
+    digest = hashlib.sha256()
+    with path.open("rb") as source:
+        for block in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def write_set_manifest(
+        path: Path, set_name: str, parameters: Path,
+        scad: Path, jobs: Sequence[ExportJob]) -> None:
+    """Write provenance, filenames, sizes, and checksums for a completed set.
+
+    Args:
+        path: Destination JSON path inside the staged set folder.
+        set_name: Human-readable collection name.
+        parameters: Source preset JSON path.
+        scad: Source model path.
+        jobs: Successfully completed exports.
+
+    Examples:
+        ``write_set_manifest(folder / "manifest.json", "Chu Shogi",
+        presets, model, jobs)`` records every file delivered with the set.
+    """
+    files = []
+    for job in jobs:
+        exported = path.parent / job.filename
+        files.append({
+            "preset": job.preset,
+            "file": job.filename,
+            "bytes": exported.stat().st_size,
+            "sha256": sha256_file(exported),
+        })
+    document = {
+        "format_version": 1,
+        "set_name": set_name,
+        "source_parameters": str(parameters),
+        "source_scad": str(scad),
+        "piece_count": len(jobs),
+        "files": files,
+    }
+    path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def publish_set(staging: Path, destination: Path, replace: bool) -> None:
+    """Publish a complete staged set folder at its final destination.
+
+    Args:
+        staging: Temporary folder containing only successful exports.
+        destination: Final human-readable set folder.
+        replace: Whether an existing destination may be removed.
+
+    Raises:
+        FileExistsError: The destination exists and ``replace`` is false.
+
+    Examples:
+        ``publish_set(staging, Path("exports/Chu Shogi"), False)`` performs
+        a same-filesystem rename after every piece has exported successfully.
+    """
+    if destination.exists():
+        if not replace:
+            raise FileExistsError(
+                "Output folder already exists; choose another --set-name or use --replace: "
+                + str(destination)
+            )
+        if destination.is_dir():
+            shutil.rmtree(destination)
+        else:
+            destination.unlink()
+    os.replace(staging, destination)
+
+
+
+def export_set(args, parser) -> int:
+    """Export selected presets to one atomically published folder.
+
+    Args:
+        args: Parsed unified export command options.
+        parser: Parser used to report command-line errors.
+
+    Returns:
+        Zero on success, or one when validation/export fails.
+    """
+    try:
+        target = args.target.resolve()
+        scad = target_path(args.scad, target)
+        parameters = target_path(args.parameters, target) if args.parameters else scad.with_suffix(".json")
+        exporter = (args.exporter if args.exporter.is_absolute() else Path.cwd() / args.exporter).resolve()
+        if not scad.is_file():
+            raise ValueError("SCAD file not found: " + str(scad))
+        if not parameters.is_file():
+            raise ValueError("Preset JSON not found: " + str(parameters))
+        if not exporter.is_file():
+            raise ValueError("Single-piece exporter not found: " + str(exporter))
+        if args.preset and args.include:
+            raise ValueError("Use either --preset or --include, not both")
+
+        parameter_sets = load_parameter_sets(parameters)
+        selected = select_presets(parameter_sets.keys(), args.preset, args.include, args.exclude)
+        jobs = plan_exports(selected)
+
+        if args.list:
+            for job in jobs:
+                print(job.preset)
+            return 0
+
+        default_name = parameters.stem.replace("_", " ").replace("-", " ").title()
+        set_name = args.set_name or default_name
+        output_root = args.output_root.resolve()
+        destination = output_root / safe_name(set_name)
+
+        if args.dry_run:
+            print("Set: " + set_name)
+            print("Folder: " + str(destination))
+            for job in jobs:
+                print("  " + job.preset + " -> " + job.filename)
+            return 0
+
+        if destination.exists() and not args.replace:
+            raise FileExistsError("Output folder already exists; choose another --set-name or use --replace: " + str(destination))
+
+        output_root.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(prefix=".komascad-set-", dir=str(output_root)))
+        try:
+            for index, job in enumerate(jobs, 1):
+                print("[%d/%d] Exporting %s" % (index, len(jobs), job.preset), flush=True)
+                output = staging / job.filename
+                command = build_export_command(sys.executable, exporter, target, scad, parameters, args.openscad, job, output)
+                run_export(command, job.preset)
+                if not output.is_file():
+                    raise RuntimeError("Exporter reported success but created no file for " + repr(job.preset))
+            write_set_manifest(staging / "manifest.json", set_name, parameters, scad, jobs)
+            publish_set(staging, destination, args.replace)
+        finally:
+            if staging.exists():
+                shutil.rmtree(staging)
+
+        print("Saved %d printable 3MF files to %s" % (len(jobs), destination))
+        print("Set manifest: " + str(destination / "manifest.json"))
+        return 0
+    except (OSError, ValueError, RuntimeError) as error:
+        print("Set export failed: " + str(error), file=sys.stderr)
+        return 1
+
+
+
+def main(argv=None):
     """Validate CLI inputs, export the model, and print slicer guidance.
 
     Raises:
@@ -632,7 +1076,19 @@ def main():
         RuntimeError: OpenSCAD fails to create an export.
     """
     parser = build_parser()
-    args = parser.parse_args()
+    raw_argv = list(argv) if argv is not None else sys.argv[1:]
+    args = parser.parse_args(raw_argv)
+
+    collection_options = args.set_name or args.include or args.exclude or args.replace or args.list or args.dry_run
+    if not args.set and collection_options:
+        parser.error("Collection options require --set")
+    if args.set:
+        if args.output is not None:
+            parser.error("--output exports one piece; use --output-root with --set")
+        if any(getattr(args, option) is not None for option in CUSTOM_PARAMETERS):
+            parser.error("Text and colour overrides export one piece; save them in a preset before using --set")
+        return export_set(args, parser)
+
     target = args.target.resolve()
     scad = target_path(args.scad, target)
     # An explicit output stays relative to the current working directory.
@@ -646,7 +1102,7 @@ def main():
 
     with tempfile.TemporaryDirectory(prefix="komascad-") as temporary:
         parts = export_parts(args.openscad, scad, common, Path(temporary))
-        manifest = create_3mf(output, parts, args.preset or "KomaSCAD")
+        manifest = create_3mf(output, parts, args.preset[0] if args.preset else "KomaSCAD")
 
     print("Saved " + str(output))
     print("Open as ONE multipart object; standard logical filament assignments are embedded:")

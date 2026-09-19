@@ -109,9 +109,7 @@ To export every piece in a preset collection, create a named folder containing
 one 3MF per preset with the batch wrapper:
 
 ```bash
-python3 scripts/komascad_export_set.py \
-  --parameters presets/taikyoku.json \
-  --set-name "Taikyoku Shogi"
+python3 scripts/komascad_export.py --set --parameters presets/taikyoku.json --set-name "Taikyoku Shogi"
 ```
 
 Use `--dry-run` to inspect all planned filenames before rendering. The
@@ -190,7 +188,7 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | `shogi_piece.json` | MIT-licensed base and Shogi presets, including the base king |
 | `presets/taikyoku.json` | Separately licensed CC BY-SA Taikyoku presets |
 | `scripts/komascad_export.py` | Multicolour 3MF exporter |
-| `scripts/komascad_export_set.py` | Batch wrapper that exports preset collections into named 3MF folders |
+| `scripts/komascad_export.py --set` | Exports preset collections into named 3MF folders |
 | [fonts/suggested_fonts.md](fonts/suggested_fonts.md) | Bundled open fonts, licenses, and font recommendations |
 | [docs/parameters.md](docs/parameters.md) | Parameter reference: every configurable parameter, with defaults and descriptions |
 | [docs/design-guide.md](docs/design-guide.md) | Design guide: piece geometry, typography and features |

@@ -1,6 +1,6 @@
 # Batch-exporting a preset collection
 
-`komascad_export_set.py` turns a JSON collection of saved Customizer presets
+`komascad_export.py --set` turns a JSON collection of saved Customizer presets
 into a named folder containing one multipart colour 3MF per preset. It is a
 coordinator: each piece is rendered by the existing `komascad_export.py`
 single-piece exporter, so batch and individual exports use the same geometry,
@@ -41,7 +41,7 @@ stops if two names would produce the same filename.
 Run the command from the repository root:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters presets/chu-shogi.json \
   --set-name "Chu Shogi"
 ```
@@ -69,7 +69,7 @@ audit without changing the printable 3MF files.
 Rendering a large collection can take time. First list the selected presets:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters presets/chu-shogi.json \
   --list
 ```
@@ -77,7 +77,7 @@ python3 scripts/komascad_export_set.py \
 Then preview the folder and filenames without invoking OpenSCAD:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters presets/chu-shogi.json \
   --set-name "Chu Shogi" \
   --dry-run
@@ -90,7 +90,7 @@ example exports all Professional King grid-search records from the main preset
 file:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters shogi_piece.json \
   --include "King - Professional Grid *" \
   --set-name "Professional King Grid Search"
@@ -99,7 +99,7 @@ python3 scripts/komascad_export_set.py \
 Multiple include patterns are combined. Excludes are applied afterward:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters shogi_piece.json \
   --include "King - Professional Grid *" \
   --include "King - Font *" \
@@ -111,7 +111,7 @@ For a hand-picked set, repeat `--preset` with exact names. Exact selections
 are exported in command-line order:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --preset "00 Base - King" \
   --preset "King - Professional Yuji Syuku" \
   --set-name "King Comparison"
@@ -125,7 +125,7 @@ both. `--exclude` can be used with either selection style.
 To export every record currently stored in the Taikyoku preset file:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters presets/taikyoku.json \
   --set-name "Taikyoku Shogi"
 ```
@@ -152,7 +152,7 @@ The default parent folder is `exports/`. Choose another location with
 `--output-root`:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters presets/chu-shogi.json \
   --set-name "Chu Shogi" \
   --output-root /path/to/print-orders
@@ -163,7 +163,7 @@ destination, pass `--replace` to replace it only after the new collection has
 exported successfully:
 
 ```bash
-python3 scripts/komascad_export_set.py \
+python3 scripts/komascad_export.py --set \
   --parameters presets/chu-shogi.json \
   --set-name "Chu Shogi" \
   --replace
@@ -171,5 +171,4 @@ python3 scripts/komascad_export_set.py \
 
 Use `--scad` and `--target` for another compatible model checkout, and
 `--openscad` when the OpenSCAD executable is not named `openscad` on `PATH`.
-Run `python3 scripts/komascad_export_set.py --help` for the complete interface.
-
+Run `python3 scripts/komascad_export.py --set --help` for the complete interface.
