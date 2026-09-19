@@ -105,6 +105,19 @@ Before printing, note the following:
 
 The [colour quickstart](docs/colour-quickstart.md) covers material mapping and limitations in more detail.
 
+To export every piece in a preset collection, create a named folder containing
+one 3MF per preset with the batch wrapper:
+
+```bash
+python3 scripts/komascad_export_set.py \
+  --parameters presets/taikyoku.json \
+  --set-name "Taikyoku Shogi"
+```
+
+Use `--dry-run` to inspect all planned filenames before rendering. The
+[batch-export guide](docs/batch-export.md) covers complete collections,
+grid-search filtering, manifests, and safe replacement of an older export.
+
 ## Customizer reference
 
 The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows where each group of settings is located. For individual parameters, see the [parameter reference](docs/parameters.md) or search the code editor with Ctrl+F. Enable **Show Details** at the top of the Customizer to display each parameter's description and units.
@@ -153,6 +166,7 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | `shogi_piece.json` | MIT-licensed base and Shogi presets, including the base king |
 | `presets/taikyoku.json` | Separately licensed CC BY-SA Taikyoku presets |
 | `scripts/komascad_export.py` | Multicolour 3MF exporter |
+| `scripts/komascad_export_set.py` | Batch wrapper that exports preset collections into named 3MF folders |
 | [fonts/suggested_fonts.md](fonts/suggested_fonts.md) | Bundled open fonts, licenses, and font recommendations |
 | [docs/parameters.md](docs/parameters.md) | Parameter reference: every configurable parameter, with defaults and descriptions |
 | [docs/design-guide.md](docs/design-guide.md) | Design guide: piece geometry, typography and features |

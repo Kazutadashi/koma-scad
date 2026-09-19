@@ -1,6 +1,7 @@
 # Local renders and slicer projects
 /exports/
 /build/
+/ignored/
 *.stl
 *.gcode
 *.bgcode
