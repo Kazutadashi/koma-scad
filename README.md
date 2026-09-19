@@ -118,6 +118,30 @@ Use `--dry-run` to inspect all planned filenames before rendering. The
 [batch-export guide](docs/batch-export.md) covers complete collections,
 grid-search filtering, manifests, and safe replacement of an older export.
 
+## Mass-editing saved presets
+
+Use `scripts/mass_edit_presets.py` when a parameter needs the same adjustment
+across a selected group of saved presets. It uses only Python's standard
+library and previews changes by default:
+
+```bash
+# List available names and categories.
+python3 scripts/mass_edit_presets.py shogi_piece.json --list
+
+# Preview an edit for every matching grid preset.
+python3 scripts/mass_edit_presets.py shogi_piece.json \
+  --category 'Professional king grid search' --set Base_Width=30
+
+# Write the reviewed edit.
+python3 scripts/mass_edit_presets.py shogi_piece.json \
+  --category 'Professional king grid search' --set Base_Width=30 --write
+```
+
+Use `--preset TEXT` to select names containing text, repeat `--set` to change
+several parameters in one pass, and run `--help` for more examples. The script
+refuses to edit anything without an explicit selection and will not create a
+misspelled parameter unless `--create-missing` is supplied.
+
 ## Customizer reference
 
 The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows where each group of settings is located. For individual parameters, see the [parameter reference](docs/parameters.md) or search the code editor with Ctrl+F. Enable **Show Details** at the top of the Customizer to display each parameter's description and units.
