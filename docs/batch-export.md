@@ -50,6 +50,22 @@ python3 scripts/komascad_export.py --preset-file shogi_piece.json --out exports 
 Completed pieces are written immediately. A piece in progress uses a hidden
 `.partial` filename and only becomes a `.3mf` after its export completes.
 
+## Import several presets at once
+
+Use `--layout-size` to make portable layout files instead of one file per
+preset. Each layout contains that many separately selectable presets, already
+spaced so they do not overlap. It stores geometry and colours only—no printer,
+nozzle, filament, bed, or process preset—so select or change those normally in
+Bambu Studio after importing:
+
+```bash
+python3 scripts/komascad_export.py --preset-file shogi_piece.json --out grid_search --layout-size 8
+```
+
+For a 64-preset grid search, this creates eight layout 3MFs, each containing
+eight placed pieces. Importing one layout requires one import action rather
+than eight separate 3MF imports. Use a smaller value for a smaller bed.
+
 ## Paths
 
 Use absolute paths whenever the model and preset file are outside the current

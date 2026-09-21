@@ -26,6 +26,21 @@ class SetExportTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "colliding filenames"):
             EXPORT.plan_exports(["Lion/Pawn", "Lion:Pawn"])
+
+    def test_layout_keeps_presets_as_separate_placed_objects(self):
+        """A portable layout contains separate objects and no printer profile."""
+        triangle = [(0.0, 0.0, 0.0), (10.0, 0.0, 0.0), (0.0, 10.0, 0.0)]
+        parts = [("body", "PLA", (0.0, 0.0, 0.0, 1.0), triangle, [(0, 1, 2)])]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "layout.3mf"
+            EXPORT.create_layout_3mf(output, [("Pawn", parts), ("King", parts)], "Grid")
+            with EXPORT.zipfile.ZipFile(output) as archive:
+                model = archive.read("3D/3dmodel.model").decode("utf-8")
+                metadata = archive.read("Metadata/KomaSCAD.json").decode("utf-8")
+        self.assertIn('name="Pawn"', model)
+        self.assertIn('name="King"', model)
+        self.assertEqual(model.count("<item "), 2)
+        self.assertIn("no printer settings", metadata)
     def test_main_exports_collection_and_writes_manifest(self):
         """A complete collection is published with printable files and metadata."""
         with tempfile.TemporaryDirectory() as temporary:
