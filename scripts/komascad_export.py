@@ -459,7 +459,8 @@ def create_layout_3mf(destination, pieces, title):
 
     Args:
         destination: Completed layout ``.3mf`` path.
-        pieces: ``(preset_name, parts)`` pairs returned from OpenSCAD.
+        pieces: ``(preset_name, parts)`` pairs returned from OpenSCAD. Repeat
+            a pair to place more copies; the copies share one stored mesh.
         title: Human-readable layout name.
     """
     model = ET.Element(
@@ -518,9 +519,11 @@ def create_layout_3mf(destination, pieces, title):
     build = node(model, "build")
     manifest = []
 
+    assembly_ids = {}
     for index, ((preset, parts), (min_x, max_x, min_y, max_y)) in enumerate(zip(prepared, bounds)):
         component_ids = []
-        for role, name, rgb, material_key, vertices, faces in parts:
+        # A repeated preset reuses the meshes written for its first copy.
+        for role, name, rgb, material_key, vertices, faces in ([] if preset in assembly_ids else parts):
             object_id = next_resource_id
             next_resource_id += 1
             component_ids.append(object_id)
@@ -537,12 +540,14 @@ def create_layout_3mf(destination, pieces, title):
             for a, b, c in faces:
                 node(xml_faces, "triangle", v1=a, v2=b, v3=c)
 
-        assembly_id = next_resource_id
-        next_resource_id += 1
-        assembly = node(resources, "object", id=assembly_id, type="model", name=preset)
-        components = node(assembly, "components")
-        for object_id in component_ids:
-            node(components, "component", objectid=object_id)
+        if preset not in assembly_ids:
+            assembly_ids[preset] = next_resource_id
+            next_resource_id += 1
+            assembly = node(resources, "object", id=assembly_ids[preset], type="model", name=preset)
+            components = node(assembly, "components")
+            for object_id in component_ids:
+                node(components, "component", objectid=object_id)
+        assembly_id = assembly_ids[preset]
 
         column, row = index % columns, index // columns
         # Centre each model in its cell, then centre the full grid at origin.
@@ -619,8 +624,9 @@ def build_parser():
                         help="directory receiving 3MF files; relative paths use the current directory")
     parser.add_argument("--set-name",
                         help="collection name stored in manifest.json when exporting every preset")
-    parser.add_argument("--layout-size", type=int,
-                        help="combine this many presets into each printer-neutral, placed layout 3MF")
+    parser.add_argument("--layout-size", type=layout_size, metavar="N|all",
+                        help="place this many pieces in each printer-neutral layout 3MF, or 'all' for "
+                             "one file; a preset file's pieceCounts decide how many copies of each piece")
     parser.add_argument("--replace", action="store_true",
                         help="overwrite existing same-named 3MF files; otherwise they are skipped")
     parser.add_argument("--list", action="store_true",
@@ -631,6 +637,19 @@ def build_parser():
     for option in CUSTOM_PARAMETERS:
         parser.add_argument("--" + option.replace("_", "-"))
     return parser
+
+
+def layout_size(text):
+    """Parse ``--layout-size``: a positive piece count, or ``all`` for one file."""
+    if text.lower() == "all":
+        return math.inf
+    try:
+        size = int(text)
+    except ValueError:
+        raise argparse.ArgumentTypeError("expected a whole number or 'all'")
+    if size < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return size
 
 
 def load_preset(scad, parameters, preset, parser):
@@ -849,6 +868,64 @@ def load_parameter_sets(path: Path) -> Dict[str, object]:
     return parameter_sets
 
 
+def portable_path(path: Path, target: Path) -> str:
+    """Describe a source file without revealing where the project is stored.
+
+    Manifests are shared with exported sets, so they must not record a
+    maker's home directory or username.
+
+    Args:
+        path: Resolved source file.
+        target: Resolved project directory.
+
+    Returns:
+        The path relative to ``target`` with forward slashes, or only the
+        filename when the file lies outside the project.
+    """
+    try:
+        return path.relative_to(target).as_posix()
+    except ValueError:
+        return path.name
+
+
+def load_piece_counts(path: Path, presets: Sequence[str]) -> Dict[str, int]:
+    """Read how many copies of each preset make a complete set.
+
+    A preset file may carry a top-level ``pieceCounts`` object mapping preset
+    names to whole numbers. Presets it does not mention count once, so a file
+    without the object behaves as before.
+
+    Args:
+        path: Preset JSON file already validated by ``load_parameter_sets``.
+        presets: Preset names in that file.
+
+    Returns:
+        A count for every preset name.
+
+    Raises:
+        ValueError: A count is not a positive whole number, or names a
+            preset the file does not contain.
+    """
+    declared = json.loads(path.read_text(encoding="utf-8")).get("pieceCounts", {})
+    if not isinstance(declared, dict):
+        raise ValueError("pieceCounts must be a JSON object: " + str(path))
+    unknown = sorted(set(declared) - set(presets))
+    if unknown:
+        raise ValueError("pieceCounts names a preset that does not exist: " + unknown[0])
+    for name, count in declared.items():
+        if not isinstance(count, int) or isinstance(count, bool) or count < 1:
+            raise ValueError("pieceCounts for %r must be a whole number of at least 1" % name)
+    return {name: declared.get(name, 1) for name in presets}
+
+
+def describe_pieces(presets: Sequence[str]) -> str:
+    """Summarize placed presets for progress output, e.g. ``Pawn x18, King``."""
+    counts = {}
+    for preset in presets:
+        counts[preset] = counts.get(preset, 0) + 1
+    return ", ".join(name if count == 1 else "%s x%d" % (name, count) for name, count in counts.items())
+
+
 def safe_name(name: str) -> str:
     """Convert a human name into a safe cross-platform file component.
 
@@ -931,7 +1008,7 @@ def sha256_file(path: Path) -> str:
 
 def write_set_manifest(
         path: Path, set_name: str, parameters: Path,
-        scad: Path, jobs: Sequence[ExportJob]) -> None:
+        scad: Path, jobs: Sequence[ExportJob], counts: Dict[str, int]) -> None:
     """Write provenance, filenames, sizes, and checksums for a completed set.
 
     Args:
@@ -940,10 +1017,11 @@ def write_set_manifest(
         parameters: Source preset JSON path.
         scad: Source model path.
         jobs: Successfully completed exports.
+        counts: Copies of each preset needed for a complete set.
 
     Examples:
         ``write_set_manifest(folder / "manifest.json", "Chu Shogi",
-        presets, model, jobs)`` records every file delivered with the set.
+        presets, model, jobs, counts)`` records every file delivered with the set.
     """
     files = []
     for job in jobs:
@@ -951,6 +1029,7 @@ def write_set_manifest(
         files.append({
             "preset": job.preset,
             "file": job.filename,
+            "quantity": counts[job.preset],
             "bytes": exported.stat().st_size,
             "sha256": sha256_file(exported),
         })
@@ -960,6 +1039,7 @@ def write_set_manifest(
         "source_parameters": str(parameters),
         "source_scad": str(scad),
         "piece_count": len(jobs),
+        "total_quantity": sum(counts[job.preset] for job in jobs),
         "files": files,
     }
     path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -1010,22 +1090,24 @@ def export_set(args, parser) -> int:
         parameter_sets = load_parameter_sets(parameters)
         selected = list(parameter_sets)
         jobs = plan_exports(selected)
+        counts = load_piece_counts(parameters, selected)
 
         if args.list:
             for job in jobs:
-                print(job.preset)
+                print(job.preset if counts[job.preset] == 1 else "%s x%d" % (job.preset, counts[job.preset]))
             return 0
 
         default_name = parameters.stem.replace("_", " ").replace("-", " ").title()
         set_name = args.set_name or default_name
         destination = args.out.resolve()
 
-        if args.layout_size is not None and args.layout_size < 1:
-            raise ValueError("--layout-size must be at least 1")
         if args.layout_size:
+            # One entry per physical piece, so a layout holds the full count.
+            placements = [job for job in jobs for _ in range(counts[job.preset])]
+            size = len(placements) if args.layout_size == math.inf else args.layout_size
             layout_jobs = []
-            for first in range(0, len(jobs), args.layout_size):
-                members = jobs[first:first + args.layout_size]
+            for first in range(0, len(placements), size):
+                members = placements[first:first + size]
                 filename = "%s - Layout %02d.3mf" % (
                     safe_name(set_name), len(layout_jobs) + 1,
                 )
@@ -1038,10 +1120,12 @@ def export_set(args, parser) -> int:
             print("Folder: " + str(destination))
             if layout_jobs:
                 for filename, members in layout_jobs:
-                    print("  " + filename + " <- " + ", ".join(job.preset for job in members))
+                    print("  %s <- %d pieces: %s" % (
+                        filename, len(members), describe_pieces([job.preset for job in members])))
             else:
                 for job in jobs:
-                    print("  " + job.preset + " -> " + job.filename)
+                    print("  " + job.preset + " -> " + job.filename + (
+                        "" if counts[job.preset] == 1 else "  (print %d)" % counts[job.preset]))
             return 0
 
         if destination.exists() and not destination.is_dir():
@@ -1051,6 +1135,7 @@ def export_set(args, parser) -> int:
         skipped = 0
         if layout_jobs:
             completed_layouts = []
+            rendered_parts = {}
             for index, (filename, members) in enumerate(layout_jobs, 1):
                 output = destination / filename
                 if output.exists() and not args.replace:
@@ -1061,12 +1146,13 @@ def export_set(args, parser) -> int:
                     skipped += 1
                     continue
                 print("[%d/%d] Exporting %s" % (
-                    index, len(layout_jobs), ", ".join(job.preset for job in members),
+                    index, len(layout_jobs), describe_pieces([job.preset for job in members]),
                 ), flush=True)
-                rendered = [
-                    (job.preset, render_piece(args, scad, parameters, job.preset, parser))
-                    for job in members
-                ]
+                # Each preset is rendered once, however many copies are placed.
+                for job in members:
+                    if job.preset not in rendered_parts:
+                        rendered_parts[job.preset] = render_piece(args, scad, parameters, job.preset, parser)
+                rendered = [(job.preset, rendered_parts[job.preset]) for job in members]
                 temporary_output = output.with_name("." + output.name + ".partial")
                 if temporary_output.exists():
                     temporary_output.unlink()
@@ -1076,7 +1162,9 @@ def export_set(args, parser) -> int:
                 os.replace(temporary_output, output)
                 completed_layouts.append((filename, [job.preset for job in members]))
                 exported += 1
-            write_layout_manifest(destination / "manifest.json", set_name, parameters, scad, completed_layouts)
+            write_layout_manifest(
+                destination / "manifest.json", set_name,
+                portable_path(parameters, target), portable_path(scad, target), completed_layouts)
             print("Saved %d new layout 3MF file(s); skipped %d existing file(s) in %s" % (
                 exported, skipped, destination,
             ))
@@ -1104,7 +1192,9 @@ def export_set(args, parser) -> int:
             os.replace(temporary_output, output)
             exported += 1
 
-        write_set_manifest(destination / "manifest.json", set_name, parameters, scad, jobs)
+        write_set_manifest(
+            destination / "manifest.json", set_name,
+            portable_path(parameters, target), portable_path(scad, target), jobs, counts)
         print("Saved %d new 3MF file(s); skipped %d existing file(s) in %s" % (exported, skipped, destination))
         print("Set manifest: " + str(destination / "manifest.json"))
         return 0

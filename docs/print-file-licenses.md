@@ -12,10 +12,10 @@ models/king.3mf.license, containing:
     Source preset: shogi_piece.json / 00 Base - King
     Font: Yuji Syuku Regular (SIL OFL 1.1; bundled notice: fonts/licenses/Yuji-OFL-1.1.txt)
 
-For a file generated from presets/taikyoku.json, use this instead:
+For a file generated from presets/misc/taikyoku.json, use this instead:
 
     SPDX-License-Identifier: CC-BY-SA-4.0
-    Source preset: presets/taikyoku.json / <preset name>
+    Source preset: presets/misc/taikyoku.json / <preset name>
     Attribution: Adapted from the English Wikipedia “Taikyoku shogi” table;
     https://en.wikipedia.org/wiki/Taikyoku_shogi
     History: https://en.wikipedia.org/w/index.php?title=Taikyoku_shogi&action=history

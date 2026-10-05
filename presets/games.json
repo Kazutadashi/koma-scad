@@ -1,0 +1,62 @@
+{
+    "minishogi": {
+        "title": "Minishogi",
+        "front": "two",
+        "back": "one",
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 2,
+            "silver": 2,
+            "pawn": 2
+        }
+    },
+    "minishogi-1char": {
+        "title": "Minishogi 1-char",
+        "front": "one",
+        "back": "one",
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 2,
+            "silver": 2,
+            "pawn": 2
+        }
+    },
+    "shogi": {
+        "title": "Shogi",
+        "front": "two",
+        "back": "one",
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 4,
+            "silver": 4,
+            "knight": 4,
+            "lance": 4,
+            "pawn": 18
+        }
+    },
+    "shogi-1char": {
+        "title": "Shogi 1-char",
+        "front": "one",
+        "back": "one",
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 4,
+            "silver": 4,
+            "knight": 4,
+            "lance": 4,
+            "pawn": 18
+        }
+    }
+}

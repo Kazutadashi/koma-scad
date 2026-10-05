@@ -109,7 +109,7 @@ To export every piece in a preset collection, create a named folder containing
 one 3MF per preset with the batch wrapper:
 
 ```bash
-python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --set-name "Taikyoku Shogi" --out exports
+python3 scripts/komascad_export.py --preset-file presets/misc/taikyoku.json --set-name "Taikyoku Shogi" --out exports
 ```
 
 Use `--dry-run` to inspect all planned filenames before rendering. The
@@ -185,8 +185,12 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | Path | Description |
 | --- | --- |
 | `shogi_piece.scad` | Piece generator |
-| `shogi_piece.json` | MIT-licensed base and Shogi presets, including the base king |
-| `presets/taikyoku.json` | Separately licensed CC BY-SA Taikyoku presets |
+| `shogi_piece.json` | Generated: every game preset, for the Customizer |
+| `presets/individual pieces/` | Master list: one file per piece, shared by every game |
+| `presets/games.json` | Which pieces, how many, and which character styles make up each game |
+| `presets/games/` | Generated game preset files; see [presets/README.md](presets/README.md) |
+| `scripts/build_games.py` | Rebuilds the game presets from the master list |
+| `presets/misc/taikyoku.json` | Separately licensed CC BY-SA Taikyoku presets |
 | `scripts/komascad_export.py` | Multicolour 3MF exporter |
 | `scripts/komascad_export.py` | Exports one named preset or every preset in a JSON file into a chosen directory |
 | [fonts/suggested_fonts.md](fonts/suggested_fonts.md) | Bundled open fonts, licenses, and font recommendations |

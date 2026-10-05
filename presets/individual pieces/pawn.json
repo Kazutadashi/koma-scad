@@ -1,0 +1,29 @@
+{
+    "name": "Pawn",
+    "category": "Pawn",
+    "body": {
+        "Piece_Length": "28",
+        "Base_Width": "24.5",
+        "Rear_Thickness": "8.2",
+        "Tip_Thickness": "2.8"
+    },
+    "front": {
+        "two": {
+            "Front_Characters": "歩兵",
+            "Front_Font_Size": "8.94",
+            "Front_Character_Spacing": "9.03"
+        },
+        "one": {
+            "Front_Characters": "歩",
+            "Front_Font_Size": "13.4"
+        }
+    },
+    "back": {
+        "one": {
+            "Back_Characters": "と",
+            "Back_Font_Size": "13.4",
+            "Back_Glyph_X": "[-0.5, 0, 0]",
+            "Back_Glyph_Y": "[1.5, 0, 0]"
+        }
+    }
+}

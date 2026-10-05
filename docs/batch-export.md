@@ -24,7 +24,7 @@ python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece "King 
 Omit `--piece` to export every saved preset:
 
 ```bash
-python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --set-name "Taikyoku Shogi" --out exports
+python3 scripts/komascad_export.py --preset-file presets/misc/taikyoku.json --set-name "Taikyoku Shogi" --out exports
 ```
 
 `--set-name` is only the human-readable name recorded in `manifest.json`; it
@@ -65,6 +65,27 @@ python3 scripts/komascad_export.py --preset-file shogi_piece.json --out grid_sea
 For a 64-preset grid search, this creates eight layout 3MFs, each containing
 eight placed pieces. Importing one layout requires one import action rather
 than eight separate 3MF imports. Use a smaller value for a smaller bed.
+
+## Complete sets
+
+A preset file can say how many of each piece a full set needs, in a top-level
+`pieceCounts` object next to `parameterSets`:
+
+```json
+"pieceCounts": { "Shogi 09 - Pawn": 18, "Shogi 05 - Gold": 4 }
+```
+
+Presets it does not mention count once. `--layout-size` then counts physical
+pieces: each preset is rendered once and placed that many times. Use `all` to
+put the whole set in one file:
+
+```bash
+python3 scripts/komascad_export.py --preset-file presets/games/shogi.json --out exports/shogi --layout-size all
+```
+
+The game files in `presets/games/` get their counts from `presets/games.json`;
+see the [user guide](user-guide.md). Without `--layout-size`, each preset is
+still exported once and `manifest.json` records its `quantity`.
 
 ## Paths
 

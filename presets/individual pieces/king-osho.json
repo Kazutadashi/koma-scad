@@ -1,0 +1,21 @@
+{
+    "name": "King (Osho)",
+    "category": "King",
+    "body": {
+        "Piece_Length": "32",
+        "Base_Width": "28.5",
+        "Rear_Thickness": "9.8",
+        "Tip_Thickness": "3.2"
+    },
+    "front": {
+        "two": {
+            "Front_Characters": "王将",
+            "Front_Font_Size": "10.4",
+            "Front_Character_Spacing": "10.5"
+        },
+        "one": {
+            "Front_Characters": "王",
+            "Front_Font_Size": "15.5"
+        }
+    }
+}

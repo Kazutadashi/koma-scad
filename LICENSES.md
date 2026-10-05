@@ -8,7 +8,7 @@ preset, or every downloadable model as “MIT” without this qualification.
 | Material | License | Requirements when sharing |
 | --- | --- | --- |
 | Original OpenSCAD/Python code and original prose | [MIT](LICENSE) | Retain the MIT notice. |
-| data/taikyoku_piece_characters.csv, data/taikyoku_size_categories.csv, data/ATTRIBUTION.md, and presets/taikyoku.json | [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt) | Retain the attribution, source/history links, change notice, and CC BY-SA license link. License adapted material under CC BY-SA 4.0 or a compatible license. |
+| data/taikyoku_piece_characters.csv, data/taikyoku_size_categories.csv, data/ATTRIBUTION.md, and presets/misc/taikyoku.json | [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt) | Retain the attribution, source/history links, change notice, and CC BY-SA license link. License adapted material under CC BY-SA 4.0 or a compatible license. |
 | fonts/*.ttf | SIL Open Font License 1.1 | Keep the matching notice in fonts/licenses/. Do not sell a font file by itself or imply author endorsement. |
 | images/*.png | MIT | Project-created renders; retain this notice when redistributing them. |
 | models/ print files | Per-file license sidecar | Every shared STL/3MF must have a matching .license file and follow [the print-file policy](docs/print-file-licenses.md). |

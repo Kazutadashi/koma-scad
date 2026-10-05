@@ -1,0 +1,27 @@
+{
+    "name": "Knight",
+    "category": "Knight",
+    "body": {
+        "Piece_Length": "29",
+        "Base_Width": "25.5",
+        "Rear_Thickness": "8.6",
+        "Tip_Thickness": "2.9"
+    },
+    "front": {
+        "two": {
+            "Front_Characters": "桂馬",
+            "Front_Font_Size": "9.31",
+            "Front_Character_Spacing": "9.4"
+        },
+        "one": {
+            "Front_Characters": "桂",
+            "Front_Font_Size": "14"
+        }
+    },
+    "back": {
+        "one": {
+            "Back_Characters": "圭",
+            "Back_Font_Size": "14"
+        }
+    }
+}

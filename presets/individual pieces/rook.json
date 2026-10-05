@@ -1,0 +1,28 @@
+{
+    "name": "Rook",
+    "category": "Rook",
+    "body": {
+        "Piece_Length": "31",
+        "Base_Width": "27.5",
+        "Rear_Thickness": "9.4",
+        "Tip_Thickness": "3.1"
+    },
+    "front": {
+        "two": {
+            "Front_Characters": "飛車",
+            "Front_Font_Size": "10.04",
+            "Front_Character_Spacing": "10.13",
+            "Front_Stroke_Expansion": "0"
+        },
+        "one": {
+            "Front_Characters": "飛",
+            "Front_Font_Size": "15"
+        }
+    },
+    "back": {
+        "one": {
+            "Back_Characters": "龍",
+            "Back_Font_Size": "15"
+        }
+    }
+}

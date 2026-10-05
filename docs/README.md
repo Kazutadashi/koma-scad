@@ -5,6 +5,7 @@ ordinary modeling workflow.
 
 | Guide | Purpose |
 | --- | --- |
+| [User guide](user-guide.md) | Start here for game sets: edit a piece, rebuild, preview and export |
 | [Design guide](design-guide.md) | Geometry, typography, inspection, and parameter behavior |
 | [Colour quickstart](colour-quickstart.md) | Standards-based multipart 3MF export |
 | [Batch export](batch-export.md) | Turn a preset collection into a named folder of printable 3MF files |

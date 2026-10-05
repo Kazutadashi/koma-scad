@@ -41,6 +41,45 @@ class SetExportTests(unittest.TestCase):
         self.assertIn('name="King"', model)
         self.assertEqual(model.count("<item "), 2)
         self.assertIn("no printer settings", metadata)
+    def test_repeated_presets_are_placed_again_but_stored_once(self):
+        """Copies of a piece add build items without duplicating its mesh."""
+        triangle = [(0.0, 0.0, 0.0), (10.0, 0.0, 0.0), (0.0, 10.0, 0.0)]
+        parts = [("body", "PLA", (0.0, 0.0, 0.0, 1.0), triangle, [(0, 1, 2)])]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "layout.3mf"
+            placed = EXPORT.create_layout_3mf(
+                output, [("Pawn", parts)] * 3 + [("King", parts)], "Set")
+            with EXPORT.zipfile.ZipFile(output) as archive:
+                model = archive.read("3D/3dmodel.model").decode("utf-8")
+        self.assertEqual(model.count("<item "), 4)
+        self.assertEqual(model.count("<mesh>"), 2)
+        self.assertEqual(len({(entry["x"], entry["y"]) for entry in placed}), 4)
+
+    def test_piece_counts_default_to_one_and_reject_unknown_names(self):
+        """A preset file's pieceCounts set the copies; mistakes are reported."""
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "set.json"
+            path.write_text(json.dumps({
+                "parameterSets": {"Pawn": {}, "King": {}}, "pieceCounts": {"Pawn": 18},
+            }), encoding="utf-8")
+            self.assertEqual(
+                EXPORT.load_piece_counts(path, ["Pawn", "King"]), {"Pawn": 18, "King": 1})
+            path.write_text(json.dumps({
+                "parameterSets": {"Pawn": {}}, "pieceCounts": {"Paw": 18},
+            }), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "does not exist"):
+                EXPORT.load_piece_counts(path, ["Pawn"])
+
+    def test_manifest_paths_outside_the_project_keep_only_the_filename(self):
+        """A source file elsewhere on disk is recorded without its folders."""
+        project = Path("/somewhere/project")
+        self.assertEqual(
+            EXPORT.portable_path(project / "presets" / "games" / "shogi.json", project),
+            "presets/games/shogi.json",
+        )
+        self.assertEqual(
+            EXPORT.portable_path(Path("/elsewhere/private/mine.json"), project), "mine.json")
+
     def test_main_exports_collection_and_writes_manifest(self):
         """A complete collection is published with printable files and metadata."""
         with tempfile.TemporaryDirectory() as temporary:
@@ -88,6 +127,10 @@ class SetExportTests(unittest.TestCase):
                 (destination / "manifest.json").read_text(encoding="utf-8"),
             )
             self.assertEqual(manifest["set_name"], "Chu Shogi")
+            # Manifests are shared, so they never record the maker's folders.
+            self.assertEqual(manifest["source_parameters"], "piece.json")
+            self.assertEqual(manifest["source_scad"], "piece.scad")
+            self.assertNotIn(str(root), json.dumps(manifest))
             self.assertEqual(manifest["piece_count"], 2)
             self.assertEqual(
                 [entry["preset"] for entry in manifest["files"]],

@@ -1,0 +1,21 @@
+{
+    "name": "Gold",
+    "category": "Gold",
+    "body": {
+        "Piece_Length": "30",
+        "Base_Width": "26.5",
+        "Rear_Thickness": "9",
+        "Tip_Thickness": "3"
+    },
+    "front": {
+        "two": {
+            "Front_Characters": "金将",
+            "Front_Font_Size": "9.67",
+            "Front_Character_Spacing": "9.76"
+        },
+        "one": {
+            "Front_Characters": "金",
+            "Front_Font_Size": "14.5"
+        }
+    }
+}

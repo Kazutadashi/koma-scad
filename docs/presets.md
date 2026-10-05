@@ -4,11 +4,19 @@ Keep the bundled `shogi_piece.json` beside `shogi_piece.scad`. It contains
 the MIT-licensed base and Shogi study records, including **00 Base - King** and
 **01 Shogi - Pawn**, plus experimental typography presets.
 
-Taikyoku presets are in `presets/taikyoku.json`, together with their
+Taikyoku presets are in `presets/misc/taikyoku.json`, together with their
 [CC BY-SA 4.0 attribution](../data/ATTRIBUTION.md). For example, the Fire Demon
 uses the attributed dataset's `火鬼` front and `奔火` promoted back. Its
 dimensions and typography are project test defaults, not verified historical
 measurements.
+
+## Game presets
+
+The Shogi and Minishogi presets are generated from a master list of individual
+pieces. Edit a piece once and every game that uses it follows; see
+[presets/README.md](../presets/README.md). `shogi_piece.json` is rebuilt by
+`scripts/build_games.py`, so move any Customizer change you want to keep into
+the piece files.
 
 ## Save and share
 
@@ -58,14 +66,14 @@ For colour 3MF, use the exporter, not the GUI Export menu:
 ```bash
 python3 scripts/komascad_export.py --preset-file shogi_piece.json --piece '00 Base - King' --out exports
 python3 scripts/komascad_export.py --preset-file my-presets.json --piece 'My Rook Study' --out exports
-python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --piece '30 Taikyoku - Fire Demon' --out exports
+python3 scripts/komascad_export.py --preset-file presets/misc/taikyoku.json --piece '30 Taikyoku - Fire Demon' --out exports
 ```
 
 To export every selected record as a separate 3MF in one named delivery
 folder, use the [batch exporter](batch-export.md):
 
 ```bash
-python3 scripts/komascad_export.py --preset-file presets/taikyoku.json --set-name 'Taikyoku Shogi' --out exports
+python3 scripts/komascad_export.py --preset-file presets/misc/taikyoku.json --set-name 'Taikyoku Shogi' --out exports
 ```
 
 The exporter privately controls the material-part modes even if the preset was saved in an Inspect view. It reads saved values only, starts with SCAD defaults for omitted keys, and applies explicit CLI text/colour overrides last. Keep distributed presets in Model so opening them immediately shows the complete design.

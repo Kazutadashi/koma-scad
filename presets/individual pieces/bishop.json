@@ -1,0 +1,27 @@
+{
+    "name": "Bishop",
+    "category": "Bishop",
+    "body": {
+        "Piece_Length": "31",
+        "Base_Width": "27.5",
+        "Rear_Thickness": "9.4",
+        "Tip_Thickness": "3.1"
+    },
+    "front": {
+        "two": {
+            "Front_Characters": "角行",
+            "Front_Font_Size": "10.04",
+            "Front_Character_Spacing": "10.13"
+        },
+        "one": {
+            "Front_Characters": "角",
+            "Front_Font_Size": "15"
+        }
+    },
+    "back": {
+        "one": {
+            "Back_Characters": "馬",
+            "Back_Font_Size": "15"
+        }
+    }
+}

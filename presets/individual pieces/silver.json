@@ -1,0 +1,28 @@
+{
+    "name": "Silver",
+    "category": "Silver",
+    "body": {
+        "Piece_Length": "30",
+        "Base_Width": "26.5",
+        "Rear_Thickness": "9",
+        "Tip_Thickness": "3"
+    },
+    "front": {
+        "two": {
+            "Front_Characters": "銀将",
+            "Front_Font_Size": "9.67",
+            "Front_Character_Spacing": "9.76"
+        },
+        "one": {
+            "Front_Characters": "銀",
+            "Front_Font_Size": "14.5"
+        }
+    },
+    "back": {
+        "one": {
+            "Back_Characters": "全",
+            "Back_Font_Size": "14.5",
+            "Back_Glyph_Y": "[1.5, 0, 0]"
+        }
+    }
+}
