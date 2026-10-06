@@ -5,7 +5,7 @@ This page is the file-format reference.
 
 | Path | What it is | Edit it? |
 | --- | --- | --- |
-| `individual pieces/` | Master list: one file per piece, plus `_defaults.json` | Yes |
+| `pieces/` | Master list: one file per piece, plus `_defaults.json` | Yes |
 | `games.json` | Which pieces, how many, and which character styles make up each game | Yes |
 | `games/` | One complete Customizer file per game | No, generated |
 | `../shogi_piece.json` | Every game in one file, so the Customizer lists them all | No, generated |
@@ -14,7 +14,7 @@ This page is the file-format reference.
 After editing a piece or `games.json`, rebuild:
 
 ```bash
-python3 scripts/build_games.py
+python3 komascad.py build
 ```
 
 ## Pieces
@@ -42,7 +42,7 @@ block, so a body tweak applies to every game and a `front.one` tweak applies
 only to games that use one-character fronts.
 
 `_defaults.json` holds what pieces share: `common` for everything (font,
-colours, engraving), and `front` / `back` for the layout of each style. Each
+colors, engraving), and `front` / `back` for the layout of each style. Each
 preset is layered, later entries winning:
 
     common -> front style defaults -> back style defaults
@@ -65,7 +65,7 @@ order, to how many a complete set needs. To add a game, add an entry and
 rebuild.
 
 The counts are written into each game file as a top-level `pieceCounts`
-object. OpenSCAD ignores it; the exporter's `--layout-size` uses it to place
+object. OpenSCAD ignores it; the exporter's `--per-file` uses it to place
 the right number of every piece.
 
 ## Tuning in the Customizer

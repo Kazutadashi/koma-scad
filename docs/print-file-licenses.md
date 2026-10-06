@@ -9,7 +9,7 @@ models/king.3mf.license, containing:
 
     SPDX-License-Identifier: MIT
     Copyright (c) 2026 KomaSCAD contributors
-    Source preset: shogi_piece.json / 00 Base - King
+    Source preset: presets/games/shogi.json / Shogi 01 - King (Osho)
     Font: Yuji Syuku Regular (SIL OFL 1.1; bundled notice: fonts/licenses/Yuji-OFL-1.1.txt)
 
 For a file generated from presets/misc/taikyoku.json, use this instead:

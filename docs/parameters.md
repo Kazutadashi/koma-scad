@@ -1,8 +1,8 @@
-# Parameter index — 3.4
+# Parameter reference
 
-All 89 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise. Colour-support thickness is an internal slicer-safe default rather than a user adjustment.
+All 89 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise. Color-support thickness is an internal slicer-safe default rather than a user adjustment.
 
-See the [design guide](design-guide.md) for geometry and the [colour quickstart](colour-quickstart.md) for 3MF export.
+See the [design guide](design-guide.md) for geometry and the [color quickstart](color-quickstart.md) for 3MF export.
 
 ## 01 - Start here
 
@@ -12,7 +12,7 @@ See the [design guide](design-guide.md) for geometry and the [colour quickstart]
 | `Front_Characters` | `"王将"` |  |
 | `Back_Characters` | `""` | Empty string makes a blank reverse. Characters are stacked from tip to heel. |
 | `Font_Name` | `"Noto Serif CJK JP:style=SemiBold"` | Install this font or select an installed Japanese font via Help > Font List. |
-| `Output_Mode` | `"Model"` | Unified geometry/font/material workspace. F6 Model exports one single-material STL; the Python exporter creates the displayed multipart colour 3MF. Blank and Inspect views remain available. |
+| `Output_Mode` | `"Model"` | Unified geometry/font/material workspace. F6 Model exports one single-material STL; the Python exporter creates the displayed multipart color 3MF. Blank and Inspect views remain available. |
 | `Print_Orientation` | `"Upright"` | Upright: broad heel on bed. Front face down or Back face down: lies flat with that face on the bed; a raised inscription on the bed-side face is rejected. |
 | `Model_Scale` | `1` | Multiplier (unitless) — 1 = original dimensions; 2 = double all lengths. |
 ## 02 - Piece dimensions
@@ -30,22 +30,22 @@ See the [design guide](design-guide.md) for geometry and the [colour quickstart]
 | --- | --- | --- |
 | `Front_Font_Size` | `0` | mm — Typographic size, not measured glyph height; 0 = automatic. 0 selects a size based on piece dimensions and character count; positive mm overrides it. |
 | `Front_Text_Scale` | `1` | Multiplier (unitless) — 1 = unchanged; 1.1 = 110%.  Multiplies automatic OR explicit font size. All adjustments remain active. |
-| `Front_Character_Spacing` | `0` | mm — Centre-to-centre distance along the face; 0 = automatic. 0 selects centre-to-centre spacing automatically; positive mm overrides it. |
+| `Front_Character_Spacing` | `0` | mm — Center-to-center distance along the face; 0 = automatic. 0 selects center-to-center spacing automatically; positive mm overrides it. |
 | `Front_Spacing_Scale` | `1` | Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. Used only with automatic spacing. In auto spacing, multiply the nominal spacing; does not resize characters. |
-| `Front_Center_Fraction` | `0.46` | Fraction (unitless, 0–1) — position from heel to point; 0.5 = halfway. Fraction of face length from broad heel to point. 0.46 is slightly below centre. |
+| `Front_Center_Fraction` | `0.46` | Fraction (unitless, 0–1) — position from heel to point; 0.5 = halfway. Fraction of face length from broad heel to point. 0.46 is slightly below center. |
 | `Front_Text_X` | `0` | mm — Whole inscription shift; positive = viewer’s right. Positive X = viewer's right; positive Y = toward the point, measured along the face. |
 | `Front_Text_Y` | `0` | mm — Whole inscription shift; positive = toward the point. |
 | `Front_Width_Scale` | `1` | Multiplier (unitless) — 1 = unchanged; 1.1 = 110%.  Width changes glyph width only; it never changes font size or spacing. |
 | `Front_Height_Scale` | `1` | Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. |
-| `Front_Text_Rotation` | `0` | Degrees — rotates the whole inscription counterclockwise as viewed. Rotation in degrees about the inscription centre, counterclockwise as viewed. |
+| `Front_Text_Rotation` | `0` | Degrees — rotates the whole inscription counterclockwise as viewed. Rotation in degrees about the inscription center, counterclockwise as viewed. |
 ## 04 - Back layout
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Mirror_Front_Settings` | `false` | Link back typography and engraving to front settings. Back text, colour and body taper stay independent. Back controls remain visible but are unused while enabled; disable to restore them. This does not reflect the lettering. |
+| `Mirror_Front_Settings` | `false` | Link back typography and engraving to front settings. Back text, color and body taper stay independent. Back controls remain visible but are unused while enabled; disable to restore them. This does not reflect the lettering. |
 | `Back_Font_Size` | `0` | mm — Typographic size, not measured glyph height; 0 = automatic. |
 | `Back_Text_Scale` | `1` | Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. |
-| `Back_Character_Spacing` | `0` | mm — Centre-to-centre distance along the face; 0 = automatic. |
+| `Back_Character_Spacing` | `0` | mm — Center-to-center distance along the face; 0 = automatic. |
 | `Back_Spacing_Scale` | `1` | Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. Used only with automatic spacing. |
 | `Back_Center_Fraction` | `0.46` | Fraction (unitless, 0–1) — position from heel to point; 0.5 = halfway. |
 | `Back_Text_X` | `0` | mm — Whole inscription shift; positive = viewer’s right. Coordinates are seen from the reverse. Do not mirror the characters manually. |
@@ -73,18 +73,18 @@ See the [design guide](design-guide.md) for geometry and the [colour quickstart]
 | `Back_Glyph_X` | `[0, 0, 0]` | mm — Per-character lateral offsets [first, second, third]. |
 | `Back_Glyph_Y` | `[0, 0, 0]` | mm — Per-character offsets toward the point [first, second, third]. |
 | `Back_Glyph_Rotation` | `[0, 0, 0]` | Degrees — individual character rotations [first, second, third]. |
-## 07 - Filament colours
+## 07 - Filament colors
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Body_Filament` | `"Wood"` | Live Model colour and standard 3MF logical material, not a physical printer slot. Custom uses Body Colour below. |
+| `Body_Filament` | `"Wood"` | Live Model color and standard 3MF logical material, not a physical printer slot. Custom uses Body Color below. |
 | `Front_Filament` | `"Black"` | Same as body shares its material. Metallic/glitter appearance comes from the actual filament. |
-| `Back_Filament` | `"Red"` | Same as front shares its logical filament. Confirm logical colours against loaded physical spools in your slicer. |
+| `Back_Filament` | `"Red"` | Same as front shares its logical filament. Confirm logical colors against loaded physical spools in your slicer. |
 ## 08 - Engraving and stroke weight
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Text_Colour_Treatment` | `"Face only"` | Face only assigns a slicer-safe supporting region directly behind the visible inscription surface and is the default. Painted grooves also assigns material beside recessed walls. Flush filled closes recessed text with a level inlay. |
+| `Text_Color_Treatment` | `"Face only"` | Face only assigns a slicer-safe supporting region directly behind the visible inscription surface and is the default. Painted grooves also assigns material beside recessed walls. Flush filled closes recessed text with a level inlay. |
 | `Front_Text_Style` | `"Recessed"` |  |
 | `Back_Text_Style` | `"Recessed"` |  |
 | `Front_Relief_Depth` | `0.2` | mm — Recess depth or raised height, perpendicular to the face. Recess depth OR raised height, perpendicular to face; independent of print orientation. |
@@ -119,9 +119,9 @@ See the [design guide](design-guide.md) for geometry and the [colour quickstart]
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Body_Colour` | `[0.76, 0.58, 0.34, 1]` | RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. These colours never create a second material or survive ordinary STL export. |
-| `Front_Inscription_Colour` | `[0.08, 0.06, 0.04, 1]` | RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. |
-| `Back_Inscription_Colour` | `[0.65, 0.05, 0.04, 1]` | RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. |
+| `Body_Color` | `[0.76, 0.58, 0.34, 1]` | RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. These colors never create a second material or survive ordinary STL export. |
+| `Front_Inscription_Color` | `[0.08, 0.06, 0.04, 1]` | RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. |
+| `Back_Inscription_Color` | `[0.65, 0.05, 0.04, 1]` | RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. |
 | `Show_Layout_Guides` | `true` |  |
 | `Reference_Line_Width` | `0.6` | mm — Inspection reference-bar width, AFTER Model Scale. Effective toolpath line width, for reference guides ONLY. Does not guarantee printability. |
 | `Text_Curve_Resolution` | `48` | Count (integer) — curve tessellation segments; higher is smoother and slower. |
@@ -134,10 +134,10 @@ See the [design guide](design-guide.md) for geometry and the [colour quickstart]
 | `Signature_Font` | `""` | Empty uses Font Name. Customizer font names have no surrounding quotes. |
 | `Signature_Font_Size` | `2.5` | mm — typographic size, not measured glyph height. Start small and use Inspect signature. |
 | `Signature_Letter_Spacing` | `1` | Multiplier (unitless) — horizontal letter spacing; 1 = font default. |
-| `Signature_X` | `0` | mm — horizontal shift from heel centre; positive = viewer's right. |
+| `Signature_X` | `0` | mm — horizontal shift from heel center; positive = viewer's right. |
 | `Signature_Y` | `0` | mm — shift across heel thickness; positive = toward the front inscription face. |
-| `Signature_Rotation` | `0` | Degrees — rotation about the signature centre, counterclockwise as viewed. |
-| `Signature_Depth` | `0.4` | mm — depth into the heel, perpendicular to that edge. Model engraves it; Face only colours the visible floor, Painted grooves colours the walls too, and Flush filled closes the recess. |
+| `Signature_Rotation` | `0` | Degrees — rotation about the signature center, counterclockwise as viewed. |
+| `Signature_Depth` | `0.4` | mm — depth into the heel, perpendicular to that edge. Model engraves it; Face only colors the visible floor, Painted grooves colors the walls too, and Flush filled closes the recess. |
 | `Signature_Margin` | `0.6` | mm — protective border around heel lettering. Overflow is clipped and shown red in Inspect signature. |
-| `Signature_Filament` | `"Same as front"` | Live Model and colour 3MF material; Same as front reuses its filament. F6 Model remains a single-material STL. |
-| `Signature_Colour` | `[0.08, 0.06, 0.04, 1]` | RGBA (unitless, 0-1) — used only when Signature Filament is Custom; alpha is preview-only. |
+| `Signature_Filament` | `"Same as front"` | Live Model and color 3MF material; Same as front reuses its filament. F6 Model remains a single-material STL. |
+| `Signature_Color` | `[0.08, 0.06, 0.04, 1]` | RGBA (unitless, 0-1) — used only when Signature Filament is Custom; alpha is preview-only. |

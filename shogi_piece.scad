@@ -1,11 +1,11 @@
 // KomaSCAD — community base, revision 3.4
 // Contributors and acknowledgements: see CONTRIBUTORS.md and README.md.
 // OpenSCAD 2021.01. Units: mm / degrees, BEFORE Model_Scale.
-// Start in Model: shape the piece, choose the font and choose colours in one live preview.
+// Start in Model: shape the piece, choose the font and choose colors in one live preview.
 // Standalone defaults already produce a piece; selecting a preset is optional.
 // All bundled presets open in Model. F5 is only a fallback if Automatic Preview is disabled.
 // Customizer: select Show Details to display units beside the controls.
-// Keep shogi_piece.json beside this file only if you want the saved base preset.
+// Keep shogi_piece.json beside this file to get the bundled game presets.
 // Font sizes are OpenSCAD typographic sizes, NOT measured glyph heights.
 // No proprietary printer, multi-material hardware, or development build required.
 
@@ -17,7 +17,7 @@ Front_Characters = "王将";
 Back_Characters = "";
 // Install this font or select an installed Japanese font via Help > Font List.
 Font_Name = "Noto Serif CJK JP:style=SemiBold";
-// Model is the complete geometry-and-colour workspace. F6 exports one ordinary single-material STL; scripts/komascad_export.py exports the shown multipart colour 3MF.
+// Model is the complete geometry-and-color workspace. F6 exports one ordinary single-material STL; "komascad.py export" writes the shown multipart color 3MF.
 Output_Mode = "Model"; // [Model,Blank,Inspect front,Inspect back,Inspect signature,Inspect pawn circle]
 // Upright: broad heel on bed. Front or Back face down: lies flat with that face on the bed; a raised inscription on the bed-side face is rejected.
 Print_Orientation = "Upright"; // [Upright,Front face down,Back face down,Design coordinates]
@@ -41,11 +41,11 @@ Tip_Thickness = 3; // [1:0.1:20]
 Front_Font_Size = 0; // [0:0.1:40]
 // Multiplier (unitless) — 1 = unchanged; 1.1 = 110%.  Multiplies automatic OR explicit font size. All adjustments remain active.
 Front_Text_Scale = 1; // [0.25:0.01:2]
-// mm — Centre-to-centre distance along the face; 0 = automatic. 0 selects centre-to-centre spacing automatically; positive mm overrides it.
+// mm — Center-to-center distance along the face; 0 = automatic. 0 selects center-to-center spacing automatically; positive mm overrides it.
 Front_Character_Spacing = 0; // [0:0.1:40]
 // Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. Used only with automatic spacing. In auto spacing, multiply the nominal spacing; does not resize characters.
 Front_Spacing_Scale = 1; // [0.5:0.01:2]
-// Fraction (unitless, 0–1) — position from heel to point; 0.5 = halfway. Fraction of face length from broad heel to point. 0.46 is slightly below centre.
+// Fraction (unitless, 0–1) — position from heel to point; 0.5 = halfway. Fraction of face length from broad heel to point. 0.46 is slightly below center.
 Front_Center_Fraction = 0.46; // [0:0.01:1]
 // mm — Whole inscription shift; positive = viewer’s right. Positive X = viewer's right; positive Y = toward the point, measured along the face.
 Front_Text_X = 0; // [-20:0.1:20]
@@ -55,17 +55,17 @@ Front_Text_Y = 0; // [-20:0.1:20]
 Front_Width_Scale = 1; // [0.25:0.01:2]
 // Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. 
 Front_Height_Scale = 1; // [0.25:0.01:2]
-// Degrees — rotates the whole inscription counterclockwise as viewed. Rotation in degrees about the inscription centre, counterclockwise as viewed.
+// Degrees — rotates the whole inscription counterclockwise as viewed. Rotation in degrees about the inscription center, counterclockwise as viewed.
 Front_Text_Rotation = 0; // [-180:1:180]
 
 /* [04 - Back layout] */
-// Link back typography and engraving to front settings. Back text, colour and body taper stay independent. Back controls remain visible but are unused while enabled; disable to restore them. This does not reflect the lettering.
+// Link back typography and engraving to front settings. Back text, color and body taper stay independent. Back controls remain visible but are unused while enabled; disable to restore them. This does not reflect the lettering.
 Mirror_Front_Settings = false;
 // mm — Typographic size, not measured glyph height; 0 = automatic.
 Back_Font_Size = 0; // [0:0.1:40]
 // Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. 
 Back_Text_Scale = 1; // [0.25:0.01:2]
-// mm — Centre-to-centre distance along the face; 0 = automatic.
+// mm — Center-to-center distance along the face; 0 = automatic.
 Back_Character_Spacing = 0; // [0:0.1:40]
 // Multiplier (unitless) — 1 = unchanged; 1.1 = 110%. Used only with automatic spacing.
 Back_Spacing_Scale = 1; // [0.5:0.01:2]
@@ -110,17 +110,17 @@ Back_Glyph_Y = [0, 0, 0]; // [-10:0.1:10]
 // Degrees — individual character rotations [first, second, third].
 Back_Glyph_Rotation = [0, 0, 0]; // [-180:1:180]
 
-/* [07 - Filament colours] */
-// Live Model colour and standard 3MF logical material, not a physical printer slot. Custom uses Body Colour below.
+/* [07 - Filament colors] */
+// Live Model color and standard 3MF logical material, not a physical printer slot. Custom uses Body Color below.
 Body_Filament = "Wood"; // [Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 // Same as body shares its material. Metallic/glitter appearance comes from the actual filament.
 Front_Filament = "Black"; // [Same as body,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
-// Same as front shares its logical filament. Confirm logical colours against loaded physical spools in your slicer.
+// Same as front shares its logical filament. Confirm logical colors against loaded physical spools in your slicer.
 Back_Filament = "Red"; // [Same as body,Same as front,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 
 /* [08 - Engraving and stroke weight] */
-// Model and 3MF appearance: Face only colours a slicer-safe region behind the visible glyph floor. Painted grooves also colours the groove walls. Flush filled closes the recess.
-Text_Colour_Treatment = "Face only"; // [Face only,Painted grooves,Flush filled]
+// Model and 3MF appearance: Face only colors a slicer-safe region behind the visible glyph floor. Painted grooves also colors the groove walls. Flush filled closes the recess.
+Text_Color_Treatment = "Face only"; // [Face only,Painted grooves,Flush filled]
 Front_Text_Style = "Recessed"; // [Recessed,Raised,None]
 Back_Text_Style = "Recessed"; // [Recessed,Raised,None]
 // mm — Recess depth or raised height, perpendicular to the face. Recess depth OR raised height, perpendicular to face; independent of print orientation.
@@ -169,12 +169,12 @@ Front_Side_Base_Angle = 85;
 Back_Side_Base_Angle = 81;
 
 /* [11 - Inspection and quality] */
-// RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. These colours never create a second material or survive ordinary STL export.
-Body_Colour = [0.76, 0.58, 0.34, 1];
+// RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only. These colors never create a second material or survive ordinary STL export.
+Body_Color = [0.76, 0.58, 0.34, 1];
 // RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only.
-Front_Inscription_Colour = [0.08, 0.06, 0.04, 1];
+Front_Inscription_Color = [0.08, 0.06, 0.04, 1];
 // RGBA (unitless, 0–1 each) — [red, green, blue, opacity]; display only.
-Back_Inscription_Colour = [0.65, 0.05, 0.04, 1];
+Back_Inscription_Color = [0.65, 0.05, 0.04, 1];
 Show_Layout_Guides = true;
 // mm — Inspection reference-bar width, AFTER Model Scale. Effective toolpath line width, for reference guides ONLY. Does not guarantee printability.
 Reference_Line_Width = 0.6; // [0.2:0.05:1.2]
@@ -192,20 +192,20 @@ Signature_Font = "";
 Signature_Font_Size = 2.5; // [0.5:0.1:8]
 // Multiplier (unitless) — horizontal letter spacing; 1 = font default.
 Signature_Letter_Spacing = 1; // [0.5:0.05:2]
-// mm — horizontal shift from heel centre; positive = viewer's right.
+// mm — horizontal shift from heel center; positive = viewer's right.
 Signature_X = 0; // [-12:0.1:12]
 // mm — shift across heel thickness; positive = toward the front inscription face.
 Signature_Y = 0; // [-5:0.1:5]
-// Degrees — rotation about the signature centre, counterclockwise as viewed.
+// Degrees — rotation about the signature center, counterclockwise as viewed.
 Signature_Rotation = 0; // [-180:1:180]
-// mm — Depth into the heel. Face only colours its floor; Painted grooves can also colour material beside its walls; Flush filled closes it.
+// mm — Depth into the heel. Face only colors its floor; Painted grooves can also color material beside its walls; Flush filled closes it.
 Signature_Depth = 0.4; // [0:0.05:2]
 // mm — protective border around heel lettering. Overflow is clipped and shown red in Inspect signature.
 Signature_Margin = 0.6; // [0.1:0.1:3]
-// Colour 3MF material; Same as front reuses its filament. F6 Model remains a single-material STL.
+// Color 3MF material; Same as front reuses its filament. F6 Model remains a single-material STL.
 Signature_Filament = "Same as front"; // [Same as body,Same as front,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 // RGBA (unitless, 0-1) — used only when Signature Filament is Custom; alpha is preview-only.
-Signature_Colour = [0.08, 0.06, 0.04, 1];
+Signature_Color = [0.08, 0.06, 0.04, 1];
 
 /* [Hidden] */
 // Export material regions need enough physical width for ordinary 0.4 mm
@@ -235,7 +235,7 @@ effective_Back_Text_Style = Mirror_Front_Settings ? Front_Text_Style : Back_Text
 effective_Back_Relief_Depth = Mirror_Front_Settings ? Front_Relief_Depth : Back_Relief_Depth;
 effective_Back_Stroke_Expansion = Mirror_Front_Settings ? Front_Stroke_Expansion : Back_Stroke_Expansion;
 effective_Back_Font_Override = Mirror_Front_Settings ? Front_Font_Override : Back_Font_Override;
-if(Mirror_Front_Settings) echo("Mirror Front Settings ON: back typography and engraving follow front. Back text/colour stay independent; disable to restore back controls. Automatic sizing still uses each face character count.");
+if(Mirror_Front_Settings) echo("Mirror Front Settings ON: back typography and engraving follow front. Back text/color stay independent; disable to restore back controls. Automatic sizing still uses each face character count.");
 
 
 // Exporter-only switch; no mesh is evaluated when querying material metadata.
@@ -254,21 +254,21 @@ function filament_choice(role) = role==0 ? Body_Filament : role==1 ? Front_Filam
 function material_source(role) = filament_choice(role)=="Same as body" ? 0 : filament_choice(role)=="Same as front" ? material_source(1) : role;
 function material_name(role) = let(src=material_source(role),choice=filament_choice(src)) choice=="Custom" ? str("Custom ",["body","front","back","signature"][src]) : choice;
 function material_rgb(role) = let(src=material_source(role),choice=filament_choice(src),matches=[for(p=filament_palette) if(p[0]==choice) p[1]])
- choice=="Custom" ? [Body_Colour,Front_Inscription_Colour,Back_Inscription_Colour,Signature_Colour][src] : assert(len(matches)==1,"Unknown filament colour.") matches[0];
+ choice=="Custom" ? [Body_Color,Front_Inscription_Color,Back_Inscription_Color,Signature_Color][src] : assert(len(matches)==1,"Unknown filament color.") matches[0];
 model_mode = Output_Mode=="Model" || Output_Mode=="Print"
- || (Output_Mode=="Colour assembly" && !Export_Metadata); // Legacy preset aliases.
-colour_mode = len([for(m=["Colour assembly","Colour body","Colour front","Colour back","Colour signature"]) if(m==Output_Mode) 1])>0;
+ || (Output_Mode=="Color assembly" && !Export_Metadata); // Legacy preset aliases.
+color_mode = len([for(m=["Color assembly","Color body","Color front","Color back","Color signature"]) if(m==Output_Mode) 1])>0;
 for(role=[0:3]) {
  assert(!(role==0 && (Body_Filament=="Same as body" || Body_Filament=="Same as front")),"Body needs its own filament choice.");
  assert(!(role==1 && Front_Filament=="Same as front"),"Front cannot reference itself.");
- assert(len(material_rgb(role))==4 && min(material_rgb(role))>=0 && max(material_rgb(role))<=1,"Custom colours need four RGBA values in 0..1.");
+ assert(len(material_rgb(role))==4 && min(material_rgb(role))>=0 && max(material_rgb(role))<=1,"Custom colors need four RGBA values in 0..1.");
 }
-assert(valid_choice(Text_Colour_Treatment,["Face only","Painted grooves","Flush filled"]),"Unknown Text Colour Treatment.");
+assert(valid_choice(Text_Color_Treatment,["Face only","Painted grooves","Flush filled"]),"Unknown Text Color Treatment.");
 assert(Paint_Floor_Thickness>0 && Paint_Wall_Thickness>0 && Paint_Top_Lip>0,
  "Paint thickness and top lip must be positive.");
-if(colour_mode) {
- assert(Protect_Face_Edges,"Colour geometry requires Protect Face Edges so parts stay within the face.");
- if(Text_Colour_Treatment=="Flush filled")
+if(color_mode) {
+ assert(Protect_Face_Edges,"Color geometry requires Protect Face Edges so parts stay within the face.");
+ if(Text_Color_Treatment=="Flush filled")
   for(f=[true,false]) assert(!active(f) || style(f)=="Recessed",
    "Flush filled requires Recessed or None on active faces. Select Face only or Painted grooves to retain Raised styles.");
 }
@@ -288,7 +288,7 @@ function style(f) = f ? Front_Text_Style : effective_Back_Text_Style;
 function depth(f) = f ? Front_Relief_Depth : effective_Back_Relief_Depth;
 function active(f) = len(chars(f))>0 && style(f)!="None" && depth(f)>0;
 
-assert(valid_choice(Output_Mode,["Model","Print","Blank","Inspect front","Inspect back","Inspect signature","Inspect pawn circle","Colour assembly","Colour body","Colour front","Colour back","Colour signature"]),"Unknown Output_Mode.");
+assert(valid_choice(Output_Mode,["Model","Print","Blank","Inspect front","Inspect back","Inspect signature","Inspect pawn circle","Color assembly","Color body","Color front","Color back","Color signature"]),"Unknown Output_Mode.");
 assert(valid_choice(Print_Orientation,["Upright","Front face down","Back face down","Design coordinates"]),"Unknown Print_Orientation.");
 assert(valid_choice(Taper_Mode,["Tip thickness","Reference side angles"]),"Unknown Taper_Mode.");
 assert(valid_choice(Angle_Mode,["Derive shoulder","Derive tip","Derive base","Check all three"]),"Unknown Angle_Mode.");
@@ -354,7 +354,7 @@ circle_apothem = Base_Width/(2*tan(9));
 if(Pawn_Circle) {
     assert(Piece_Length<circle_apothem,
         str("Pawn Circle: length must be less than ",circle_apothem,
-            " mm at this width, otherwise inward tips touch or overlap at the centre."));
+            " mm at this width, otherwise inward tips touch or overlap at the center."));
     echo("Pawn Circle: 20 identical pieces, 18 degrees per piece; plan-view constraint. Bevels leave intentional surface seams.");
     echo("Pawn Circle outer heel-corner diameter / inner tip-circle diameter (mm, scaled):",
         Base_Width/sin(9)*Model_Scale,2*(circle_apothem-Piece_Length)*Model_Scale);
@@ -648,23 +648,23 @@ module preview_signature_wall() {
     offset(delta=-epsilon/2) signature_outline();
    }
 }
-module print_preview(show_colours=true) {
+module print_preview(show_colors=true) {
  color(material_rgb(0)) preview_body_shell();
  color(material_rgb(0)) preview_face_skin(true);
  color(material_rgb(0)) preview_face_skin(false);
  color(material_rgb(0)) preview_heel_skin();
- if(Text_Colour_Treatment!="Flush filled") {
-  color(Text_Colour_Treatment=="Painted grooves" ? material_rgb(1) : preview_wall_rgb())
+ if(Text_Color_Treatment!="Flush filled") {
+  color(Text_Color_Treatment=="Painted grooves" ? material_rgb(1) : preview_wall_rgb())
    preview_recess_wall(true);
-  color(Text_Colour_Treatment=="Painted grooves" ? material_rgb(2) : preview_wall_rgb())
+  color(Text_Color_Treatment=="Painted grooves" ? material_rgb(2) : preview_wall_rgb())
    preview_recess_wall(false);
-  color(Text_Colour_Treatment=="Painted grooves" ? material_rgb(3) : preview_wall_rgb())
+  color(Text_Color_Treatment=="Painted grooves" ? material_rgb(3) : preview_wall_rgb())
    preview_signature_wall();
  }
- if(show_colours) {
-  color(material_rgb(1)) preview_face_colour(true);
-  color(material_rgb(2)) preview_face_colour(false);
-  color(material_rgb(3)) preview_signature_colour();
+ if(show_colors) {
+  color(material_rgb(1)) preview_face_color(true);
+  color(material_rgb(2)) preview_face_color(false);
+  color(material_rgb(3)) preview_signature_color();
  }
 }
 module printed_piece() {
@@ -685,7 +685,7 @@ module signature_inspection() {
 // assigns material directly behind the exposed inscription surface; Painted
 // grooves can also extend it beside a recessed wall. These backings remain
 // inside printable geometry and never add a coating on top of the model.
-module colour_inlay_raw(f) {
+module color_inlay_raw(f) {
  if(active(f)) intersection() {
   blank();
   on_face(f) translate([0,0,-Paint_Floor_Thickness])
@@ -693,16 +693,16 @@ module colour_inlay_raw(f) {
    inscription(f);
  }
 }
-module colour_inlay(f) {
+module color_inlay(f) {
  if(active(f)) difference() {
-  colour_inlay_raw(f);
-  if(!f) colour_inlay_raw(true);
+  color_inlay_raw(f);
+  if(!f) color_inlay_raw(true);
   signature_inlay();
  }
 }
-// A printable surface colour cannot be zero-thickness. Face only therefore
+// A printable surface color cannot be zero-thickness. Face only therefore
 // assigns a closed 0.8 mm supporting region immediately behind the visible
-// recessed floor, without colouring the groove walls. Raised lettering uses
+// recessed floor, without coloring the groove walls. Raised lettering uses
 // the selected material through the relief and the same inward backing.
 module face_only_volume(f) {
  d=depth(f);
@@ -838,68 +838,68 @@ module painted_body_region() {
  difference() { printed_piece(); painted_face_region(true); painted_face_region(false); painted_signature_region(); }
 }
 module flush_body_region() {
- difference() { blank(); colour_inlay(true); colour_inlay(false); signature_inlay(); }
+ difference() { blank(); color_inlay(true); color_inlay(false); signature_inlay(); }
 }
 // Material preview surfaces are shared by Model. Exact closed complementary
 // volumes remain available in the hidden modes used by the exporter.
-module preview_face_colour(f) {
+module preview_face_color(f) {
  if(active(f)) {
   if(style(f)=="Raised") relief(f);
-  else if(Text_Colour_Treatment=="Flush filled")
+  else if(Text_Color_Treatment=="Flush filled")
    on_face(f) translate([0,0,0])
     linear_extrude(height=epsilon/2,convexity=20) preview_opening(f);
   else
    on_face(f) translate([0,0,-depth(f)])
     linear_extrude(height=epsilon/2,convexity=20)
-    offset(delta=Text_Colour_Treatment=="Painted grooves" ? Paint_Wall_Thickness : 0)
+    offset(delta=Text_Color_Treatment=="Painted grooves" ? Paint_Wall_Thickness : 0)
     preview_floor_outline(f);
  }
 }
-module preview_signature_colour() {
+module preview_signature_color() {
  if(signature_active())
   on_heel() translate([0,0,
-   Text_Colour_Treatment=="Flush filled" ? 0 : -Signature_Depth])
+   Text_Color_Treatment=="Flush filled" ? 0 : -Signature_Depth])
    linear_extrude(height=epsilon/2,convexity=20)
-   offset(delta=Text_Colour_Treatment=="Painted grooves" ? Paint_Wall_Thickness : 0)
+   offset(delta=Text_Color_Treatment=="Painted grooves" ? Paint_Wall_Thickness : 0)
    signature_outline();
 }
-module colour_output() {
+module color_output() {
  // F6 implicitly unions top-level children, destroying material separation and
- // risking CGAL failures at the exactly touching body/colour interfaces.
- assert(Output_Mode!="Colour assembly" || $preview,
-   "Colour assembly is exporter-internal. Return to Model; use F6 for one STL or scripts/komascad_export.py for multipart colour 3MF.");
- if(Output_Mode=="Colour assembly") {
+ // risking CGAL failures at the exactly touching body/color interfaces.
+ assert(Output_Mode!="Color assembly" || $preview,
+   "Color assembly is exporter-internal. Return to Model; use F6 for one STL or komascad.py export for multipart color 3MF.");
+ if(Output_Mode=="Color assembly") {
   print_preview(true);
- } else if(Text_Colour_Treatment=="Flush filled") {
-   if(Output_Mode=="Colour body")
+ } else if(Text_Color_Treatment=="Flush filled") {
+   if(Output_Mode=="Color body")
     color(material_rgb(0)) render(convexity=30) flush_body_region();
-   if(Output_Mode=="Colour front")
-    color(material_rgb(1)) render(convexity=30) colour_inlay(true);
-   if(Output_Mode=="Colour back")
-    color(material_rgb(2)) render(convexity=30) colour_inlay(false);
-   if(Output_Mode=="Colour signature")
+   if(Output_Mode=="Color front")
+    color(material_rgb(1)) render(convexity=30) color_inlay(true);
+   if(Output_Mode=="Color back")
+    color(material_rgb(2)) render(convexity=30) color_inlay(false);
+   if(Output_Mode=="Color signature")
     color(material_rgb(3)) render(convexity=30) signature_inlay();
- } else if(Text_Colour_Treatment=="Face only") {
-   if(Output_Mode=="Colour body")
+ } else if(Text_Color_Treatment=="Face only") {
+   if(Output_Mode=="Color body")
     color(material_rgb(0)) render(convexity=30) face_only_body_region();
-   if(Output_Mode=="Colour front")
+   if(Output_Mode=="Color front")
     color(material_rgb(1)) render(convexity=30) face_only_region(true);
-   if(Output_Mode=="Colour back")
+   if(Output_Mode=="Color back")
     color(material_rgb(2)) render(convexity=30) face_only_region(false);
-   if(Output_Mode=="Colour signature")
+   if(Output_Mode=="Color signature")
     color(material_rgb(3)) render(convexity=30) face_only_signature_region();
  } else {
-   if(Output_Mode=="Colour body")
+   if(Output_Mode=="Color body")
     color(material_rgb(0)) render(convexity=30) painted_body_region();
-   if(Output_Mode=="Colour front")
+   if(Output_Mode=="Color front")
     color(material_rgb(1)) render(convexity=30) painted_face_region(true);
-   if(Output_Mode=="Colour back")
+   if(Output_Mode=="Color back")
     color(material_rgb(2)) render(convexity=30) painted_face_region(false);
-   if(Output_Mode=="Colour signature")
+   if(Output_Mode=="Color signature")
     color(material_rgb(3)) render(convexity=30) painted_signature_region();
  }
 }
-// Inspect is deliberately blocked at F6/export: the separate colours are not print geometry.
+// Inspect is deliberately blocked at F6/export: the separate colors are not print geometry.
 module inspection(f) {
     assert($preview,"Inspection is F5-only. Select Model or Blank before F6 / STL export.");
     color(material_rgb(0)) linear_extrude(height=0.1) polygon([for(p=outline) [p[0],p[1]/cosine(f)]]);
@@ -943,19 +943,19 @@ module oriented_piece() {
     else children();
 }
 for(f=[true,false]) if(len(chars(f))>0) {
-    echo(f?"Front resolved size / spacing / centre:":"Back resolved size / spacing / centre:",font_size(f),char_spacing(f),center_y(f));
+    echo(f?"Front resolved size / spacing / center:":"Back resolved size / spacing / center:",font_size(f),char_spacing(f),center_y(f));
     if(Text_Edge_Radius>depth(f)/2) echo("NOTE: text radius capped at half relief depth.");
 }
 if(signature_active()) echo("Signature is on the heel (bed-facing in Upright). Check Inspect signature, then check the first layers in your slicer.");
 if(model_mode && $preview)
- echo("KOMASCAD MODEL: live geometry and selected materials; F6 makes one STL, the Python exporter makes the colour 3MF.");
+ echo("KOMASCAD MODEL: live geometry and selected materials; F6 makes one STL, the Python exporter makes the color 3MF.");
 if(model_mode && !$preview)
  echo("Check both F5 Inspect views for red overflow and slicer paths for fine strokes before printing.");
 if(!Protect_Face_Edges) echo("CAUTION: edge protection disabled; lettering can breach edges or form detached raised fragments.");
 if(Print_Orientation=="Back face down" && active(false) && model_mode) echo("CAUTION: reverse relief faces the bed. Upright is the base orientation for two-sided pieces.");
 if(Print_Orientation=="Front face down" && active(true) && model_mode) echo("CAUTION: front relief faces the bed. Upright is the base orientation for two-sided pieces.");
-if(colour_mode) echo("INTERNAL 3MF PART MODE. Return to Model for editing. Treatment:",Text_Colour_Treatment);
-if(Export_Metadata && Output_Mode!="Colour assembly")
+if(color_mode) echo("INTERNAL 3MF PART MODE. Return to Model for editing. Treatment:",Text_Color_Treatment);
+if(Export_Metadata && Output_Mode!="Color assembly")
  assert(false,"Export_Metadata is an internal switch; remove it from your saved preset to show geometry. The Python exporter sets it automatically.");
 if(Export_Metadata) echo("KOMASCAD_FONTS", concat([for(f=[true,false]) if(active(f)) font(f)],signature_active() ? [signature_font()] : []));
 if(Export_Metadata) echo("KOMASCAD_EXPORT", [for(role=[0:3]) [["body","front","back","signature"][role],material_name(role),material_rgb(role),role==0 ? true : role==3 ? signature_active() : active(role==1)]]);
@@ -967,4 +967,4 @@ else if(Output_Mode=="Inspect front" || Output_Mode=="Inspect back") inspection(
 else oriented_piece()
     if(Output_Mode=="Blank") color(material_rgb(0)) blank();
     else if(model_mode) printed_piece();
-    else if(colour_mode) colour_output();
+    else if(color_mode) color_output();

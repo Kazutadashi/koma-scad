@@ -1,9 +1,10 @@
 # User guide: making a game set
 
 This guide covers the everyday job: change a piece, see the whole set, and
-export it for printing. You do not need to read the scripts.
+export it for printing, all with one tool: `komascad.py`.
 
-Run every command from the repository root.
+The commands below are written for the repository root. The
+[command reference](cli.md) lists every option.
 
 ## The idea in one minute
 
@@ -11,13 +12,13 @@ Each piece is described once. Games are lists of pieces. A build step turns
 those into the preset files that OpenSCAD and the exporter use.
 
 ```
-presets/individual pieces/   you edit these (one file per piece)
-presets/games.json           you edit this (which pieces, and how many, are in each game)
+presets/pieces/         you edit these (one file per piece)
+presets/games.json      you edit this (which pieces, and how many, are in each game)
             |
-            |  python3 scripts/build_games.py
+            |  python3 komascad.py build
             v
-presets/games/*.json         generated: one preset file per game
-shogi_piece.json             generated: every game, shown in the Customizer
+presets/games/*.json    generated: one preset file per game
+shogi_piece.json        generated: every game, shown in the Customizer
 ```
 
 Two rules follow from this:
@@ -44,27 +45,28 @@ Two rules follow from this:
 | `shogi-1char` | one character | one character | 9 | 40 |
 
 The game name is what you type in commands, and it is also the filename in
-`presets/games/`.
+`presets/games/`. `python3 komascad.py list` prints this table, and
+`python3 komascad.py list shogi` prints the pieces in one game.
 
 ## The everyday loop
 
-1. **Edit** a file in `presets/individual pieces/`.
+1. **Edit** a file in `presets/pieces/`.
 2. **Build:**
    ```bash
-   python3 scripts/build_games.py
+   python3 komascad.py build
    ```
 3. **Preview** the whole game on one page:
    ```bash
-   python3 scripts/preview_game.py minishogi
+   python3 komascad.py preview minishogi
    ```
    Open `exports/preview/minishogi/index.html` in a browser. Refresh the page
    after each new preview.
 4. **Export** when it looks right:
    ```bash
-   python3 scripts/komascad_export.py --preset-file presets/games/minishogi.json --set-name "Minishogi" --layout-size all --out exports/minishogi
+   python3 komascad.py export minishogi --per-file all
    ```
-   This writes one colour 3MF holding the complete set: every piece, in the
-   quantity the game needs.
+   This writes one color 3MF into `exports/minishogi/` holding the complete
+   set: every piece, in the quantity the game needs.
 
 ## Where a setting lives
 
@@ -72,7 +74,7 @@ Decide how far the change should reach, then edit the matching place.
 
 | I want to change... | Edit this |
 | --- | --- |
-| Something on every piece in every game (font, colours, engraving depth) | `common` in `_defaults.json` |
+| Something on every piece in every game (font, colors, engraving depth) | `common` in `_defaults.json` |
 | The layout of every two-character front | `front` → `two` in `_defaults.json` |
 | The layout of every one-character front | `front` → `one` in `_defaults.json` |
 | The layout of every one-character back | `back` → `one` in `_defaults.json` |
@@ -91,7 +93,7 @@ explains what each setting does.
 
 ### Make the pawn longer
 
-In `presets/individual pieces/pawn.json`:
+In `presets/pieces/pawn.json`:
 
 ```json
 "body": {
@@ -102,7 +104,7 @@ Build. The pawn is now 29 mm in all four games.
 
 ### Make every promoted side red
 
-In `presets/individual pieces/_defaults.json`, inside `common`:
+In `presets/pieces/_defaults.json`, inside `common`:
 
 ```json
 "Back_Filament": "Red",
@@ -110,7 +112,7 @@ In `presets/individual pieces/_defaults.json`, inside `common`:
 
 Build. Pieces with a blank back (kings and golds) are unaffected.
 
-### Give one piece a different colour from the rest
+### Give one piece a different color from the rest
 
 Put the setting in that piece's own block. In `pawn.json`:
 
@@ -148,7 +150,7 @@ Typing numbers and rebuilding is slow for fine adjustments. To tune live:
    Minishogi 07 - Pawn: Front_Font_Size = 9.2 (built value: 8.94)
    ```
 4. Copy those values into the piece file.
-5. Run `python3 scripts/build_games.py --force` to finish.
+5. Run `python3 komascad.py build --force` to finish.
 
 Step 3 is a safety net: the Customizer saves into `shogi_piece.json`, which
 the build regenerates, so the build refuses to erase changes that exist
@@ -184,47 +186,49 @@ with a blank reverse.
 
 ## Exporting
 
-Start from this command and add options:
+Start from this command, which writes into `exports/shogi/`, and add options:
 
 ```bash
-python3 scripts/komascad_export.py --preset-file presets/games/shogi.json --out exports/shogi
+python3 komascad.py export shogi
 ```
 
 | I want... | Add |
 | --- | --- |
-| The complete set in one 3MF (all 40 shogi pieces) | `--layout-size all` |
-| The complete set split across files, at most 20 pieces each | `--layout-size 20` |
+| The complete set in one 3MF (all 40 shogi pieces) | `--per-file all` |
+| The complete set split across files, at most 20 pieces each | `--per-file 20` |
 | One 3MF per different piece, to duplicate in the slicer | nothing |
 | Pieces lying flat on the front (black) face | `--orientation front-down` |
 | Pieces lying flat on the back face | `--orientation back-down` |
 | Pieces standing on the heel, whatever the preset says | `--orientation upright` |
-| Just one piece | `--piece "Shogi 09 - Pawn"` |
-| To see what would be written, without rendering | `--dry-run` |
-| To re-export after a change | `--replace` (existing files are skipped otherwise) |
-| A tidy name on the files | `--set-name "Shogi"` |
+| Just one piece | its name after the game: `export shogi pawn` |
+| A different output folder (default: `exports/shogi`) | `-o DIR` |
+| To see what would be written, without rendering | `-n` |
+| To re-export after a change | `-f` (existing files are skipped otherwise) |
+| A different name on the layout files | `--name "My Shogi"` |
 
 How many of each piece go into a set comes from the counts in
 `presets/games.json`, so a new variant needs no changes to the exporter. A
 full shogi set is about 242 × 95 mm as laid out; use a smaller
-`--layout-size` if that does not fit your bed, or rearrange in the slicer.
-Without `--layout-size`, each file holds one piece and `manifest.json` lists
+`--per-file` if that does not fit your bed, or rearrange in the slicer.
+Without `--per-file`, each file holds one piece and `manifest.json` lists
 the quantity to print.
 
 Without `--orientation`, pieces use the orientation saved in the preset, which
 is upright for the bundled games. Lying flat takes more bed: a full shogi set
-is about 242 × 228 mm, so split it with `--layout-size 20` on a smaller bed.
-In the slicer, each piece appears under its preset name; its coloured parts
+is about 242 × 228 mm, so split it with `--per-file 20` on a smaller bed.
+In the slicer, each piece appears under its preset name; its colored parts
 are listed beneath it.
 
-Colours in the 3MF are logical names. Match them to your loaded spools in the
-slicer. More detail is in [batch export](batch-export.md) and the
-[colour quickstart](colour-quickstart.md).
+Colors in the 3MF are logical names. Match them to your loaded spools in the
+slicer. More detail is in the [command reference](cli.md#export) and the
+[color quickstart](color-quickstart.md).
 
 ## When something goes wrong
 
 | What you see | What to do |
 | --- | --- |
-| The set has the wrong number of a piece | Fix the count in `presets/games.json`, build, and export with `--replace`. |
+| The set has the wrong number of a piece | Fix the count in `presets/games.json`, build, and export with `-f`. |
+| A command says a game file "is older than the piece files" | Run `python3 komascad.py build`. |
 | The build stops with "has Customizer edits" | Copy the listed values into the piece files, then build with `--force`. See [Tuning by eye](#tuning-by-eye-in-openscad). |
 | "uses unknown parameter(s)" | A setting name is misspelled. Names are case-sensitive and use underscores. |
 | "has no front style" or "has no back style" | The game asks for a style that piece file does not define. Add the block or change the game. |
@@ -233,14 +237,15 @@ slicer. More detail is in [batch export](batch-export.md) and the
 | My change disappeared | It was made in a generated file. Make it in the piece file instead. |
 | Characters show as boxes or are missing | The font is not installed, or lacks that character. Install it and restart OpenSCAD. |
 
-## Tools at a glance
+## Commands at a glance
 
-| Tool | What it does |
+| Command | What it does |
 | --- | --- |
-| `scripts/build_games.py` | Rebuilds the game preset files from the piece files. `--check` reports stale files without writing; `--force` discards unsaved Customizer edits. |
-| `scripts/preview_game.py <game>` | Renders every piece of a game, front and back, onto one page. |
-| `scripts/komascad_export.py` | Exports colour 3MF files for one piece or a whole preset file. |
-| `scripts/mass_edit_presets.py` | Bulk-edits a hand-maintained preset file, such as those in `presets/misc/`. Do not use it on game presets; change `_defaults.json` instead. |
+| `komascad.py list [GAME]` | Shows the games, or the pieces in one game. |
+| `komascad.py build` | Rebuilds the game preset files from the piece files. `--check` reports stale files without writing; `--force` discards unsaved Customizer edits. |
+| `komascad.py preview GAME` | Renders every piece of a game, front and back, onto one page. |
+| `komascad.py export GAME [PIECE ...]` | Exports color 3MF files for a whole game or chosen pieces. |
+| `komascad.py set FILE NAME=VALUE ...` | Bulk-edits a hand-maintained preset file, such as those in `presets/misc/`. For game presets, change `_defaults.json` instead. |
 
 `presets/misc/` holds older studies and the separately licensed Taikyoku set.
 Those files are maintained by hand and are not touched by the build.

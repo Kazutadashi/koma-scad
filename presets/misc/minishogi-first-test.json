@@ -69,9 +69,9 @@
             "Face_Tip_Angle": "144",
             "Front_Side_Base_Angle": "85",
             "Back_Side_Base_Angle": "81",
-            "Body_Colour": "[0.82, 0.68, 0.43, 1]",
-            "Front_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
-            "Back_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Body_Color": "[0.82, 0.68, 0.43, 1]",
+            "Front_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
+            "Back_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
             "Show_Layout_Guides": "true",
             "Reference_Line_Width": "0.6",
             "Text_Curve_Resolution": "64",
@@ -86,10 +86,10 @@
             "Signature_Depth": "0.2",
             "Signature_Margin": "0.6",
             "Signature_Filament": "Same as front",
-            "Signature_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Signature_Color": "[0.025, 0.02, 0.015, 1]",
             "Pawn_Circle": "true",
             "Mirror_Front_Settings": "true",
-            "Text_Colour_Treatment": "Flush filled"
+            "Text_Color_Treatment": "Flush filled"
         },
         "Minishogi 02 - King (Gyokusho)": {
             "Category": "Minishogi / King",
@@ -160,9 +160,9 @@
             "Face_Tip_Angle": "144",
             "Front_Side_Base_Angle": "85",
             "Back_Side_Base_Angle": "81",
-            "Body_Colour": "[0.82, 0.68, 0.43, 1]",
-            "Front_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
-            "Back_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Body_Color": "[0.82, 0.68, 0.43, 1]",
+            "Front_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
+            "Back_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
             "Show_Layout_Guides": "true",
             "Reference_Line_Width": "0.6",
             "Text_Curve_Resolution": "64",
@@ -177,10 +177,10 @@
             "Signature_Depth": "0.2",
             "Signature_Margin": "0.6",
             "Signature_Filament": "Same as front",
-            "Signature_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Signature_Color": "[0.025, 0.02, 0.015, 1]",
             "Pawn_Circle": "true",
             "Mirror_Front_Settings": "true",
-            "Text_Colour_Treatment": "Flush filled"
+            "Text_Color_Treatment": "Flush filled"
         },
         "Minishogi 03 - Rook": {
             "Category": "Minishogi / Rook",
@@ -251,9 +251,9 @@
             "Face_Tip_Angle": "144",
             "Front_Side_Base_Angle": "85",
             "Back_Side_Base_Angle": "81",
-            "Body_Colour": "[0.82, 0.68, 0.43, 1]",
-            "Front_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
-            "Back_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Body_Color": "[0.82, 0.68, 0.43, 1]",
+            "Front_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
+            "Back_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
             "Show_Layout_Guides": "true",
             "Reference_Line_Width": "0.6",
             "Text_Curve_Resolution": "64",
@@ -268,10 +268,10 @@
             "Signature_Depth": "0.2",
             "Signature_Margin": "0.6",
             "Signature_Filament": "Same as front",
-            "Signature_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Signature_Color": "[0.025, 0.02, 0.015, 1]",
             "Pawn_Circle": "true",
             "Mirror_Front_Settings": "true",
-            "Text_Colour_Treatment": "Flush filled"
+            "Text_Color_Treatment": "Flush filled"
         },
         "Minishogi 04 - Bishop": {
             "Category": "Minishogi / Bishop",
@@ -342,9 +342,9 @@
             "Face_Tip_Angle": "144",
             "Front_Side_Base_Angle": "85",
             "Back_Side_Base_Angle": "81",
-            "Body_Colour": "[0.82, 0.68, 0.43, 1]",
-            "Front_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
-            "Back_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Body_Color": "[0.82, 0.68, 0.43, 1]",
+            "Front_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
+            "Back_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
             "Show_Layout_Guides": "true",
             "Reference_Line_Width": "0.6",
             "Text_Curve_Resolution": "64",
@@ -359,10 +359,10 @@
             "Signature_Depth": "0.2",
             "Signature_Margin": "0.6",
             "Signature_Filament": "Same as front",
-            "Signature_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Signature_Color": "[0.025, 0.02, 0.015, 1]",
             "Pawn_Circle": "true",
             "Mirror_Front_Settings": "true",
-            "Text_Colour_Treatment": "Flush filled"
+            "Text_Color_Treatment": "Flush filled"
         },
         "Minishogi 05 - Gold": {
             "Category": "Minishogi / Gold",
@@ -433,9 +433,9 @@
             "Face_Tip_Angle": "144",
             "Front_Side_Base_Angle": "85",
             "Back_Side_Base_Angle": "81",
-            "Body_Colour": "[0.82, 0.68, 0.43, 1]",
-            "Front_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
-            "Back_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Body_Color": "[0.82, 0.68, 0.43, 1]",
+            "Front_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
+            "Back_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
             "Show_Layout_Guides": "true",
             "Reference_Line_Width": "0.6",
             "Text_Curve_Resolution": "64",
@@ -450,10 +450,10 @@
             "Signature_Depth": "0.2",
             "Signature_Margin": "0.6",
             "Signature_Filament": "Same as front",
-            "Signature_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Signature_Color": "[0.025, 0.02, 0.015, 1]",
             "Pawn_Circle": "true",
             "Mirror_Front_Settings": "true",
-            "Text_Colour_Treatment": "Flush filled"
+            "Text_Color_Treatment": "Flush filled"
         },
         "Minishogi 06 - Silver": {
             "Category": "Minishogi / Silver",
@@ -524,9 +524,9 @@
             "Face_Tip_Angle": "144",
             "Front_Side_Base_Angle": "85",
             "Back_Side_Base_Angle": "81",
-            "Body_Colour": "[0.82, 0.68, 0.43, 1]",
-            "Front_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
-            "Back_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Body_Color": "[0.82, 0.68, 0.43, 1]",
+            "Front_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
+            "Back_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
             "Show_Layout_Guides": "true",
             "Reference_Line_Width": "0.6",
             "Text_Curve_Resolution": "64",
@@ -541,10 +541,10 @@
             "Signature_Depth": "0.2",
             "Signature_Margin": "0.6",
             "Signature_Filament": "Same as front",
-            "Signature_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Signature_Color": "[0.025, 0.02, 0.015, 1]",
             "Pawn_Circle": "true",
             "Mirror_Front_Settings": "true",
-            "Text_Colour_Treatment": "Flush filled"
+            "Text_Color_Treatment": "Flush filled"
         },
         "Minishogi 07 - Pawn": {
             "Category": "Minishogi / Pawn",
@@ -615,9 +615,9 @@
             "Face_Tip_Angle": "144",
             "Front_Side_Base_Angle": "85",
             "Back_Side_Base_Angle": "81",
-            "Body_Colour": "[0.82, 0.68, 0.43, 1]",
-            "Front_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
-            "Back_Inscription_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Body_Color": "[0.82, 0.68, 0.43, 1]",
+            "Front_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
+            "Back_Inscription_Color": "[0.025, 0.02, 0.015, 1]",
             "Show_Layout_Guides": "true",
             "Reference_Line_Width": "0.6",
             "Text_Curve_Resolution": "64",
@@ -632,10 +632,10 @@
             "Signature_Depth": "0.2",
             "Signature_Margin": "0.6",
             "Signature_Filament": "Same as front",
-            "Signature_Colour": "[0.025, 0.02, 0.015, 1]",
+            "Signature_Color": "[0.025, 0.02, 0.015, 1]",
             "Pawn_Circle": "true",
             "Mirror_Front_Settings": "true",
-            "Text_Colour_Treatment": "Flush filled"
+            "Text_Color_Treatment": "Flush filled"
         }
     },
     "fileFormatVersion": "1"

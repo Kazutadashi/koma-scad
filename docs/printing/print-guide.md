@@ -1,12 +1,12 @@
 # Print guide: lettering on the bed
 
-How we print multicolour KomaSCAD pieces. We got our best results with the
+How we print multicolor KomaSCAD pieces. We got our best results with the
 pieces lying flat and an inscribed face on a smooth PEI plate, so the
 lettering is formed by the first layer, and tuned our slicer settings for that.
 Upright pieces still work, but with a single-nozzle printer every layer needs
-colour swaps (much more purge waste), and the lettering picks up a fuzzier
+color swaps (much more purge waste), and the lettering picks up a fuzzier
 finish from the layer lines. Lying flat, the swaps are limited to the first and
-last few layers. See [batch export](../batch-export.md#print-orientation) for the
+last few layers. See the [command reference](../cli.md#print-orientation) for the
 `--orientation` options.
 
 Tested on a Bambu Lab A1 (AMS lite, 0.4 mm nozzle) with Bambu Studio 2.8.
@@ -30,7 +30,7 @@ Results vary between printers; treat these settings as a starting point.
 > because each test piece carries its own flow-ratio multiplier. Follow the
 > model's instructions: a rough pass at flow 1.0, then a fine pass around the
 > rough result. Save the final value in the filament preset, and calibrate
-> every filament separately, including different colours of the same product.
+> every filament separately, including different colors of the same product.
 
 *Photo coming soon: a face printed before flow tuning next to one printed after.*
 
@@ -62,7 +62,7 @@ your own printer and spool.
 
 | Setting | Default | Ours | Why |
 | --- | --- | --- | --- |
-| Layer height | 0.16 mm | 0.15 mm | Good balance between stair-stepping on the back and the number of colour-swap layers |
+| Layer height | 0.16 mm | 0.15 mm | Good balance between stair-stepping on the back and the number of color-swap layers |
 | First layer speed | 50 mm/s | 30 mm/s | Small strokes bond and flatten before the nozzle moves on |
 | First layer infill speed | 105 mm/s | 30 mm/s | Same; the face is mostly first-layer infill |
 | Bottom surface pattern | Monotonic | Monotonic line | Separate straight lines, no connecting turns inside small strokes |
@@ -85,7 +85,7 @@ and first layer line width (0.5 mm).
 
 ## Plate setup
 
-**Print the body colour first on the first layer** (Bambu Studio: plate
+**Print the body color first on the first layer** (Bambu Studio: plate
 settings → first layer filament sequence). The lettering then squeezes into
 the voids left in the body, which made the characters much clearer.
 
@@ -98,7 +98,7 @@ calibration for the wood PLA and Bambu's automatic calibration for PLA Matte.
 ## Nozzle size
 
 A smaller nozzle (for example 0.2 mm) improves face quality further, but
-prints much more slowly, wastes more filament on colour swaps, and cannot be
+prints much more slowly, wastes more filament on color swaps, and cannot be
 used with wood-filled PLA, whose particles clog fine nozzles. Our settings are
 for a 0.4 mm nozzle.
 
@@ -111,7 +111,7 @@ them.
 | --- | --- |
 | First layer line width 0.42 mm | Worse than the 0.5 mm default; less adhesion and merging |
 | First layer height 0.24 mm | Rounder lines, visible grooves |
-| Elephant foot compensation 0–0.1 mm | Can open gaps between colours on the face; little benefit |
+| Elephant foot compensation 0–0.1 mm | Can open gaps between colors on the face; little benefit |
 | Classic walls; Arachne minimums down to 10% / 60% | Classic worse; very low minimums gave starved, blobby lines |
 | Lettering first on layer 1 | Blobs where the body squeezed in around the strokes; body first is better |
 | Bambu flow-rate calibration | Hard to read; replaced by the MakerWorld test above |
@@ -124,6 +124,6 @@ them.
 2. Dry the filament; wash the plate.
 3. Export the pieces lying flat with the lettering face down.
 4. Import the profile, or apply the table to your own preset.
-5. Set the body colour to print first on layer 1.
+5. Set the body color to print first on layer 1.
 6. Check layer 1 in the slicer preview for gaps in strokes.
 7. Print one king and one pawn before committing to a set.
