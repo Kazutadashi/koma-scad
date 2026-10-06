@@ -1,0 +1,36 @@
+{
+    "bottom_surface_pattern": "monotonicline",
+    "enable_arc_fitting": "0",
+    "from": "User",
+    "infill_direction": "0",
+    "inherits": "0.16mm Optimal @BBL A1",
+    "initial_layer_infill_speed": [
+        "30"
+    ],
+    "initial_layer_speed": [
+        "30"
+    ],
+    "layer_height": "0.15",
+    "min_bead_width": "55%",
+    "min_feature_size": "15%",
+    "name": "KomaSCAD face-down 0.15mm A1 0.4",
+    "only_one_wall_first_layer": "1",
+    "print_extruder_id": [
+        "1"
+    ],
+    "print_extruder_variant": [
+        "Direct Drive Standard"
+    ],
+    "print_settings_id": "KomaSCAD face-down 0.15mm A1 0.4",
+    "resolution": "0.003",
+    "skirt_loops": "6",
+    "slice_closing_radius": "0.01",
+    "sparse_infill_pattern": "gyroid",
+    "top_solid_infill_flow_ratio": [
+        "1.025"
+    ],
+    "version": "2.8.0.6",
+    "wall_distribution_count": "2",
+    "wall_generator": "arachne",
+    "wall_transition_filter_deviation": "30%"
+}
