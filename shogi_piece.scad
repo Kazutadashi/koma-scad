@@ -19,8 +19,8 @@ Back_Characters = "";
 Font_Name = "Noto Serif CJK JP:style=SemiBold";
 // Model is the complete geometry-and-colour workspace. F6 exports one ordinary single-material STL; scripts/komascad_export.py exports the shown multipart colour 3MF.
 Output_Mode = "Model"; // [Model,Blank,Inspect front,Inspect back,Inspect signature,Inspect pawn circle]
-// Upright: broad heel on bed. Back face down: usually unsuitable for an engraved reverse.
-Print_Orientation = "Upright"; // [Upright,Back face down,Design coordinates]
+// Upright: broad heel on bed. Front or Back face down: lies flat with that face on the bed; a raised inscription on the bed-side face is rejected.
+Print_Orientation = "Upright"; // [Upright,Front face down,Back face down,Design coordinates]
 // Multiplier (unitless) — 1 = original dimensions; 2 = double all lengths.
 Model_Scale = 1; // [0.25:0.05:20]
 
@@ -289,7 +289,7 @@ function depth(f) = f ? Front_Relief_Depth : effective_Back_Relief_Depth;
 function active(f) = len(chars(f))>0 && style(f)!="None" && depth(f)>0;
 
 assert(valid_choice(Output_Mode,["Model","Print","Blank","Inspect front","Inspect back","Inspect signature","Inspect pawn circle","Colour assembly","Colour body","Colour front","Colour back","Colour signature"]),"Unknown Output_Mode.");
-assert(valid_choice(Print_Orientation,["Upright","Back face down","Design coordinates"]),"Unknown Print_Orientation.");
+assert(valid_choice(Print_Orientation,["Upright","Front face down","Back face down","Design coordinates"]),"Unknown Print_Orientation.");
 assert(valid_choice(Taper_Mode,["Tip thickness","Reference side angles"]),"Unknown Taper_Mode.");
 assert(valid_choice(Angle_Mode,["Derive shoulder","Derive tip","Derive base","Check all three"]),"Unknown Angle_Mode.");
 assert(Model_Scale>0 && Piece_Length>0 && Base_Width>0 && Rear_Thickness>0,"Scale and dimensions must be positive.");
@@ -299,6 +299,8 @@ assert(Text_Edge_Radius>=0 && Text_Rounding_Steps>=2 && Text_Rounding_Steps<=12 
 assert(Reference_Line_Width>0,"Reference_Line_Width must be positive.");
 assert(!(model_mode && Print_Orientation=="Back face down" && active(false) && style(false)=="Raised"),
     "Raised reverse extends below the bed. Use Upright for this piece.");
+assert(!(model_mode && Print_Orientation=="Front face down" && active(true) && style(true)=="Raised"),
+    "Raised front extends below the bed. Use Upright for this piece.");
 for (f=[true,false]) {
     assert(valid_choice(style(f),["Recessed","Raised","None"]),"Unknown text style.");
     assert(depth(f)>=0,"Relief depth must be nonnegative.");
@@ -933,6 +935,9 @@ module pawn_circle_inspection() {
 module oriented_piece() {
     if(Print_Orientation=="Upright")
         translate([0,Rear_Thickness,0]) rotate([90,0,0]) children();
+    else if(Print_Orientation=="Front face down")
+        // Turn the piece over about its heel-to-point axis, level the front face, and lift it onto the bed.
+        translate([0,0,Rear_Thickness*cos(atan(front_slope))]) rotate([-atan(front_slope),0,0]) rotate([0,180,0]) children();
     else if(Print_Orientation=="Back face down")
         rotate([-atan(back_slope),0,0]) children();
     else children();
@@ -948,6 +953,7 @@ if(model_mode && !$preview)
  echo("Check both F5 Inspect views for red overflow and slicer paths for fine strokes before printing.");
 if(!Protect_Face_Edges) echo("CAUTION: edge protection disabled; lettering can breach edges or form detached raised fragments.");
 if(Print_Orientation=="Back face down" && active(false) && model_mode) echo("CAUTION: reverse relief faces the bed. Upright is the base orientation for two-sided pieces.");
+if(Print_Orientation=="Front face down" && active(true) && model_mode) echo("CAUTION: front relief faces the bed. Upright is the base orientation for two-sided pieces.");
 if(colour_mode) echo("INTERNAL 3MF PART MODE. Return to Model for editing. Treatment:",Text_Colour_Treatment);
 if(Export_Metadata && Output_Mode!="Colour assembly")
  assert(false,"Export_Metadata is an internal switch; remove it from your saved preset to show geometry. The Python exporter sets it automatically.");

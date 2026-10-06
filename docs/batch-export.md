@@ -66,6 +66,24 @@ For a 64-preset grid search, this creates eight layout 3MFs, each containing
 eight placed pieces. Importing one layout requires one import action rather
 than eight separate 3MF imports. Use a smaller value for a smaller bed.
 
+## Print orientation
+
+`--orientation` sets how every exported piece sits on the bed, overriding the
+orientation saved in the presets:
+
+| Value | Result |
+| --- | --- |
+| `upright` | Stands on the broad heel |
+| `front-down` | Lies flat with the front face on the bed |
+| `back-down` | Lies flat with the back face on the bed |
+
+```bash
+python3 scripts/komascad_export.py --preset-file presets/games/shogi.json --out exports/shogi-flat --layout-size all --orientation front-down
+```
+
+Raised lettering cannot be on the face that lies on the bed; the export stops
+with a message if a preset asks for that.
+
 ## Complete sets
 
 A preset file can say how many of each piece a full set needs, in a top-level

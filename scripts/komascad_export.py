@@ -72,6 +72,13 @@ ET.register_namespace("m", MATERIAL_NAMESPACE)
 CONTENT_TYPES = b'''<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="json" ContentType="application/json"/></Types>'''
 RELATIONSHIPS = b'''<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>'''
 
+# --orientation choices and the Print_Orientation value each selects.
+ORIENTATIONS = {
+    "upright": "Upright",
+    "front-down": "Front face down",
+    "back-down": "Back face down",
+}
+
 # CLI spelling and the corresponding public OpenSCAD parameter.
 CUSTOM_PARAMETERS = {
     "body_colour": "Body_Filament",
@@ -460,7 +467,8 @@ def create_layout_3mf(destination, pieces, title):
     Args:
         destination: Completed layout ``.3mf`` path.
         pieces: ``(preset_name, parts)`` pairs returned from OpenSCAD. Repeat
-            a pair to place more copies; the copies share one stored mesh.
+            a pair to place more copies; the copies share one stored mesh but
+            are separate named objects.
         title: Human-readable layout name.
     """
     model = ET.Element(
@@ -519,11 +527,11 @@ def create_layout_3mf(destination, pieces, title):
     build = node(model, "build")
     manifest = []
 
-    assembly_ids = {}
+    mesh_ids = {}
     for index, ((preset, parts), (min_x, max_x, min_y, max_y)) in enumerate(zip(prepared, bounds)):
         component_ids = []
         # A repeated preset reuses the meshes written for its first copy.
-        for role, name, rgb, material_key, vertices, faces in ([] if preset in assembly_ids else parts):
+        for role, name, rgb, material_key, vertices, faces in ([] if preset in mesh_ids else parts):
             object_id = next_resource_id
             next_resource_id += 1
             component_ids.append(object_id)
@@ -540,14 +548,14 @@ def create_layout_3mf(destination, pieces, title):
             for a, b, c in faces:
                 node(xml_faces, "triangle", v1=a, v2=b, v3=c)
 
-        if preset not in assembly_ids:
-            assembly_ids[preset] = next_resource_id
-            next_resource_id += 1
-            assembly = node(resources, "object", id=assembly_ids[preset], type="model", name=preset)
-            components = node(assembly, "components")
-            for object_id in component_ids:
-                node(components, "component", objectid=object_id)
-        assembly_id = assembly_ids[preset]
+        # Every copy gets its own named object. Bambu Studio turns build items
+        # that share one object into unnamed duplicates.
+        assembly_id = next_resource_id
+        next_resource_id += 1
+        assembly = node(resources, "object", id=assembly_id, type="model", name=preset)
+        components = node(assembly, "components")
+        for object_id in mesh_ids.setdefault(preset, component_ids):
+            node(components, "component", objectid=object_id)
 
         column, row = index % columns, index // columns
         # Centre each model in its cell, then centre the full grid at origin.
@@ -627,6 +635,9 @@ def build_parser():
     parser.add_argument("--layout-size", type=layout_size, metavar="N|all",
                         help="place this many pieces in each printer-neutral layout 3MF, or 'all' for "
                              "one file; a preset file's pieceCounts decide how many copies of each piece")
+    parser.add_argument("--orientation", choices=sorted(ORIENTATIONS),
+                        help="how every exported piece sits on the bed, overriding the preset: upright "
+                             "stands on the heel; front-down and back-down lie flat on that face")
     parser.add_argument("--replace", action="store_true",
                         help="overwrite existing same-named 3MF files; otherwise they are skipped")
     parser.add_argument("--list", action="store_true",
@@ -722,6 +733,8 @@ def scad_arguments(args, scad, parameters, piece, parser):
             values[parameter] = choice
     if args.signature_text is not None:
         values["Signature_Enabled"] = True
+    if args.orientation is not None:
+        values["Print_Orientation"] = ORIENTATIONS[args.orientation]
 
     common = []
     for name, value in values.items():

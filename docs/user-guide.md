@@ -195,6 +195,9 @@ python3 scripts/komascad_export.py --preset-file presets/games/shogi.json --out 
 | The complete set in one 3MF (all 40 shogi pieces) | `--layout-size all` |
 | The complete set split across files, at most 20 pieces each | `--layout-size 20` |
 | One 3MF per different piece, to duplicate in the slicer | nothing |
+| Pieces lying flat on the front (black) face | `--orientation front-down` |
+| Pieces lying flat on the back face | `--orientation back-down` |
+| Pieces standing on the heel, whatever the preset says | `--orientation upright` |
 | Just one piece | `--piece "Shogi 09 - Pawn"` |
 | To see what would be written, without rendering | `--dry-run` |
 | To re-export after a change | `--replace` (existing files are skipped otherwise) |
@@ -206,6 +209,12 @@ full shogi set is about 242 × 95 mm as laid out; use a smaller
 `--layout-size` if that does not fit your bed, or rearrange in the slicer.
 Without `--layout-size`, each file holds one piece and `manifest.json` lists
 the quantity to print.
+
+Without `--orientation`, pieces use the orientation saved in the preset, which
+is upright for the bundled games. Lying flat takes more bed: a full shogi set
+is about 242 × 228 mm, so split it with `--layout-size 20` on a smaller bed.
+In the slicer, each piece appears under its preset name; its coloured parts
+are listed beneath it.
 
 Colours in the 3MF are logical names. Match them to your loaded spools in the
 slicer. More detail is in [batch export](batch-export.md) and the

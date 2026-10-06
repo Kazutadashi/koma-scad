@@ -13,7 +13,7 @@ See the [design guide](design-guide.md) for geometry and the [colour quickstart]
 | `Back_Characters` | `""` | Empty string makes a blank reverse. Characters are stacked from tip to heel. |
 | `Font_Name` | `"Noto Serif CJK JP:style=SemiBold"` | Install this font or select an installed Japanese font via Help > Font List. |
 | `Output_Mode` | `"Model"` | Unified geometry/font/material workspace. F6 Model exports one single-material STL; the Python exporter creates the displayed multipart colour 3MF. Blank and Inspect views remain available. |
-| `Print_Orientation` | `"Upright"` | Upright: broad heel on bed. Back face down: usually unsuitable for an engraved reverse. |
+| `Print_Orientation` | `"Upright"` | Upright: broad heel on bed. Front face down or Back face down: lies flat with that face on the bed; a raised inscription on the bed-side face is rejected. |
 | `Model_Scale` | `1` | Multiplier (unitless) — 1 = original dimensions; 2 = double all lengths. |
 ## 02 - Piece dimensions
 

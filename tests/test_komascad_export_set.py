@@ -53,6 +53,9 @@ class SetExportTests(unittest.TestCase):
                 model = archive.read("3D/3dmodel.model").decode("utf-8")
         self.assertEqual(model.count("<item "), 4)
         self.assertEqual(model.count("<mesh>"), 2)
+        # Each copy is its own named object so slicers keep the name.
+        self.assertEqual(model.count('name="Pawn"'), 3)
+        self.assertEqual(len(set(EXPORT.re.findall(r'<item objectid="(\d+)"', model))), 4)
         self.assertEqual(len({(entry["x"], entry["y"]) for entry in placed}), 4)
 
     def test_piece_counts_default_to_one_and_reject_unknown_names(self):

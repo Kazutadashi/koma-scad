@@ -149,7 +149,7 @@ For stronger visual contrast with one filament, test sealing and hand filling th
 | `Front_Characters`, `Back_Characters` | Unicode strings, stacked in order from point to heel; empty means blank. |
 | `Font_Name` | Shared installed font family and optional Fontconfig style. |
 | `Output_Mode` | Model/Blank or Inspect front/back/signature/pawn circle. Model combines geometry and material preview. Inspect views are F5-only. Exporter-only material part modes are hidden. |
-| `Print_Orientation` | Upright, Back face down, or Design coordinates; ignored by flat inspection views. Raised reverse text cannot use Back face down. |
+| `Print_Orientation` | Upright, Front face down, Back face down, or Design coordinates; ignored by flat inspection views. Raised text cannot be on the face that lies on the bed. |
 | `Model_Scale` | Uniformly scales body, lettering, offsets, bevel, and relief. Does not resize only the blank. |
 | `Piece_Length`, `Base_Width`, `Rear_Thickness` | Authoritative dimensions in all categories. |
 | `Taper_Mode`, `Tip_Thickness` | Tip thickness mode uses equal slopes and ignores the reference side angles. Reference side angles mode derives point thickness and ignores Tip_Thickness. |
