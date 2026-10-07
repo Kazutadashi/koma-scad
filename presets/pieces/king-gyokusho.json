@@ -16,6 +16,11 @@
         "one": {
             "Front_Characters": "玉",
             "Front_Font_Size": "15.5"
+        },
+        "learner": {
+            "Front_Characters": "玉",
+            "Front_Moves": "ooo/o@o/ooo",
+            "Front_Font_Size": "9.6"
         }
     }
 }

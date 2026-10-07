@@ -58,5 +58,35 @@
             "lance": 4,
             "pawn": 18
         }
+    },
+    "minishogi-learner": {
+        "title": "Minishogi Learner",
+        "front": "learner",
+        "back": "learner",
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 2,
+            "silver": 2,
+            "pawn": 2
+        }
+    },
+    "shogi-learner": {
+        "title": "Shogi Learner",
+        "front": "learner",
+        "back": "learner",
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 4,
+            "silver": 4,
+            "knight": 4,
+            "lance": 4,
+            "pawn": 18
+        }
     }
 }

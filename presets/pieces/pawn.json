@@ -16,6 +16,11 @@
         "one": {
             "Front_Characters": "歩",
             "Front_Font_Size": "13.4"
+        },
+        "learner": {
+            "Front_Characters": "歩",
+            "Front_Moves": "o/@",
+            "Front_Font_Size": "8.4"
         }
     },
     "back": {
@@ -24,6 +29,11 @@
             "Back_Font_Size": "13.4",
             "Back_Glyph_X": "[-0.5, 0, 0]",
             "Back_Glyph_Y": "[1.5, 0, 0]"
+        },
+        "learner": {
+            "Back_Characters": "と",
+            "Back_Moves": "ooo/o@o/.o.",
+            "Back_Font_Size": "8.4"
         }
     }
 }

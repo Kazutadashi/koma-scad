@@ -43,6 +43,18 @@ Two rules follow from this:
 | `minishogi-1char` | one character | one character | 7 | 12 |
 | `shogi` | two characters | one character | 9 | 40 |
 | `shogi-1char` | one character | one character | 9 | 40 |
+| `minishogi-learner` | one character and its moves | one character and its moves | 7 | 12 |
+| `shogi-learner` | one character and its moves | one character and its moves | 9 | 40 |
+
+The learner games are for new players: under each character is a diagram of
+how the piece moves, and the reverse shows its moves after promotion. A line
+ending in a dot is a step; a line ending in an arrow slides any distance; a
+ring is a jump. Each diagram is a short grid such as `ooo/o@o/.o.` in the
+piece file, so any piece, including variant pieces, can have one. Draw a new
+one in [move-editor.html](../move-editor.html), which opens in any browser,
+and see [movement diagrams](parameters.md#13---movement-diagrams) for every
+symbol. `presets/misc/chu-shogi-learner.json` is a chu shogi example whose
+reverse shows a lion move.
 
 The game name is what you type in commands, and it is also the filename in
 `presets/games/`. `python3 komascad.py list` prints this table, and

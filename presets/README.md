@@ -9,6 +9,7 @@ This page is the file-format reference.
 | `games.json` | Which pieces, how many, and which character styles make up each game | Yes |
 | `games/` | One complete Customizer file per game | No, generated |
 | `../shogi_piece.json` | Every game in one file, so the Customizer lists them all | No, generated |
+| `print-test/` | The [print test page](../docs/print-test-page.md): a fixed reference print | No, generated |
 | `misc/` | Older studies and the separately licensed Taikyoku set | Independent files |
 
 After editing a piece or `games.json`, rebuild:

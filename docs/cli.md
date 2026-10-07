@@ -13,7 +13,8 @@ python3 komascad.py COMMAND [options]
 | [`list [GAME]`](#list) | Show the games, or the pieces in one game |
 | [`export GAME [PIECE ...]`](#export) | Write print-ready color 3MF files |
 | [`preview GAME`](#preview) | Render every piece of a game onto one HTML page |
-| [`build`](#build) | Rebuild the game presets after editing `presets/pieces/` |
+| [`build`](#build) | Rebuild the game presets after editing `presets/pieces/`, and the print test page |
+| [`check GAME [PIECE ...]`](#check) | Check that each piece's lettering is coarse enough to print |
 | [`set FILE NAME=VALUE ...`](#set) | Change a setting across many presets in a hand-kept file |
 
 `python3 komascad.py --help` shows this list, and
@@ -62,7 +63,9 @@ to change what is written:
 | Pieces lying flat on the front face | `--orientation front-down` |
 | Pieces lying flat on the back face | `--orientation back-down` |
 | Pieces standing on the heel, whatever the preset says | `--orientation upright` |
+| Several pieces rendered at once | `-j N` (`--jobs N`) |
 | To see what would be written, without rendering | `-n` |
+| To export lettering the printability check rejects | `--no-print-check` |
 | To export again after a change | `-f` (existing files are skipped otherwise) |
 | A different name on layout files and in the manifest | `--name "My Shogi"` |
 
@@ -81,6 +84,27 @@ smaller number if that does not fit your bed, or rearrange in the slicer.
 The quantities come from a top-level `pieceCounts` object in the preset file.
 The bundled game files get theirs from `presets/games.json`; presets a file
 does not mention count once.
+
+A file that mixes piece sizes can also plan its rows with a top-level
+`layoutRows` array: the number of pieces in each row, back of the bed first.
+Each row is then only as deep and as wide as its own pieces. It applies when
+one file holds every piece, so with `--per-file all` or a large enough number,
+and its numbers must add up to the pieces placed. The
+[print test page](print-test-page.md) uses it:
+
+```json
+"layoutRows": [5, 5, 10, 11]
+```
+
+### Rendering faster
+
+`-j N` renders up to N different pieces at once. Each OpenSCAD run uses one
+processor core and can need a gigabyte or more of memory, so choose N to fit
+both:
+
+```bash
+python3 komascad.py export shogi --per-file all -j 4
+```
 
 The files hold geometry and colors only, with no printer, nozzle, filament,
 bed or process settings, so choose those normally in your slicer after
@@ -157,7 +181,9 @@ python3 komascad.py build
 
 turns the piece files in `presets/pieces/` and the recipes in
 `presets/games.json` into `presets/games/*.json` and `shogi_piece.json`. Run
-it after editing either source. `export` and `preview` refuse to use a game
+it after editing either source. It also writes the
+[print test page](print-test-page.md) plates in `presets/print-test/`, whose
+settings are fixed in `komascad.py` itself. `export` and `preview` refuse to use a game
 file that is older than its piece files and ask you to build first.
 
 | Option | Effect |
@@ -168,6 +194,23 @@ file that is older than its piece files and ask you to build first.
 The build stops if `shogi_piece.json` holds Customizer changes that the piece
 files do not, and lists them; see
 [tuning by eye](user-guide.md#tuning-by-eye-in-openscad).
+
+## check
+
+```bash
+python3 komascad.py check shogi
+```
+
+measures every piece's lettering at `Print_Line_Width` and prints, per face,
+the share of strokes thinner than one printed line and of gaps narrower than
+one line. A piece over 2.5% or 5% is marked FAIL, and the exit status is 1.
+Open a failing piece in OpenSCAD with Output Mode **Inspect printability** to
+see where; [lettering printability](parameters.md#lettering-printability)
+explains the fixes.
+
+`export` runs the same check before rendering anything and stops when a piece
+fails. Add `--no-print-check` to export it anyway, as the
+[print test page](print-test-page.md) does on purpose.
 
 ## set
 

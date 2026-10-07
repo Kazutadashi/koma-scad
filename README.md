@@ -181,10 +181,12 @@ The Customizer in OpenSCAD 2021.01 cannot be searched. The table below shows whe
 | --- | --- |
 | `shogi_piece.scad` | Piece generator |
 | `komascad.py` | Command-line tool: list, build, preview and export |
+| `move-editor.html` | Draw a piece's movement diagram in a browser; see [movement diagrams](docs/parameters.md#13---movement-diagrams) |
 | `shogi_piece.json` | Generated: every game preset, for the Customizer |
 | `presets/pieces/` | Master list: one file per piece, shared by every game |
 | `presets/games.json` | Which pieces, how many, and which character styles make up each game |
 | `presets/games/` | Generated game preset files; see [presets/README.md](presets/README.md) |
+| `presets/print-test/` | Generated [print test page](docs/print-test-page.md): the fixed reference print |
 | `presets/misc/` | Hand-kept studies and the separately licensed CC BY-SA Taikyoku presets |
 | `data/` | Taikyoku source data and its attribution |
 | [fonts/](fonts/suggested_fonts.md) | Bundled open fonts, licenses, and font recommendations |

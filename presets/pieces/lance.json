@@ -16,12 +16,22 @@
         "one": {
             "Front_Characters": "香",
             "Front_Font_Size": "14"
+        },
+        "learner": {
+            "Front_Characters": "香",
+            "Front_Moves": "#/@",
+            "Front_Font_Size": "8.7"
         }
     },
     "back": {
         "one": {
             "Back_Characters": "杏",
             "Back_Font_Size": "14"
+        },
+        "learner": {
+            "Back_Characters": "杏",
+            "Back_Moves": "ooo/o@o/.o.",
+            "Back_Font_Size": "8.7"
         }
     }
 }

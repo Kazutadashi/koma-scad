@@ -16,6 +16,11 @@
         "one": {
             "Front_Characters": "銀",
             "Front_Font_Size": "14.5"
+        },
+        "learner": {
+            "Front_Characters": "銀",
+            "Front_Moves": "ooo/.@./o.o",
+            "Front_Font_Size": "9"
         }
     },
     "back": {
@@ -23,6 +28,11 @@
             "Back_Characters": "全",
             "Back_Font_Size": "14.5",
             "Back_Glyph_Y": "[1.5, 0, 0]"
+        },
+        "learner": {
+            "Back_Characters": "全",
+            "Back_Moves": "ooo/o@o/.o.",
+            "Back_Font_Size": "9"
         }
     }
 }

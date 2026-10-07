@@ -1,6 +1,6 @@
 # Parameter reference
 
-All 89 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise. Color-support thickness is an internal slicer-safe default rather than a user adjustment.
+All 97 public controls in `shogi_piece.scad`. Search this page for a name or keyword. Customizer displays underscores as spaces. Values below are source defaults; a saved preset may override them. Units are before Model Scale unless stated otherwise. Color-support thickness is an internal slicer-safe default rather than a user adjustment.
 
 See the [design guide](design-guide.md) for geometry and the [color quickstart](color-quickstart.md) for 3MF export.
 
@@ -141,3 +141,112 @@ See the [design guide](design-guide.md) for geometry and the [color quickstart](
 | `Signature_Margin` | `0.6` | mm — protective border around heel lettering. Overflow is clipped and shown red in Inspect signature. |
 | `Signature_Filament` | `"Same as front"` | Live Model and color 3MF material; Same as front reuses its filament. F6 Model remains a single-material STL. |
 | `Signature_Color` | `[0.08, 0.06, 0.04, 1]` | RGBA (unitless, 0-1) — used only when Signature Filament is Custom; alpha is preview-only. |
+
+## 13 - Movement diagrams
+
+A movement diagram is a small picture of where a piece can go, drawn below or
+above its characters and engraved and colored like them. The easiest way to
+make one is the move editor: open [move-editor.html](../move-editor.html) in a
+browser, click the squares, and copy the result.
+
+A diagram is written as a grid of the squares around the piece. Rows run from
+the point (forward) to the heel and are separated by `/`; spaces are ignored.
+
+| Symbol | Meaning | Drawn as |
+| --- | --- | --- |
+| `@` | The piece | A small pentagon pointing forward |
+| `o` | Can move to this square | A line from the piece ending in a dot; every square it can stop on has a dot |
+| `x` | Jumps to this square, over anything between | A ring, with no line |
+| `!` | Captures here without moving (igui), or moves on: a lion move | A line ending in an ✕; next to the `@` only |
+| `#` | Slides any distance this way | A line ending in an arrowhead, past the last mark on its line |
+| `=` | Flies over any number of pieces this way, capturing them | A double arrowhead |
+| `L` | Slides this way and may turn 90° once (hook move) | A line ending in a bar across it |
+| `2` | Moves up to 2 squares this way; next to the `@` | Two dots |
+| `3`–`7` | Moves up to that many squares this way; next to the `@` | A line ending in the number |
+| `.` | Nothing | Nothing |
+
+A `#`, `=` or `L` that lies beyond an `x` on the same line slides on from the
+jump. A grid that reaches every square within two steps (a lion) is drawn as a
+square frame around the piece.
+
+| Piece | Grid |
+| --- | --- |
+| Pawn | `o/@` |
+| Lance | `#/@` |
+| Knight | `x.x/.../.@.` |
+| Gold | `ooo/o@o/.o.` |
+| Rook | `.#./#@#/.#.` |
+| Dragon (promoted rook) | `o#o/#@#/o#o` |
+| Chu shogi horned falcon | `.x./#!#/#@#/###` |
+| Lion | `xxxxx/xooox/xo@ox/xooox/xxxxx` |
+| Taikyoku great dragon | `#3#/.@./#3#` |
+| Taikyoku great general | `===/=@=/===` |
+| Taikyoku hook mover | `.L./L@L/.L.` |
+
+### How diagrams stay printable
+
+Every mark is built from two sizes, `Move_Stroke` (the thinnest line) and
+`Move_Gap` (the narrowest space between marks), measured after Model Scale so
+a small piece keeps printable marks. The model places the squares as close as
+those two sizes allow, then enlarges the diagram to about one character's size
+when the face has room. Marks differ in outline, so none is told apart by size
+alone.
+
+Automatic character sizes give the characters whatever face length the
+smallest printable diagram leaves. If the characters and diagram together are
+longer than the face, the model stops with a message.
+
+Whether the characters then print depends on their strokes, not only their
+size: 鷹 has 24 strokes and needs about three times the size of と. The
+exporter measures this (see [lettering printability](#lettering-printability)),
+and that is what limits most variant pieces. With a 0.4 mm nozzle, one
+character and a diagram fit a standard piece; two dense characters and a
+diagram generally do not. The fonts differ too: Yuji Syuku cannot print 鷹 at
+any size, while LXGW WenKai Mono prints it once stroke expansion is 0: extra
+thickness is what closes its narrow gaps. The chu shogi example in
+`presets/misc/chu-shogi-learner.json` therefore uses 馬 and 鷹 in LXGW WenKai
+Mono, like the learner sets, with no stroke expansion, at 1.4× size.
+
+For a set, give every piece the same `Move_Stroke`, `Move_Gap` and
+`Move_Pitch`, so each mark is the same size on every piece, and characters in
+the same proportion to the body. The learner sets use LXGW WenKai Mono with
+0.08 mm stroke expansion, characters 0.30 × the body length, character slots
+at 0.92 spacing, 0.6 mm lines and 3.75 mm between squares: a full step diagram
+is then about as wide as its character, and slides reach a little further.
+
+Set `Move_Stroke` and `Move_Gap` from your [print test page](print-test-page.md):
+the thinnest line and narrowest gap from the ladders. Neither can be smaller
+than `Print_Line_Width`.
+
+What a diagram cannot show: the lion's ability to move twice is implied by the
+✕ and the frame, not drawn step by step; burning, and pieces that capture
+differently from how they move, belong in a rules sheet.
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `Front_Moves` | `""` | Move grid for the front; empty = no diagram. |
+| `Front_Move_Position` | `"Below"` | Below or Above the front characters. The diagram takes one character slot; Glyph X, Y and Rotation for that slot move it, and a Glyph Size above 1 enlarges it. |
+| `Back_Moves` | `""` | Moves after promotion, shown on the reverse. |
+| `Back_Move_Position` | `"Below"` | Below or Above the back characters. |
+| `Move_Stroke` | `0.6` | mm, after Model Scale — thinnest diagram line. |
+| `Move_Gap` | `0.6` | mm, after Model Scale — narrowest space between diagram marks. |
+| `Move_Pitch` | `0` | mm, after Model Scale — distance between squares; 0 = automatic. Use one value for a whole set. The model stops if a grid needs more space to print. |
+
+## Lettering printability
+
+A stroke thinner than one printed line disappears, and a gap narrower than one
+line fills in. Set Output Mode to **Inspect printability** to see both on the
+current piece: front on the left, back on the right, thin strokes in yellow and
+narrow gaps in blue. Diagrams are not marked; they are printable by
+construction.
+
+`komascad.py check GAME` measures every piece: the share of each face's
+lettering that is too thin, and the share that would fill in. `export` runs the
+same check first and stops if any piece is over the limits, 2.5% and 5%. The
+bundled shogi and minishogi sets, which print cleanly, measure at most 1.4% and
+2.4%; the limits leave headroom above them. Larger characters, a font with fewer strokes, or a
+smaller nozzle with a matching `Print_Line_Width` bring a piece under them.
+
+| Parameter | Default | Description |
+| --- | --- | --- |
+| `Print_Line_Width` | `0.5` | mm, after Model Scale — your printer's line width on the face; 0.5 with the [print guide](printing/print-guide.md)'s settings. Use your nozzle's first-layer line width with another nozzle. |

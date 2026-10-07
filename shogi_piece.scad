@@ -18,7 +18,7 @@ Back_Characters = "";
 // Install this font or select an installed Japanese font via Help > Font List.
 Font_Name = "Noto Serif CJK JP:style=SemiBold";
 // Model is the complete geometry-and-color workspace. F6 exports one ordinary single-material STL; "komascad.py export" writes the shown multipart color 3MF.
-Output_Mode = "Model"; // [Model,Blank,Inspect front,Inspect back,Inspect signature,Inspect pawn circle]
+Output_Mode = "Model"; // [Model,Blank,Inspect front,Inspect back,Inspect printability,Inspect signature,Inspect pawn circle]
 // Upright: broad heel on bed. Front or Back face down: lies flat with that face on the bed; a raised inscription on the bed-side face is rejected.
 Print_Orientation = "Upright"; // [Upright,Front face down,Back face down,Design coordinates]
 // Multiplier (unitless) — 1 = original dimensions; 2 = double all lengths.
@@ -180,6 +180,8 @@ Show_Layout_Guides = true;
 Reference_Line_Width = 0.6; // [0.2:0.05:1.2]
 // Count (integer) — curve tessellation segments; higher is smoother and slower.
 Text_Curve_Resolution = 48; // [16:8:128]
+// mm — your printer's line width on the face, AFTER Model Scale; 0.5 with the print guide's settings. Inspect printability marks character strokes thinner (yellow) and gaps narrower (blue) than this; the exporter refuses lettering with too much of either.
+Print_Line_Width = 0.5; // [0.2:0.05:1.2]
 
 /* [12 - Maker signature on heel] */
 // Optional mark on the broad bottom edge, NOT on the reverse inscription face. Off preserves existing pieces.
@@ -206,6 +208,20 @@ Signature_Margin = 0.6; // [0.1:0.1:3]
 Signature_Filament = "Same as front"; // [Same as body,Same as front,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 // RGBA (unitless, 0-1) — used only when Signature Filament is Custom; alpha is preview-only.
 Signature_Color = [0.08, 0.06, 0.04, 1];
+
+/* [13 - Movement diagrams] */
+// Move grid for the front, drawn below or above the characters. Rows run from the point to the heel, separated by /. @ piece; o moves there; x jumps there; ! captures there without moving (igui) or moves on; # slides; = flies over pieces, capturing them; L slides and may turn 90 degrees; 2-7 beside the @ moves up to that many squares. # = L after an x slide on from the jump. Draw one with move-editor.html. Empty = no diagram.
+Front_Moves = "";
+Front_Move_Position = "Below"; // [Below,Above]
+// Moves after promotion, shown on the reverse. Same symbols as Front Moves.
+Back_Moves = "";
+Back_Move_Position = "Below"; // [Below,Above]
+// mm — thinnest diagram stroke, AFTER Model Scale. Use the line ladder result from the print test page.
+Move_Stroke = 0.6; // [0.3:0.05:2]
+// mm — narrowest gap between diagram marks, AFTER Model Scale. Use the gap ladder result from the print test page.
+Move_Gap = 0.6; // [0.3:0.05:2]
+// mm — distance between squares in the diagram, AFTER Model Scale; 0 = automatic. Give every piece of a set the same value so their marks match; the model stops if a grid needs more.
+Move_Pitch = 0; // [0:0.05:10]
 
 /* [Hidden] */
 // Export material regions need enough physical width for ordinary 0.4 mm
@@ -284,11 +300,17 @@ function valid_choice(x, choices) = len([for(c=choices) if(x==c) 1])==1;
 function all_positive(a) = is_list(a) && len(a)>0 && min(a)>0;
 function entry(a,i,fallback) = i<len(a) ? a[i] : fallback;
 function chars(f) = f ? Front_Characters : Back_Characters;
+function move_grid(f) = f ? Front_Moves : Back_Moves;
+function has_moves(f) = len(move_grid(f))>0;
+// Characters plus the diagram, which takes one more slot below or above them.
+function slots(f) = len(chars(f)) + (has_moves(f) ? 1 : 0);
+function moves_above(f) = has_moves(f) && (f ? Front_Move_Position : Back_Move_Position)=="Above";
+function diagram_slot(f) = has_moves(f) ? (moves_above(f) ? 0 : slots(f)-1) : -1;
 function style(f) = f ? Front_Text_Style : effective_Back_Text_Style;
 function depth(f) = f ? Front_Relief_Depth : effective_Back_Relief_Depth;
-function active(f) = len(chars(f))>0 && style(f)!="None" && depth(f)>0;
+function active(f) = slots(f)>0 && style(f)!="None" && depth(f)>0;
 
-assert(valid_choice(Output_Mode,["Model","Print","Blank","Inspect front","Inspect back","Inspect signature","Inspect pawn circle","Color assembly","Color body","Color front","Color back","Color signature"]),"Unknown Output_Mode.");
+assert(valid_choice(Output_Mode,concat(["Model","Print","Blank","Inspect front","Inspect back","Inspect printability","Inspect signature","Inspect pawn circle","Color assembly","Color body","Color front","Color back","Color signature"],printability_modes)),"Unknown Output_Mode.");
 assert(valid_choice(Print_Orientation,["Upright","Front face down","Back face down","Design coordinates"]),"Unknown Print_Orientation.");
 assert(valid_choice(Taper_Mode,["Tip thickness","Reference side angles"]),"Unknown Taper_Mode.");
 assert(valid_choice(Angle_Mode,["Derive shoulder","Derive tip","Derive base","Check all three"]),"Unknown Angle_Mode.");
@@ -297,6 +319,20 @@ assert(Bevel_Width>=0 && Bevel_Depth>=0 && Text_Margin>=0 && Minimum_Web>0,"Beve
 assert(Text_Curve_Resolution>=16 && Text_Curve_Resolution<=128 && floor(Text_Curve_Resolution)==Text_Curve_Resolution,"Text resolution must be an integer 16..128.");
 assert(Text_Edge_Radius>=0 && Text_Rounding_Steps>=2 && Text_Rounding_Steps<=12 && floor(Text_Rounding_Steps)==Text_Rounding_Steps,"Invalid text rounding settings.");
 assert(Reference_Line_Width>0,"Reference_Line_Width must be positive.");
+assert(Move_Stroke>0 && Move_Gap>0 && Print_Line_Width>0,"Move stroke, move gap and print line width must be positive.");
+assert(Move_Stroke>=Print_Line_Width && Move_Gap>=Print_Line_Width,"Move Stroke and Move Gap cannot be narrower than Print Line Width: the printer could not make them.");
+for(f=[true,false]) if(has_moves(f)) let(name=f?"Front_Moves":"Back_Moves", grid=move_grid(f), rows=grid_rows(grid)) {
+ assert(len([for(row=rows, c=row) if(!valid_choice(c,move_symbols)) 1])==0,
+  str(name," may only use . o x ! # = L 2-7 @ and /: ",grid));
+ assert(len([for(row=rows, c=row) if(c=="@") 1])==1, str(name," needs exactly one @ for the piece: ",grid));
+ assert(len([for(row=rows) if(len(row)!=len(rows[0])) 1])==0, str(name," rows must all be the same length: ",grid));
+ let(marks=move_marks(f)) {
+  assert(len([for(m=marks) if(mv_is_direction(m[2]) && !on_line(m)) 1])==0,
+   str(name,": # = and L must lie straight or diagonally from the @: ",grid));
+  assert(len([for(m=marks) if((m[2]=="!" || mv_is_digit(m[2])) && mv_cheb(m)!=1) 1])==0,
+   str(name,": ! and 2-7 go on a square next to the @: ",grid));
+ }
+}
 assert(!(model_mode && Print_Orientation=="Back face down" && active(false) && style(false)=="Raised"),
     "Raised reverse extends below the bed. Use Upright for this piece.");
 assert(!(model_mode && Print_Orientation=="Front face down" && active(true) && style(true)=="Raised"),
@@ -450,11 +486,22 @@ assert(safe_outline[1][0]>safe_outline[0][0] && safe_outline[3][1]>safe_outline[
 function slope(f) = f ? front_slope : back_slope;
 function cosine(f) = 1/sqrt(1+slope(f)*slope(f));
 function face_length(f) = Piece_Length/cosine(f);
-function font_size(f) = let(n=max(1,len(chars(f))), override=f?Front_Font_Size:effective_Back_Font_Size)
-    (override>0 ? override : min(Base_Width*0.43,face_length(f)*0.72/(1.35*n))) * (f?Front_Text_Scale:effective_Back_Text_Scale);
+// Usable face length, and the share of it a stack with a diagram may fill:
+// the margin keeps characters out of the narrow point.
+function safe_length(f) = let(ys=[for(q=safe_outline) q[1]/cosine(f)]) max(ys)-min(ys);
+mv_fill = 0.9;
+function font_size(f) = let(n=max(1,slots(f)), override=f?Front_Font_Size:effective_Back_Font_Size,
+    // With a diagram, the characters get what the smallest printable diagram
+    // leaves: each takes 1.42 sizes of spacing, plus the gap above the diagram.
+    beside=len(chars(f))>0 && has_moves(f)
+        ? (safe_length(f)*mv_fill-mv_min_height(f))/(1.42*(f?Front_Spacing_Scale:effective_Back_Spacing_Scale)*len(chars(f))+0.42) : 1e9)
+    (override>0 ? override : min(Base_Width*0.43, beside<1e9 ? beside : face_length(f)*0.72/(1.35*n))) * (f?Front_Text_Scale:effective_Back_Text_Scale);
 function char_spacing(f) = let(override=f?Front_Character_Spacing:effective_Back_Character_Spacing)
     override>0 ? override : font_size(f)*1.42*(f?Front_Spacing_Scale:effective_Back_Spacing_Scale);
-function center_y(f) = face_length(f)*(f?Front_Center_Fraction:effective_Back_Center_Fraction)+(f?Front_Text_Y:effective_Back_Text_Y);
+function center_y(f) = let(c=face_length(f)*(f?Front_Center_Fraction:effective_Back_Center_Fraction)+(f?Front_Text_Y:effective_Back_Text_Y))
+    has_moves(f) ? let(ys=[for(q=safe_outline) q[1]/cosine(f)], half=stack_height(f)/2)
+        // Slide a stack that holds a diagram back inside the face; the fit check catches one too long to fit.
+        max(min(ys)+half, min(max(ys)-half, c)) : c;
 function font(f) = let(override=f?Front_Font_Override:effective_Back_Font_Override) override=="" ? Font_Name : override;
 function ink(f) = material_rgb(f?1:2);
 
@@ -468,8 +515,8 @@ module on_face(f) {
 module safe_face(f) { polygon([for(p=safe_outline) [p[0],p[1]/cosine(f)]]); }
 module flat_face(f) { polygon([for(p=has_bezel?inner_outline:outline) [p[0],p[1]/cosine(f)]]); }
 
-module raw_inscription(f) {
-    n=len(chars(f));
+module raw_inscription(f,diagram=true) {
+    n=slots(f);
     if(n>0 && style(f)!="None")
     translate([f?Front_Text_X:effective_Back_Text_X, center_y(f)])
     rotate(f?Front_Text_Rotation:effective_Back_Text_Rotation)
@@ -477,12 +524,210 @@ module raw_inscription(f) {
         g=entry(f?Front_Glyph_Size:effective_Back_Glyph_Size,i,1);
         gx=entry(f?Front_Glyph_Width:effective_Back_Glyph_Width,i,1)*(f?Front_Width_Scale:effective_Back_Width_Scale);
         gy=entry(f?Front_Glyph_Height:effective_Back_Glyph_Height,i,1)*(f?Front_Height_Scale:effective_Back_Height_Scale);
-        translate([entry(f?Front_Glyph_X:effective_Back_Glyph_X,i,0),(n-1-2*i)*char_spacing(f)/2+entry(f?Front_Glyph_Y:effective_Back_Glyph_Y,i,0)])
+        translate([entry(f?Front_Glyph_X:effective_Back_Glyph_X,i,0),slot_y(f,i)+entry(f?Front_Glyph_Y:effective_Back_Glyph_Y,i,0)])
         rotate(entry(f?Front_Glyph_Rotation:effective_Back_Glyph_Rotation,i,0))
+        // Diagrams are already sized for printing; stroke expansion is for lettering.
+        if(i==diagram_slot(f)) { if(diagram) move_diagram(f); }
         // Expand AFTER scaling so stroke expansion remains a predictable mm value.
-        offset(delta=f?Front_Stroke_Expansion:effective_Back_Stroke_Expansion)
+        else offset(delta=f?Front_Stroke_Expansion:effective_Back_Stroke_Expansion)
         scale([g*gx,g*gy])
-        text(chars(f)[i],size=font_size(f),font=font(f),halign="center",valign="center",language="ja",$fn=Text_Curve_Resolution);
+        text(chars(f)[moves_above(f) ? i-1 : i],size=font_size(f),font=font(f),halign="center",valign="center",language="ja",$fn=Text_Curve_Resolution);
+    }
+}
+
+// Slots are stacked from the point to the heel. A character slot is one
+// character spacing tall; a diagram slot is as tall as its diagram needs.
+function slot_height(f,i) = i==diagram_slot(f)
+    ? mv_box_size(f)[1] + (char_spacing(f)-font_size(f))
+    : char_spacing(f);
+function slot_y(f,i) = let(heights=[for(j=[0:slots(f)-1]) slot_height(f,j)])
+    sum_to(heights,slots(f))/2 - sum_to(heights,i) - heights[i]/2;
+function sum_to(v,n) = n<=0 ? 0 : v[n-1] + sum_to(v,n-1);
+function stack_height(f) = sum_to([for(j=[0:slots(f)-1]) slot_height(f,j)],slots(f));
+
+// --- Movement diagrams -------------------------------------------------------
+// A grid such as ".#./#@#/.#." describes the squares around the piece: rows
+// from the point to the heel, spaces ignored. Every mark is built from two
+// final sizes, the thinnest stroke and the narrowest gap the printer keeps,
+// so each inked shape and each gap between shapes stays printable at any
+// Model Scale. Marks differ in outline, never only in size.
+mvW = Move_Stroke/Model_Scale;
+mvG = Move_Gap/Model_Scale;
+mv_dot = 2*mvW;                         // o: a square the piece can stop on
+mv_ring = 2*mvW + mvG;                  // x: a square it jumps to; the hole is one gap
+mv_cross = 3*mvW;                       // !: igui, capture there without moving; notches stay one gap wide
+mv_head = 2.5*mvW;                      // # and =: arrowhead length and base
+mv_tee = 3.5*mvW;                       // L: bar across the end of a hook move
+mv_piece = 3*mvW;                       // @: the piece, a pentagon pointing forward
+mv_digit = [2*mvW+mvG, 3*mvW+2*mvG];    // 3-7: seven-segment count, width and height
+move_directions = [[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
+mv_slide_past = 0.5;                    // a slide's arrowhead lies this many squares past its farthest mark
+move_symbols = [".","o","x","!","#","=","L","2","3","4","5","6","7","@"];
+
+function without_spaces(s,i=0) = i>=len(s) ? "" : str(s[i]==" " ? "" : s[i], without_spaces(s,i+1));
+function grid_rows(text) = let(g=without_spaces(text), n=len(g),
+    cuts=concat([-1],[for(i=[0:n-1]) if(g[i]=="/") i],[n]))
+    [for(r=[0:len(cuts)-2]) [for(i=[0:n-1]) if(i>cuts[r] && i<cuts[r+1]) g[i]]];
+function mv_grid_ok(f) = let(rows=grid_rows(move_grid(f)))
+    len([for(row=rows, c=row) if(!valid_choice(c,move_symbols)) 1])==0
+    && len([for(row=rows, c=row) if(c=="@") 1])==1
+    && len([for(row=rows) if(len(row)!=len(rows[0])) 1])==0;
+// [dx, dy, symbol] for every mark, in squares from the @; positive dy is forward.
+function move_marks(f) = let(rows=grid_rows(move_grid(f)),
+    at=[for(r=[0:len(rows)-1]) for(c=[0:len(rows[r])]) if(rows[r][c]=="@") [r,c]][0])
+    [for(r=[0:len(rows)-1]) for(c=[0:len(rows[r])]) if(valid_choice(rows[r][c],move_symbols) && rows[r][c]!="." && rows[r][c]!="@")
+        [c-at[1], at[0]-r, rows[r][c]]];
+function on_line(m) = m[0]==0 || m[1]==0 || abs(m[0])==abs(m[1]);
+function mv_cheb(m) = max(abs(m[0]),abs(m[1]));
+function mv_unit(m) = [sign(m[0]),sign(m[1])];
+function mv_ray(u) = [for(i=[0:7]) if(move_directions[i]==u) i][0];
+function mv_is_direction(c) = c=="#" || c=="=" || c=="L";
+function mv_is_digit(c) = valid_choice(c,["2","3","4","5","6","7"]);
+function mv_stops(c) = c=="o" || c=="x" || c=="!";
+// Reaching every square within two steps is an area move (a lion): one frame
+// replaces 24 marks that could never be printed apart.
+function mv_area(marks) = len([for(a=[-2:2], b=[-2:2]) if(max(abs(a),abs(b))>0
+    && len([for(m=marks) if(m[0]==a && m[1]==b && mv_stops(m[2])) 1])==0) 1])==0;
+function mv_visible(marks,area) = [for(m=marks) if(!(area && mv_cheb(m)<=2 && mv_stops(m[2]))) m];
+function mv_reach(vis,area) = max(concat([1, area ? 2 : 1],
+    [for(m=vis) if(mv_stops(m[2])) mv_cheb(m)], [for(m=vis) if(mv_is_digit(m[2])) 2]));
+// A slide's arrow lies past the farthest mark on its own line.
+function mv_ray_reach(vis,m) = max(concat([1],[for(k=vis) if(on_line(k) && mv_unit(k)==mv_unit(m)
+    && (mv_stops(k[2]) || mv_is_digit(k[2]))) mv_is_digit(k[2]) ? 2 : mv_cheb(k)]));
+// A slide behind a jump on its line continues from that jump.
+function mv_slide_from(vis,m) = let(rings=[for(k=vis) if(k[2]=="x" && on_line(k)
+    && mv_unit(k)==mv_unit(m) && mv_cheb(k)<mv_cheb(m)) mv_cheb(k)]) len(rings)>0 ? max(rings) : 0;
+function mv_starts_slide(vis,k) = len([for(m=vis) if(mv_is_direction(m[2]) && on_line(m) && on_line(k)
+    && mv_unit(m)==mv_unit(k) && mv_slide_from(vis,m)==mv_cheb(k)) 1])>0;
+function mv_digit_value(c) = ord(c)-ord("0");
+
+// Layout at pitch p (mm per square): [marks, lines, frame half-size, reach].
+// A mark is [kind, center, spacing radius, line it belongs to, drawing data];
+// a line is [start, end, line id, visible shaft length]. Line ids are the
+// direction index 0-7 or 100+ for a mark off the eight lines.
+function mv_layout(f,p) = let(
+    marks=move_marks(f), area=mv_area(marks), vis=mv_visible(marks,area), n=len(vis),
+    R=mv_reach(vis,area),
+    pieces=[["piece",[0,0],mv_piece/2,-1,0]],
+    stops=[for(i=[0:1:n-1]) let(m=vis[i], c=[m[0],m[1]]*p, line=on_line(m) ? mv_ray(mv_unit(m)) : 100+i)
+        if(m[2]=="o") ["dot",c,mv_dot/2,line,0]
+        else if(m[2]=="!") ["cross",c,(mv_cross-mvW)/2*sqrt(2)+mvW/2,line,0]
+        else if(m[2]=="x") ["ring",c,mv_ring/2,mv_starts_slide(vis,m) ? line : 100+i,0]],
+    ranges=[for(m=vis) if(mv_is_digit(m[2])) let(u=mv_unit(m), nu=u/norm(u), d=mv_digit_value(m[2]),
+        half=abs(nu[0])*mv_digit[0]/2+abs(nu[1])*mv_digit[1]/2)
+        each (d==2 ? [["dot",u*p,mv_dot/2,mv_ray(u),0], ["dot",2*u*p,mv_dot/2,mv_ray(u),0]]
+                   : [["digit",u*p+nu*(mvW/2+mvG+half),norm(mv_digit)/2,mv_ray(u),d]])],
+    ends=[for(m=vis) if(mv_is_direction(m[2])) let(u=mv_unit(m), nu=u/norm(u), s=mv_slide_from(vis,m),
+        tip=u*(max(mv_ray_reach(vis,m),s+1)+mv_slide_past)*p, angle=atan2(nu[1],nu[0]))
+        each (m[2]=="L" ? [["tee",tip,mv_tee/2,mv_ray(u),angle]]
+            : concat([["head",tip-nu*0.55*mv_head,0.55*mv_head,mv_ray(u),[tip,angle]]],
+                m[2]=="=" ? [["head",tip-nu*(1.55*mv_head+mvG),0.55*mv_head,mv_ray(u),[tip-nu*(mv_head+mvG),angle]]] : []))],
+    lines=concat(
+        [for(i=[0:1:n-1]) let(m=vis[i]) if(m[2]=="o" || m[2]=="!")
+            [[0,0],[m[0],m[1]]*p,on_line(m) ? mv_ray(mv_unit(m)) : 100+i,1e9]],
+        [for(m=vis) if(mv_is_digit(m[2])) let(u=mv_unit(m))
+            [[0,0],(mv_digit_value(m[2])==2 ? 2 : 1)*u*p,mv_ray(u),1e9]],
+        [for(m=vis) if(mv_is_direction(m[2])) let(u=mv_unit(m), nu=u/norm(u), s=mv_slide_from(vis,m),
+            tip=u*(max(mv_ray_reach(vis,m),s+1)+mv_slide_past)*p, start=s>0 ? u*s*p+nu*mv_ring/2 : [0,0],
+            head=m[2]=="L" ? mvW/2 : m[2]=="=" ? 2*mv_head+mvG : mv_head)
+            [start, m[2]=="L" ? tip : tip-nu*0.5*mv_head, mv_ray(u), norm(tip-start)-(s>0 ? 0 : mv_piece/2)-head]]))
+    [[for(m=concat(pieces,stops,ranges,ends)) concat(m,[mv_capsules(m)])], lines, area ? 2*p : 0, R];
+
+// A mark's outline as capsules [a, b, radius]: the spacing checks measure
+// these, so an x between two diagonal lines is judged by its arms, not by a
+// circle around it.
+function mv_capsules(m) = let(c=m[1])
+    m[0]=="cross" ? let(a=(mv_cross-mvW)/2) [[c+[-a,-a],c+[a,a],mvW/2],[c+[-a,a],c+[a,-a],mvW/2]]
+    : m[0]=="tee" ? let(n=[cos(m[4]+90),sin(m[4]+90)]*(mv_tee-mvW)/2) [[c-n,c+n,mvW/2]]
+    : m[0]=="digit" ? [[c-[0,(mv_digit[1]-mv_digit[0])/2],c+[0,(mv_digit[1]-mv_digit[0])/2],mv_digit[0]/2]]
+    : [[c,c,m[2]]];
+
+function mv_segment_distance(q,a,b) = let(d=b-a, t=max(0,min(1,(d*d)==0 ? 0 : ((q-a)*d)/(d*d)))) norm(q-(a+t*d));
+function mv_cross2(u,v) = u[0]*v[1]-u[1]*v[0];
+function mv_segments_cross(a,b,c,d) = let(d1=mv_cross2(b-a,c-a), d2=mv_cross2(b-a,d-a), d3=mv_cross2(d-c,a-c), d4=mv_cross2(d-c,b-c))
+    ((d1>0 && d2<0) || (d1<0 && d2>0)) && ((d3>0 && d4<0) || (d3<0 && d4>0));
+function mv_segments_distance(a,b,c,d) = mv_segments_cross(a,b,c,d) ? 0 :
+    min(mv_segment_distance(a,c,d),mv_segment_distance(b,c,d),mv_segment_distance(c,a,b),mv_segment_distance(d,a,b));
+// Clear space between two capsules.
+function mv_clear(p,q) = mv_segments_distance(p[0],p[1],q[0],q[1])-p[2]-q[2];
+function mv_marks_clear(s,t) = min([for(p=s[5], q=t[5]) mv_clear(p,q)]);
+// True when every mark keeps one gap from every other mark and from every
+// line it is not on, slides show a shaft, and an area frame clears its marks.
+function mv_fits(f,p) = let(L=mv_layout(f,p), S=L[0], lines=L[1], frame=L[2], n=len(S))
+    len([for(i=[0:n-1]) for(j=[0:n-1]) if(j>i && !(S[i][0]=="head" && S[j][0]=="head" && S[i][3]==S[j][3])
+        && mv_marks_clear(S[i],S[j]) < mvG) 1])==0
+    && len([for(s=S, l=lines) if(s[3]!=-1 && s[3]!=l[2] && min([for(c=s[5]) mv_clear(c,[l[0],l[1],mvW/2])]) < mvG) 1])==0
+    && len([for(l=lines) if(l[3] < 2*mvW) 1])==0
+    && (frame==0 || (frame-mvW/2 >= mv_piece/2+mvG
+        && len([for(s=S) if(s[3]!=-1 && abs(max(abs(s[1][0]),abs(s[1][1]))-frame) < s[2]+mvW/2+mvG) 1])==0));
+function mv_bisect(f,a,b,n) = n==0 ? b : let(m=(a+b)/2) mv_fits(f,m) ? mv_bisect(f,a,m,n-1) : mv_bisect(f,m,b,n-1);
+// The smallest printable pitch at or above a starting size.
+function mv_solve(f,start) = mv_fits(f,start) ? start : mv_bisect(f,start,start+40*mvW,24);
+function mv_box(f,p) = let(L=mv_layout(f,p), frame=L[2],
+    pts=concat([for(s=L[0], c=s[5]) each [[c[0],c[2]],[c[1],c[2]]]], [for(l=L[1]) each [[l[0],mvW/2],[l[1],mvW/2]]],
+        frame>0 ? [[[frame,frame],mvW/2],[[-frame,-frame],mvW/2]] : []))
+    [[min([for(q=pts) q[0][0]-q[1]]), min([for(q=pts) q[0][1]-q[1]])],
+     [max([for(q=pts) q[0][0]+q[1]]), max([for(q=pts) q[0][1]+q[1]])]];
+
+// Solved once per face. The smallest diagram sets how far automatic character
+// sizes shrink; the drawn diagram fills about one character's space when the
+// face has room, and a Glyph Size above 1 enlarges it, never below printable.
+mv_front_ok = has_moves(true) && mv_grid_ok(true);
+mv_back_ok = has_moves(false) && mv_grid_ok(false);
+mv_front_min_pitch = mv_front_ok ? mv_solve(true,mvW) : 0;
+mv_back_min_pitch = mv_back_ok ? mv_solve(false,mvW) : 0;
+mv_front_min_size = mv_front_ok ? let(b=mv_box(true,mv_front_min_pitch)) b[1]-b[0] : [0,0];
+mv_back_min_size = mv_back_ok ? let(b=mv_box(false,mv_back_min_pitch)) b[1]-b[0] : [0,0];
+function mv_min_height(f) = (f ? mv_front_min_size : mv_back_min_size)[1];
+function mv_glyph_size(f) = max(1,entry(f?Front_Glyph_Size:effective_Back_Glyph_Size,diagram_slot(f),1));
+// Spreading the marks further apart only widens gaps, so scaling up the
+// smallest printable pitch stays printable. The diagram grows toward about one
+// character's size, but only into face length the characters leave free.
+function mv_drawn_pitch(f) = Move_Pitch>0 ? Move_Pitch/Model_Scale : let(p=f ? mv_front_min_pitch : mv_back_min_pitch,
+    size=f ? mv_front_min_size : mv_back_min_size,
+    letters=len(chars(f))*char_spacing(f)+(char_spacing(f)-font_size(f)),
+    room=(safe_length(f)*mv_fill-letters)/size[1])
+    p*max(1,min(1.2*font_size(f)/max(size),room))*mv_glyph_size(f);
+mv_front_pitch = mv_front_ok ? mv_drawn_pitch(true) : 0;
+mv_back_pitch = mv_back_ok ? mv_drawn_pitch(false) : 0;
+mv_front_box = mv_front_ok ? mv_box(true,mv_front_pitch) : [[0,0],[0,0]];
+mv_back_box = mv_back_ok ? mv_box(false,mv_back_pitch) : [[0,0],[0,0]];
+function mv_pitch(f) = f ? mv_front_pitch : mv_back_pitch;
+function mv_box_of(f) = f ? mv_front_box : mv_back_box;
+function mv_box_size(f) = mv_box_of(f)[1]-mv_box_of(f)[0];
+
+module mv_line(a,b) { hull() { translate(a) circle(d=mvW); translate(b) circle(d=mvW); } }
+module mv_head_shape() {
+    hull() { translate([-mvW/2,0]) circle(d=mvW);
+        translate([-mv_head,mv_head/2-mvW/2]) circle(d=mvW); translate([-mv_head,-mv_head/2+mvW/2]) circle(d=mvW); }
+}
+module mv_digit_shape(d) {
+    w=mv_digit[0]; h=mv_digit[1]; i=mvW/2;
+    // Segment ends, inset by half a stroke: middle, upper left, lower left,
+    // bottom, lower right, upper right, top.
+    ends=[[[i,h/2],[w-i,h/2]],[[i,h/2],[i,h-i]],[[i,i],[i,h/2]],[[i,i],[w-i,i]],
+          [[w-i,i],[w-i,h/2]],[[w-i,h/2],[w-i,h-i]],[[i,h-i],[w-i,h-i]]];
+    lit=[[],[],[6,5,0,2,3],[6,5,0,4,3],[1,0,5,4],[6,1,0,4,3],[6,1,2,3,4,0],[6,5,4]][d];
+    translate([-w/2,-h/2]) for(k=lit) mv_line(ends[k][0],ends[k][1]);
+}
+module move_diagram(f) {
+    L=mv_layout(f,mv_pitch(f));
+    box=mv_box_of(f);
+    // Center the drawn diagram in its slot.
+    translate(-(box[0]+box[1])/2) {
+        s=mv_piece;
+        polygon([[0,0.62*s],[0.36*s,0.42*s],[0.5*s,-0.5*s],[-0.5*s,-0.5*s],[-0.36*s,0.42*s]]);
+        for(l=L[1]) mv_line(l[0],l[1]);
+        for(m=L[0]) {
+            if(m[0]=="dot") translate(m[1]) circle(d=mv_dot);
+            if(m[0]=="ring") translate(m[1]) difference() { circle(d=mv_ring); circle(d=mvG); }
+            if(m[0]=="cross") translate(m[1]) for(a=[45,-45]) rotate(a)
+                mv_line([-(mv_cross-mvW)/2*sqrt(2),0],[(mv_cross-mvW)/2*sqrt(2),0]);
+            if(m[0]=="head") translate(m[4][0]) rotate(m[4][1]) mv_head_shape();
+            if(m[0]=="tee") translate(m[1]) rotate(m[4]) mv_line([0,-(mv_tee-mvW)/2],[0,(mv_tee-mvW)/2]);
+            if(m[0]=="digit") translate(m[1]) mv_digit_shape(m[4]);
+        }
+        if(L[2]>0) difference() { square(2*L[2]+mvW,center=true); square(2*L[2]-mvW,center=true); }
     }
 }
 module inscription(f) {
@@ -932,6 +1177,36 @@ module pawn_circle_inspection() {
             circle(r=Base_Width/(2*sin(9))-0.04,$fn=360);
         }
 }
+// --- Printability -------------------------------------------------------------
+// A stroke thinner than one printed line disappears under a morphological
+// opening (shrink by half a line, grow back); a gap narrower than one line
+// fills under a closing (grow, shrink back). The exporter measures the area
+// of each against the lettering; the bundled sets lose at most about 2% to
+// thin strokes and 4% to narrow gaps, and print cleanly.
+printability_modes = ["Printability front ink","Printability front thin","Printability front gaps",
+                      "Printability back ink","Printability back thin","Printability back gaps"];
+function print_line() = Print_Line_Width/Model_Scale;
+// Characters only: diagrams are built from Move Stroke and Move Gap, which
+// are at least one printed line, and the wedges where their lines meet would
+// read as gaps.
+module letters(f) { intersection() { raw_inscription(f,false); safe_face(f); } }
+module printability_layer(f,layer) {
+    if(active(f) && len(chars(f))>0) {
+        if(layer==0) letters(f);
+        if(layer==1) difference() { letters(f); offset(r=print_line()/2) offset(r=-print_line()/2) letters(f); }
+        if(layer==2) difference() { offset(r=-print_line()/2) offset(r=print_line()/2) letters(f); letters(f); }
+    }
+}
+module printability_inspection() {
+    assert($preview,"Inspection is F5-only. Select Model before F6 / STL export.");
+    for(f=[true,false]) if(active(f)) translate([(f ? -0.6 : 0.6)*Base_Width,0,0]) {
+        color(material_rgb(0)) linear_extrude(height=0.1) flat_face(f);
+        color(ink(f)) translate([0,0,0.12]) linear_extrude(height=0.02) inscription(f);
+        color([1,0.85,0,1]) translate([0,0,0.16]) linear_extrude(height=0.02) printability_layer(f,1);
+        color([0.1,0.6,1,1]) translate([0,0,0.16]) linear_extrude(height=0.02) printability_layer(f,2);
+    }
+    echo("Inspect printability: front left, back right. Yellow strokes are thinner than Print Line Width and blue gaps narrower; both are lost in printing.");
+}
 module oriented_piece() {
     if(Print_Orientation=="Upright")
         translate([0,Rear_Thickness,0]) rotate([90,0,0]) children();
@@ -942,7 +1217,22 @@ module oriented_piece() {
         rotate([-atan(back_slope),0,0]) children();
     else children();
 }
-for(f=[true,false]) if(len(chars(f))>0) {
+// A diagram never shrinks below printable, so a face that cannot hold it and
+// its characters stops here. Whether the characters themselves print is
+// measured: see Inspect printability.
+for(f=[true,false]) if(has_moves(f) && active(f)) let(face=f?"Front":"Back",
+    ys=[for(q=safe_outline) q[1]/cosine(f)], need=stack_height(f)) {
+ assert(Move_Pitch==0 || Move_Pitch/Model_Scale>=(f ? mv_front_min_pitch : mv_back_min_pitch)-1e-6,
+  str(face," Moves need at least ",(f ? mv_front_min_pitch : mv_back_min_pitch)*Model_Scale,
+      " mm between squares to print; Move Pitch is ",Move_Pitch," mm."));
+ assert(center_y(f)-need/2>=min(ys)-0.01 && center_y(f)+need/2<=max(ys)+0.01,
+  str(face," characters and movement diagram need ",need*Model_Scale," mm of face length; the face has ",
+      (max(ys)-min(ys))*Model_Scale," mm. Raise Model Scale or use fewer characters."));
+ // Drawn pitch and size, then the smallest printable ones, in final mm; move-editor.html shows the latter.
+ echo("KOMASCAD_MOVES", face, mv_pitch(f)*Model_Scale, mv_box_size(f)*Model_Scale,
+  (f ? mv_front_min_pitch : mv_back_min_pitch)*Model_Scale, (f ? mv_front_min_size : mv_back_min_size)*Model_Scale);
+}
+for(f=[true,false]) if(slots(f)>0) {
     echo(f?"Front resolved size / spacing / center:":"Back resolved size / spacing / center:",font_size(f),char_spacing(f),center_y(f));
     if(Text_Edge_Radius>depth(f)/2) echo("NOTE: text radius capped at half relief depth.");
 }
@@ -961,7 +1251,10 @@ if(Export_Metadata) echo("KOMASCAD_FONTS", concat([for(f=[true,false]) if(active
 if(Export_Metadata) echo("KOMASCAD_EXPORT", [for(role=[0:3]) [["body","front","back","signature"][role],material_name(role),material_rgb(role),role==0 ? true : role==3 ? signature_active() : active(role==1)]]);
 if(!Export_Metadata)
 scale([Model_Scale,Model_Scale,Model_Scale])
-if(Output_Mode=="Inspect pawn circle") pawn_circle_inspection();
+if(Output_Mode=="Inspect printability") printability_inspection();
+else if(valid_choice(Output_Mode,printability_modes))
+    let(k=search([Output_Mode],printability_modes)[0]) printability_layer(k<3,k%3);
+else if(Output_Mode=="Inspect pawn circle") pawn_circle_inspection();
 else if(Output_Mode=="Inspect signature") signature_inspection();
 else if(Output_Mode=="Inspect front" || Output_Mode=="Inspect back") inspection(Output_Mode=="Inspect front");
 else oriented_piece()

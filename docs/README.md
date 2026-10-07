@@ -9,6 +9,7 @@ two quick starts.
 | [Design guide](design-guide.md) | Geometry, typography, inspection, and parameter behavior |
 | [Color quickstart](color-quickstart.md) | Standards-based multipart 3MF export |
 | [Print guide](printing/print-guide.md) | Slicer settings and profiles for printing lettering on the bed |
+| [Print test page](print-test-page.md) | The fixed reference print for comparing printers, filaments and profiles |
 | [Command reference](cli.md) | Every `komascad.py` command and option |
 | [Presets](presets.md) | Saving, sharing and exporting your own presets; Taikyoku |
 | [Parameters](parameters.md) | Complete Customizer reference |

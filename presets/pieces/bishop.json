@@ -16,12 +16,22 @@
         "one": {
             "Front_Characters": "角",
             "Front_Font_Size": "15"
+        },
+        "learner": {
+            "Front_Characters": "角",
+            "Front_Moves": "#.#/.@./#.#",
+            "Front_Font_Size": "9.3"
         }
     },
     "back": {
         "one": {
             "Back_Characters": "馬",
             "Back_Font_Size": "15"
+        },
+        "learner": {
+            "Back_Characters": "馬",
+            "Back_Moves": "#o#/o@o/#o#",
+            "Back_Font_Size": "9.3"
         }
     }
 }
