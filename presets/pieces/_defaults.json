@@ -27,7 +27,6 @@
         "Bevel_Width": "0",
         "Body_Color": "[0.82, 0.68, 0.43, 1]",
         "Body_Filament": "Wood",
-        "Export_Metadata": "false",
         "Face_Base_Angle": "81",
         "Face_Shoulder_Angle": "117",
         "Face_Tip_Angle": "144",
@@ -61,14 +60,10 @@
         "Move_Pitch": "0",
         "Move_Stroke": "0.6",
         "Output_Mode": "Model",
-        "Paint_Floor_Thickness": "0.8",
-        "Paint_Top_Lip": "0.03",
-        "Paint_Wall_Thickness": "0.35",
         "Pawn_Circle": "true",
         "Print_Line_Width": "0.5",
         "Print_Orientation": "Upright",
         "Protect_Face_Edges": "true",
-        "Reference_Line_Width": "0.6",
         "Show_Layout_Guides": "true",
         "Signature_Color": "[0.025, 0.02, 0.015, 1]",
         "Signature_Depth": "0.2",
@@ -87,8 +82,7 @@
         "Text_Curve_Resolution": "64",
         "Text_Edge_Radius": "0",
         "Text_Margin": "0.9",
-        "Text_Rounding_Steps": "6",
-        "filament_palette": "[[\"Wood\", [0.76, 0.58, 0.34, 1]], [\"Black\", [0.08, 0.06, 0.04, 1]], [\"White\", [0.95, 0.95, 0.95, 1]], [\"Red\", [0.65, 0.05, 0.04, 1]], [\"Blue\", [0.08, 0.25, 0.8, 1]], [\"Green\", [0.08, 0.5, 0.2, 1]], [\"Purple\", [0.45, 0.15, 0.65, 1]], [\"Yellow\", [0.95, 0.8, 0.08, 1]], [\"Orange\", [0.95, 0.35, 0.05, 1]], [\"Silver\", [0.7, 0.72, 0.75, 1]], [\"Gold\", [0.8, 0.62, 0.2, 1]], [\"Glitter silver\", [0.7, 0.72, 0.75, 1]], [\"Glitter gold\", [0.8, 0.62, 0.2, 1]], [\"Filament 1\", [0.5, 0.5, 0.5, 1]], [\"Filament 2\", [0.15, 0.5, 0.85, 1]], [\"Filament 3\", [0.85, 0.25, 0.5, 1]]]"
+        "Text_Rounding_Steps": "6"
     },
     "front": {
         "two": {
@@ -104,7 +98,7 @@
             "Front_Height_Scale": "1"
         },
         "learner": {
-            "Front_Center_Fraction": "0.42",
+            "Front_Center_Fraction": "0.73",
             "Front_Glyph_Size": "[1, 1, 1]",
             "Front_Glyph_Width": "[1, 1, 1]",
             "Front_Glyph_Y": "[0, 0, 0]",
@@ -112,7 +106,7 @@
             "Move_Pitch": "3.75",
             "Font_Name": "LXGW WenKai Mono:style=Regular",
             "Front_Stroke_Expansion": "0.08",
-            "Front_Spacing_Scale": "0.92"
+            "Front_Spacing_Scale": "0.96"
         }
     },
     "back": {
@@ -123,13 +117,13 @@
             "Back_Height_Scale": "1"
         },
         "learner": {
-            "Back_Center_Fraction": "0.42",
+            "Back_Center_Fraction": "0.73",
             "Back_Glyph_Size": "[1, 1, 1]",
             "Back_Glyph_Width": "[1, 1, 1]",
             "Back_Glyph_Y": "[0, 0, 0]",
             "Back_Height_Scale": "1",
             "Back_Stroke_Expansion": "0.08",
-            "Back_Spacing_Scale": "0.92"
+            "Back_Spacing_Scale": "0.96"
         }
     }
 }

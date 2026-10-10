@@ -20,7 +20,7 @@
         "learner": {
             "Front_Characters": "桂",
             "Front_Moves": "x.x/.../.@.",
-            "Front_Font_Size": "8.7"
+            "Front_Font_Size": "9.28"
         }
     },
     "back": {
@@ -31,7 +31,7 @@
         "learner": {
             "Back_Characters": "圭",
             "Back_Moves": "ooo/o@o/.o.",
-            "Back_Font_Size": "8.7"
+            "Back_Font_Size": "9.28"
         }
     }
 }

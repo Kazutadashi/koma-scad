@@ -32,10 +32,11 @@ import tempfile
 import xml.etree.ElementTree as ET
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
+from xml.sax.saxutils import quoteattr
 from pathlib import Path
 
 
-VERSION = "3.4"
+VERSION = "3.5"
 
 ROOT = Path(__file__).resolve().parent
 SCAD = ROOT / "shogi_piece.scad"
@@ -50,8 +51,20 @@ MATERIAL_NAMESPACE = "http://schemas.microsoft.com/3dmanufacturing/material/2015
 ET.register_namespace("", MODEL_NAMESPACE)
 ET.register_namespace("m", MATERIAL_NAMESPACE)
 
-CONTENT_TYPES = b'''<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/><Default Extension="json" ContentType="application/json"/></Types>'''
-RELATIONSHIPS = b'''<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>'''
+CONTENT_TYPES = (
+    b'<?xml version="1.0" encoding="UTF-8"?>'
+    b'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    b'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    b'<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>'
+    b'<Default Extension="json" ContentType="application/json"/>'
+    b'<Default Extension="config" ContentType="text/xml"/>'
+    b'</Types>')
+RELATIONSHIPS = (
+    b'<?xml version="1.0" encoding="UTF-8"?>'
+    b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    b'<Relationship Target="/3D/3dmodel.model" Id="rel0"'
+    b' Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>'
+    b'</Relationships>')
 
 # --orientation choices and the Print_Orientation value each selects.
 ORIENTATIONS = {
@@ -70,6 +83,10 @@ OVERRIDES = {
     "signature_text": ("Signature_Text", "heel signature; also enables it"),
     "signature_color": ("Signature_Filament", "signature filament"),
 }
+
+# Settings that older versions of the model had. Saved presets can still hold
+# them; the export ignores them.
+RETIRED_PARAMETERS = {"Reference_Line_Width", "Paint_Floor_Thickness", "Paint_Wall_Thickness", "Paint_Top_Lip"}
 
 # Orthographic preview cameras square onto each face; the distance fixes a shared scale.
 PREVIEW_VIEWS = {"front": "0,0,16,90,0,0,120", "back": "0,0,16,90,0,180,120"}
@@ -255,11 +272,9 @@ def cmd_build(args):
 # Change anything that alters geometry and you have a new baseline: raise
 # TEST_PAGE_VERSION and say so in docs/print-test-page.md.
 #
-# The page is capped at TEST_PAGE_PIECES. They are split over three plates
-# that each fit a 220 mm bed.
+# The 59 pieces are split over three plates that each fit a 220 mm bed.
 
 TEST_PAGE_VERSION = 1
-TEST_PAGE_PIECES = 59
 
 # (family, registered font name).
 TEST_FONTS = [
@@ -353,7 +368,6 @@ TEST_BASE = {
     "Print_Orientation": "Front face down",
     "Protect_Face_Edges": "true",
     "Rear_Thickness": "9.8",
-    "Reference_Line_Width": "0.6",
     "Show_Layout_Guides": "true",
     "Signature_Color": "[0.025, 0.02, 0.015, 1]",
     "Signature_Depth": "0.2",
@@ -394,8 +408,8 @@ ONE_CHARACTER = {
     "Center_Fraction": "0.42",
     "Glyph_Y": "[1, 0, 0]",
 }
-# Flush filled cannot be raised, and Face only currently exports an open body
-# mesh for raised lettering, so raised pieces use Painted grooves. Only the
+# Flush filled cannot be raised. Raised pieces use Painted grooves, as they did
+# when baseline 1 was printed. Only the
 # reverse can be raised: the front lies on the bed. The raised lettered piece
 # has a blank front because a dense Painted grooves front takes many times
 # longer to build.
@@ -453,8 +467,6 @@ def dot_code(plate, piece):
     Columns never hang from the top row, so no two dots meet only at a
     corner; OpenSCAD cannot extrude outlines that do.
     """
-    if not (1 <= plate <= 3 and 1 <= piece <= 80):
-        raise ValueError("No dot code for plate %d piece %d" % (plate, piece))
     heights = [2, plate - 1] + [piece // weight % 3 for weight in (27, 9, 3, 1)]
     top = [int(height == 2) for height in heights]
     bottom = [int(height >= 1) for height in heights]
@@ -542,111 +554,102 @@ def ladder(front, back):
     return settings
 
 
-def build_test_page():
-    """Return ``{filename: (presets, rows)}``: each plate's pieces in bed order.
+class Plate:
+    """One plate of the test page: its presets in bed order, and its rows.
 
-    Rows run from the back of the bed to the front. A piece is identified by
-    its plate and its place on that plate, such as ``3-07``.
+    A piece is named by its plate and its place on the plate, such as
+    ``3-07``. Rows run from the back of the bed to the front.
     """
-    title = "Print test v%d" % TEST_PAGE_VERSION
-    plates = {}
 
-    def plate(build):
-        sets, rows = {}, []
-        plate_number = len(plates) + 1
+    def __init__(self, number):
+        self.number, self.sets, self.rows = number, {}, []
 
-        def add(description, font, scale, *layers):
-            piece = len(sets) + 1
-            name = "%s - %d-%02d %s" % (title, plate_number, piece, description)
-            preset = dict(TEST_BASE, Font_Name=font, Model_Scale=customizer_number(scale),
-                          Category="%s / %s" % (title, description))
-            for layer in layers:
-                preset.update(layer)
-            preset.update(heel_label(plate_number, piece, scale))
-            sets[name] = preset
+    def add(self, description, font, scale, *layers):
+        """Add one piece: the shared base, then each layer of settings."""
+        piece = len(self.sets) + 1
+        title = "Print test v%d" % TEST_PAGE_VERSION
+        preset = dict(TEST_BASE, Font_Name=font, Model_Scale=customizer_number(scale),
+                      Category="%s / %s" % (title, description))
+        for layer in layers:
+            preset.update(layer)
+        preset.update(heel_label(self.number, piece, scale))
+        self.sets["%s - %d-%02d %s" % (title, self.number, piece, description)] = preset
 
-        def sweep(font_entry, size, scale, levels):
-            family, font = font_entry
-            for level in levels:
-                stroke_name, expansion = STROKES[level]
-                add("%s %s stroke %d %s" % (size, family, level + 1, stroke_name), font, scale,
-                    lettering(TWO_CHARACTERS, expansion))
+    def sweep(self, font_entry, size, scale, levels):
+        """Add the two-character piece at the given stroke levels."""
+        family, font = font_entry
+        for level in levels:
+            stroke_name, expansion = STROKES[level]
+            self.add("%s %s stroke %d %s" % (size, family, level + 1, stroke_name), font, scale,
+                     lettering(TWO_CHARACTERS, expansion))
 
-        def single(font_entry, size, scale):
-            family, font = font_entry
-            add("%s %s one character" % (size, family), font, scale, lettering(ONE_CHARACTER))
+    def single(self, font_entry, size, scale):
+        """Add the one-character piece."""
+        family, font = font_entry
+        self.add("%s %s one character" % (size, family), font, scale, lettering(ONE_CHARACTER))
 
-        def end_row():
-            rows.append(len(sets) - sum(rows))
+    def end_row(self):
+        self.rows.append(len(self.sets) - sum(self.rows))
 
-        build(add, sweep, single, end_row)
-        plates["print-test-plate-%d.json" % plate_number] = (sets, rows)
 
+def build_test_page():
+    """Return ``{filename: (presets, rows)}`` for the three plates."""
     syuku, wenkai = TEST_FONTS
 
-    # Large sizes print easily, so they get the two extremes and the normal
-    # stroke; the pieces saved go to the ladders.
-    def large(add, sweep, single, end_row):
+    # Plate 1. Large sizes print easily, so they get the two extremes and the
+    # normal stroke only.
+    large = Plate(1)
+    for font_entry in TEST_FONTS:
+        large.sweep(font_entry, "2x", 2, (0, 2, 4))
+        large.end_row()
+    for size, scale in (("1.5x", 1.5), ("1x", 1)):
         for font_entry in TEST_FONTS:
-            sweep(font_entry, "2x", 2, (0, 2, 4))
-            end_row()
-        for size, scale in (("1.5x", 1.5), ("1x", 1)):
-            for font_entry in TEST_FONTS:
-                single(font_entry, size, scale)
-        end_row()
+            large.single(font_entry, size, scale)
+    large.end_row()
 
-    def medium(add, sweep, single, end_row):
-        # Ladders are in final mm, so they are always full size. Each pattern
-        # appears on the bed face and on the top face.
-        coupons = [
-            ("L1 inlaid, lines down", ladder("lines", "gaps")),
-            ("L2 inlaid, gaps down", ladder("gaps", "lines")),
-            ("L3 indented, lines down", dict(ladder("lines", "gaps"), **INDENTED)),
-            ("L4 indented, gaps down", dict(ladder("gaps", "lines"), **INDENTED)),
-            ("L5 raised lines", dict(ladder(None, "lines"), **RAISED)),
-            ("L6 raised gaps", dict(ladder(None, "gaps"), **RAISED)),
-        ]
+    # Plate 2. Ladders are in final mm, so they are always full size. Each
+    # pattern is on the bed face and on the top face.
+    coupons = [
+        ("L1 inlaid, lines down", ladder("lines", "gaps")),
+        ("L2 inlaid, gaps down", ladder("gaps", "lines")),
+        ("L3 indented, lines down", dict(ladder("lines", "gaps"), **INDENTED)),
+        ("L4 indented, gaps down", dict(ladder("gaps", "lines"), **INDENTED)),
+        ("L5 raised lines", dict(ladder(None, "lines"), **RAISED)),
+        ("L6 raised gaps", dict(ladder(None, "gaps"), **RAISED)),
+    ]
+    medium = Plate(2)
+    medium.sweep(syuku, "1.5x", 1.5, (0, 2, 4))
+    medium.add("1x Yuji Syuku raised reverse", syuku[1], 1,
+               lettering(TWO_CHARACTERS), RAISED, {"Front_Characters": ""})
+    medium.end_row()
+    medium.sweep(wenkai, "1.5x", 1.5, (0, 2, 4))
+    for description, settings in coupons[:1]:
+        medium.add("Ladder " + description, syuku[1], 1, settings)
+    medium.end_row()
+    for description, settings in coupons[1:]:
+        medium.add("Ladder " + description, syuku[1], 1, settings)
+    medium.end_row()
 
-        def coupon(index):
-            description, settings = coupons[index]
-            add("Ladder " + description, syuku[1], 1, settings)
+    # Plate 3. Small sizes get every stroke level.
+    small = Plate(3)
+    for font_entry in TEST_FONTS:
+        small.single(font_entry, "2x", 2)
+    for font_entry in TEST_FONTS:
+        small.single(font_entry, "0.5x", 0.5)
+    small.single(wenkai, "0.25x", 0.25)
+    small.end_row()
+    for font_entry in TEST_FONTS:
+        small.sweep(font_entry, "1x", 1, range(5))
+        small.end_row()
+    small.sweep(syuku, "0.5x", 0.5, range(5))
+    small.sweep(syuku, "0.25x", 0.25, range(5))
+    small.end_row()
+    small.sweep(wenkai, "0.5x", 0.5, range(5))
+    small.sweep(wenkai, "0.25x", 0.25, range(5))
+    small.single(syuku, "0.25x", 0.25)
+    small.end_row()
 
-        sweep(syuku, "1.5x", 1.5, (0, 2, 4))
-        add("1x Yuji Syuku raised reverse", syuku[1], 1,
-            lettering(TWO_CHARACTERS), RAISED, {"Front_Characters": ""})
-        end_row()
-        sweep(wenkai, "1.5x", 1.5, (0, 2, 4))
-        coupon(0)
-        end_row()
-        for index in range(1, len(coupons)):
-            coupon(index)
-        end_row()
-
-    def small(add, sweep, single, end_row):
-        for font_entry in TEST_FONTS:
-            single(font_entry, "2x", 2)
-        for font_entry in TEST_FONTS:
-            single(font_entry, "0.5x", 0.5)
-        single(wenkai, "0.25x", 0.25)
-        end_row()
-        for font_entry in TEST_FONTS:
-            sweep(font_entry, "1x", 1, range(5))
-            end_row()
-        sweep(syuku, "0.5x", 0.5, range(5))
-        sweep(syuku, "0.25x", 0.25, range(5))
-        end_row()
-        sweep(wenkai, "0.5x", 0.5, range(5))
-        sweep(wenkai, "0.25x", 0.25, range(5))
-        single(syuku, "0.25x", 0.25)
-        end_row()
-
-    for build in (large, medium, small):
-        plate(build)
-    total = sum(len(sets) for sets, _ in plates.values())
-    if total > TEST_PAGE_PIECES:
-        raise ValueError("The test page is capped at %d pieces; this has %d" % (
-            TEST_PAGE_PIECES, total))
-    return plates
+    return {"print-test-plate-%d.json" % plate.number: (plate.sets, plate.rows) for plate in (large, medium, small)}
 
 
 # --- Reading preset files ---------------------------------------------------
@@ -698,12 +701,7 @@ def load_layout_rows(path, pieces):
         The row sizes, or ``None`` when the file declares none.
     """
     rows = read_json(path).get("layoutRows")
-    if rows is None:
-        return None
-    if not isinstance(rows, list) or not rows or any(
-            not isinstance(count, int) or isinstance(count, bool) or count < 1 for count in rows):
-        raise ValueError("layoutRows must be an array of whole numbers of at least 1: " + shown(path))
-    if sum(rows) != pieces:
+    if rows and sum(rows) != pieces:
         raise ValueError("layoutRows in %s places %d pieces but the file has %d" % (
             shown(path), sum(rows), pieces))
     return rows
@@ -801,9 +799,9 @@ def run_openscad(command):
 
 
 @functools.lru_cache(maxsize=None)
-def scad_parameters(scad):
-    """Return ``(public defaults, hidden names)`` declared in the SCAD source."""
-    source = scad.read_text(encoding="utf-8")
+def scad_parameters():
+    """Return ``(public defaults, hidden names)`` declared in shogi_piece.scad."""
+    source = SCAD.read_text(encoding="utf-8")
     public_source, marker, hidden_source = source.partition("/* [Hidden] */")
     defaults = {
         name: json.loads(value)
@@ -813,19 +811,18 @@ def scad_parameters(scad):
     return defaults, hidden
 
 
-def scad_definitions(scad, preset, values, overrides):
+def scad_definitions(preset, values, overrides):
     """Turn one saved preset plus overrides into OpenSCAD ``-D`` arguments.
 
-    OpenSCAD 2021.01 preset loading can override -D public parameters, so the
-    values are read here and passed explicitly: overrides always win.
+    OpenSCAD 2021.01 lets ``-p`` preset values win over ``-D``, so the values
+    are read here and passed explicitly: overrides always win.
     """
-    defaults, hidden = scad_parameters(scad)
+    defaults, hidden = scad_parameters()
     typed = {}
     for name, value in values.items():
-        # OpenSCAD 2021.01 can leak variables declared after its Hidden marker
-        # into a saved preset. They are implementation details, so skip them
-        # while still rejecting unknown or misspelled public parameters.
-        if name in hidden:
+        # The Customizer saves some hidden variables into presets. Skip them,
+        # but reject unknown or misspelled public parameters.
+        if name in hidden or name in RETIRED_PARAMETERS:
             continue
         if name not in defaults:
             raise ValueError("Preset %r has an unsupported parameter: %s" % (preset, name))
@@ -966,7 +963,7 @@ def read_stl(path):
     return vertices, faces
 
 
-def render_parts(executable, scad, definitions):
+def render_parts(executable, definitions):
     """Ask OpenSCAD for every enabled material part of one piece.
 
     OpenSCAD remains the geometry engine: the meshes are validated and
@@ -980,7 +977,7 @@ def render_parts(executable, scad, definitions):
         echo = folder / "materials.echo"
         status, log = run_openscad(
             [executable, "--hardwarnings", "-o", str(echo)] + definitions
-            + ["-D", 'Output_Mode="Color assembly"', "-D", "Export_Metadata=true", str(scad)])
+            + ["-D", "Export_Metadata=true", str(SCAD)])
         if echo.exists():
             log += "\n" + echo.read_text(encoding="utf-8")
         if status or "ERROR:" in log or "WARNING:" in log:
@@ -999,7 +996,7 @@ def render_parts(executable, scad, definitions):
         status, log = run_openscad(
             [executable, "--animate", str(len(modes)), "-o", str(output), "--export-format", "binstl"]
             + definitions
-            + ["-D", "Output_Mode=" + mode_expression, "-D", "Export_Metadata=false", str(scad)])
+            + ["-D", "Output_Mode=" + mode_expression, "-D", "Export_Metadata=false", str(SCAD)])
         # A direct extrusion can contain independently closed font shells that
         # touch at an exact edge. OpenSCAD warns because STL carries no
         # topology; read_stl() separates their vertex IDs and then performs
@@ -1037,13 +1034,14 @@ def svg_area(path):
     total = 0.0
     for data in re.findall(r'\bd="([^"]*)"', path.read_text(encoding="utf-8")):
         for outline in re.split(r"[Mm]", data)[1:]:
-            points = [tuple(map(float, pair)) for pair in re.findall(r"(-?[\d.]+(?:e-?\d+)?)[ ,](-?[\d.]+(?:e-?\d+)?)", outline)]
+            number = r"(-?[\d.]+(?:e-?\d+)?)"
+            points = [tuple(map(float, pair)) for pair in re.findall(number + "[ ,]" + number, outline)]
             if len(points) > 2:
                 total += sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in zip(points, points[1:] + points[:1])) / 2
     return abs(total)
 
 
-def check_printability(executable, scad, definitions):
+def check_printability(executable, definitions):
     """Measure each lettered face of one piece.
 
     Returns ``{face: (thin %, gap %)}`` for faces that carry characters.
@@ -1057,7 +1055,7 @@ def check_printability(executable, scad, definitions):
                 # An empty layer is the good case; OpenSCAD then writes no file.
                 # An error is not: the piece itself is invalid.
                 status, log = run_openscad([executable, "-o", str(output)] + definitions
-                                           + ["-D", 'Output_Mode="Printability %s %s"' % (face, layer), str(scad)])
+                                           + ["-D", 'Output_Mode="Printability %s %s"' % (face, layer), str(SCAD)])
                 if "ERROR:" in log:
                     raise RuntimeError("OpenSCAD could not draw the lettering:\n" + log[-4000:])
                 areas.append(svg_area(output))
@@ -1073,11 +1071,14 @@ def printability_problems(measured):
             for face, (thin, gaps) in measured.items() if thin > THIN_LIMIT or gaps > GAP_LIMIT]
 
 
-def measure_presets(args, scad, sets, names, overrides):
-    """Measure many presets in parallel; return ``{name: {face: (thin, gap)}}``."""
+def measure_presets(executable, sets, names, overrides):
+    """Measure many presets in parallel; return ``{name: {face: (thin, gap)}}``.
+
+    The 2D outlines are light, so this uses every processor core.
+    """
     def measure(name):
-        return check_printability(args.openscad, scad, scad_definitions(scad, name, sets[name], overrides))
-    with ThreadPoolExecutor(max_workers=max(args.jobs, os.cpu_count() or 1)) as pool:
+        return check_printability(executable, scad_definitions(name, sets[name], overrides))
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 1) as pool:
         return dict(zip(names, pool.map(measure, names)))
 
 
@@ -1086,8 +1087,7 @@ def cmd_check(args):
     preset_file = find_preset_file(args.game)
     sets, _ = load_parameter_sets(preset_file)
     names = select_presets(list(sets), args.piece)
-    args.jobs = 1
-    measured = measure_presets(args, SCAD, sets, names, {})
+    measured = measure_presets(args.openscad, sets, names, {})
     failed = 0
     for name in names:
         problems = printability_problems(measured[name])
@@ -1161,7 +1161,38 @@ def grid_positions(bounds, rows=None):
     return positions
 
 
-def create_3mf(destination, pieces, title, rows=None):
+def filament_settings(entries, slots):
+    """The per-part filament slots Bambu Studio and OrcaSlicer forks read.
+
+    OrcaSlicer forks ignore standard 3MF colors on import (Elegoo Slicer puts
+    every part on filament 1) but honor their own
+    ``Metadata/model_settings.config``: one ``object`` per build item, one
+    ``part`` per component, each with a 1-based ``extruder`` slot.
+
+    Args:
+        entries: ``(object id, name, [(component id, part name, material key), ...])``
+            for every build item.
+        slots: ``{material key: slot}``.
+    """
+    identity = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"
+    lines = ['<?xml version="1.0" encoding="UTF-8"?>', "<config>"]
+    for object_id, name, parts in entries:
+        lines += ['  <object id="%d">' % object_id,
+                  '    <metadata key="name" value=%s/>' % quoteattr(name),
+                  '    <metadata key="extruder" value="%d"/>' % slots[parts[0][2]]]
+        for part_id, part_name, key in parts:
+            lines += ['    <part id="%d" subtype="normal_part">' % part_id,
+                      '      <metadata key="name" value=%s/>' % quoteattr(part_name),
+                      # Components carry no transform, so each part sits as stored.
+                      '      <metadata key="matrix" value="%s"/>' % identity,
+                      '      <metadata key="extruder" value="%d"/>' % slots[key],
+                      "    </part>"]
+        lines.append("  </object>")
+    lines.append("</config>")
+    return "\n".join(lines) + "\n"
+
+
+def create_3mf(destination, pieces, title, rows=None, slicer_settings=True):
     """Package one or more pieces as a portable multipart color 3MF.
 
     Every piece is a named object made of aligned material parts. Core
@@ -1180,6 +1211,11 @@ def create_3mf(destination, pieces, title, rows=None):
             several are spaced on a grid centered at the origin.
         title: Human-readable model name.
         rows: Optional row plan for ``grid_positions``.
+        slicer_settings: Also write the per-part filament slots Bambu Studio
+            and OrcaSlicer forks read (see ``filament_settings``), so one file
+            colors correctly in all of them. Tested in the Bambu Studio and
+            Elegoo Slicer apps. Bambu Studio 2.8's command line crashes on
+            them, which is what turning this off is for.
 
     Returns:
         One ``{"preset", "object_id", "x", "y", "parts"}`` record per placed piece.
@@ -1190,12 +1226,6 @@ def create_3mf(destination, pieces, title, rows=None):
     )
     node(model, "metadata", name="Title").text = title
     node(model, "metadata", name="Application").text = "KomaSCAD " + VERSION
-    node(model, "metadata", name="Description").text = (
-        "Shogi pieces as separately selectable multipart objects with standard "
-        "3MF material and color assignments. Glitter/metallic labels describe "
-        "filament choice, not surface textures. No printer, filament, or "
-        "slicing settings are embedded."
-    )
     resources = node(model, "resources")
     materials = node(resources, "basematerials", id=1)
 
@@ -1228,6 +1258,10 @@ def create_3mf(destination, pieces, title, rows=None):
     build = node(model, "build")
     placed = []
     mesh_ids = {}
+    # Filament slots follow the materials' first appearance: body, then front,
+    # then back lettering, so the learner sets read Wood 1, Black 2, Red 3.
+    slots = {key: slot for slot, key in enumerate(color_groups, 1)}
+    settings = []
 
     for (preset, parts), (shift_x, shift_y) in zip(pieces, grid_positions(bounds, rows)):
         # A repeated preset reuses the meshes written for its first copy.
@@ -1257,6 +1291,9 @@ def create_3mf(destination, pieces, title, rows=None):
         components = node(assembly, "components")
         for object_id in mesh_ids[preset]:
             node(components, "component", objectid=object_id)
+        settings.append((assembly_id, preset, [
+            (object_id, role.title() + " | " + material, (material, hex_color(rgba)))
+            for object_id, (role, material, rgba, _, _) in zip(mesh_ids[preset], parts)]))
 
         if len(pieces) == 1:
             node(build, "item", objectid=assembly_id)
@@ -1273,8 +1310,12 @@ def create_3mf(destination, pieces, title, rows=None):
         archive.writestr("[Content_Types].xml", CONTENT_TYPES)
         archive.writestr("_rels/.rels", RELATIONSHIPS)
         archive.writestr("3D/3dmodel.model", ET.tostring(model, encoding="utf-8", xml_declaration=True))
+        if slicer_settings:
+            archive.writestr("Metadata/model_settings.config", filament_settings(settings, slots))
         archive.writestr("Metadata/KomaSCAD.json", json.dumps({
             "version": VERSION, "units": "mm", "pieces": placed,
+            "filament_slots": [{"slot": slot, "material": key[0], "display_color": key[1]}
+                               for key, slot in slots.items()],
             "type": "portable multipart model with standard color assignments; no printer settings",
         }, ensure_ascii=False, indent=2))
     return placed
@@ -1357,7 +1398,7 @@ def sha256_file(path):
     return digest.hexdigest()
 
 
-def write_manifest(folder, set_name, preset_file, scad, plan, counts, layouts):
+def write_manifest(folder, set_name, preset_file, plan, counts, layouts):
     """Record provenance, contents, sizes and checksums of an exported set.
 
     A layout file lists the presets placed in it; a single-piece file names
@@ -1376,7 +1417,7 @@ def write_manifest(folder, set_name, preset_file, scad, plan, counts, layouts):
         "format_version": 1,
         "set_name": set_name,
         "source_parameters": portable_path(preset_file),
-        "source_scad": portable_path(scad),
+        "source_scad": portable_path(SCAD),
         "piece_count": len(counts),
         "total_quantity": sum(counts.values()),
         "files": files,
@@ -1388,7 +1429,6 @@ def write_manifest(folder, set_name, preset_file, scad, plan, counts, layouts):
 def cmd_export(args):
     """Export chosen presets of one game or preset file as color 3MF files."""
     preset_file = find_preset_file(args.game)
-    scad = args.scad.resolve()
     sets, counts = load_parameter_sets(preset_file)
     selected = select_presets(list(sets), args.piece)
 
@@ -1420,7 +1460,8 @@ def cmd_export(args):
 
     if not args.no_print_check:
         print("Checking that the lettering will print ...", flush=True)
-        measured = measure_presets(args, scad, sets, list(dict.fromkeys(name for _, members in plan for name in members)), overrides)
+        names = list(dict.fromkeys(name for _, members in plan for name in members))
+        measured = measure_presets(args.openscad, sets, names, overrides)
         problems = ["  %s\n    %s" % (name, "\n    ".join(found)) for name, found in
                     ((name, printability_problems(values)) for name, values in measured.items()) if found]
         if problems:
@@ -1449,7 +1490,7 @@ def cmd_export(args):
         def render(preset):
             if len(set(members)) > 1:
                 print("      rendering " + preset, flush=True)
-            return render_parts(args.openscad, scad, scad_definitions(scad, preset, sets[preset], overrides))
+            return render_parts(args.openscad, scad_definitions(preset, sets[preset], overrides))
 
         # OpenSCAD does the work in its own process, so threads suffice.
         with ThreadPoolExecutor(max_workers=args.jobs) as pool:
@@ -1459,7 +1500,7 @@ def cmd_export(args):
         partial = output.with_name("." + output.name + ".partial")
         try:
             create_3mf(partial, [(preset, rendered[preset]) for preset in members],
-                       members[0] if len(members) == 1 else filename[:-4], rows)
+                       members[0] if len(members) == 1 else filename[:-4], rows, slicer_settings=not args.plain)
             os.replace(partial, output)
         finally:
             if partial.exists():
@@ -1469,7 +1510,7 @@ def cmd_export(args):
     print("Saved %d new 3MF file(s); skipped %d existing in %s" % (exported, skipped, destination))
     # A manifest describes a complete delivery, so a hand-picked subset has none.
     if not args.piece:
-        write_manifest(destination, set_name, preset_file, scad, plan, counts, bool(args.per_file))
+        write_manifest(destination, set_name, preset_file, plan, counts, bool(args.per_file))
         print("Manifest: " + str(destination / "manifest.json"))
         if not args.per_file and any(count > 1 for count in counts.values()):
             print("Some pieces are needed more than once; the manifest lists quantities. "
@@ -1609,13 +1650,15 @@ stopped; use --force to write them again.
                              "processor core and can need a gigabyte or more of memory (default: 1)")
     export.add_argument("-f", "--force", action="store_true",
                         help="overwrite existing 3MF files instead of skipping them")
+    export.add_argument("--plain", action="store_true",
+                        help="leave out the per-part filament slots that Bambu Studio, OrcaSlicer and "
+                             "Elegoo Slicer read; only for tools that cannot load them, such as Bambu "
+                             "Studio's command line")
     export.add_argument("--no-print-check", action="store_true",
                         help="export even when lettering is too fine to print (see the check command)")
     export.add_argument("-n", "--dry-run", action="store_true",
                         help="show the files that would be written, without rendering")
     export.add_argument("--name", help="set name used in layout filenames and manifest.json")
-    export.add_argument("--scad", type=Path, default=SCAD, metavar="FILE",
-                        help="SCAD model to render (default: the bundled shogi_piece.scad)")
     export.add_argument("--openscad", default="openscad", metavar="PATH", help="OpenSCAD executable")
     overrides = export.add_argument_group("overrides for the exported pieces")
     for option, (_, description) in OVERRIDES.items():
@@ -1630,7 +1673,8 @@ one printed line and of gaps narrower than one line. export runs the same
 check and stops when a piece fails.
 """)
     checker.add_argument("game", metavar="GAME", help="game name or preset JSON file")
-    checker.add_argument("piece", nargs="*", metavar="PIECE", help="check only pieces whose name is, or contains, this text")
+    checker.add_argument("piece", nargs="*", metavar="PIECE",
+                         help="check only pieces whose name is, or contains, this text")
     checker.add_argument("--openscad", default="openscad", metavar="PATH", help="OpenSCAD executable")
 
     setter = command("set", cmd_set, "change a setting across many presets in a hand-kept file", """\

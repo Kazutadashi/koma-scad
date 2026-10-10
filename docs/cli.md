@@ -1,177 +1,44 @@
 # Command reference
 
-Everything on the command line goes through one tool, `komascad.py`, in the
-repository root. It needs Python 3.8 or later and nothing else from Python;
-`preview` and `export` also need the `openscad` command on your PATH.
+`komascad.py` is the command-line tool. It needs Python 3.8 or later.
+`preview`, `check` and `export` also need the `openscad` command on your PATH.
 
 ```bash
 python3 komascad.py COMMAND [options]
 ```
 
-| Command | What it does |
+| Command | Use it to |
 | --- | --- |
 | [`list [GAME]`](#list) | Show the games, or the pieces in one game |
-| [`export GAME [PIECE ...]`](#export) | Write print-ready color 3MF files |
-| [`preview GAME`](#preview) | Render every piece of a game onto one HTML page |
-| [`build`](#build) | Rebuild the game presets after editing `presets/pieces/`, and the print test page |
-| [`check GAME [PIECE ...]`](#check) | Check that each piece's lettering is coarse enough to print |
-| [`set FILE NAME=VALUE ...`](#set) | Change a setting across many presets in a hand-kept file |
+| [`build`](#build) | Make the game presets after you edit `presets/pieces/` |
+| [`preview GAME`](#preview) | Show every piece of a game on one HTML page |
+| [`check GAME [PIECE ...]`](#check) | Check that the lettering will print |
+| [`export GAME [PIECE ...]`](#export) | Write color 3MF files |
+| [`set FILE NAME=VALUE ...`](#set) | Change a setting in many presets of a hand-kept file |
 
-`python3 komascad.py --help` shows this list, and
-`python3 komascad.py COMMAND --help` shows one command's options with
-examples. The tool works from any directory.
+`python3 komascad.py COMMAND --help` shows the options of one command.
 
-## Conventions
+## Terms
 
-- **`GAME`** is a game name from `list`, such as `shogi` or `minishogi-1char`,
-  or a path to any Customizer preset file, such as `shogi_piece.json` or
+- **GAME** is a game name from `list`, such as `shogi`. It can also be the
+  path of a preset file, such as `shogi_piece.json` or
   `presets/misc/taikyoku.json`.
-- **`PIECE`** is an exact preset name or any part of one, in any letter case.
-  `pawn` matches `Shogi 09 - Pawn`; `king` matches both kings. Quote text that
-  contains spaces.
-- **`-o DIR`** chooses the output folder. Relative paths start from the
-  directory where you run the command.
-- **`-n`** (`--dry-run`) shows what would happen and writes nothing.
-- **`-f`** (`--force`) overwrites what the command would otherwise protect.
-- Results are printed to standard output and errors to standard error. The
-  exit status is 0 on success, 1 when a command fails, and 2 for a mistyped
-  command line.
+- **PIECE** is a preset name, or part of one, in any letter case. `pawn`
+  selects `Shogi 09 - Pawn`. `king` selects both kings. Put quotes around
+  text with spaces.
+- **`-o DIR`** sets the output folder.
+- **`-n`** shows what the command would do. It writes nothing.
+- **`-f`** writes files that the command would otherwise keep.
+- The exit status is 0 when the command works, 1 when it fails, and 2 for a
+  wrong command line.
 
 ## list
 
 ```bash
-python3 komascad.py list                # every game and its size
-python3 komascad.py list shogi          # the pieces in shogi, with how many a set needs
-python3 komascad.py list -l presets/misc/taikyoku.json   # also show each Category
+python3 komascad.py list                               # all games
+python3 komascad.py list shogi                         # the pieces in shogi, and how many
+python3 komascad.py list -l presets/misc/taikyoku.json # also show each Category
 ```
-
-## export
-
-```bash
-python3 komascad.py export shogi
-```
-
-writes one color 3MF per different piece into `exports/shogi/`. Add options
-to change what is written:
-
-| I want... | Add |
-| --- | --- |
-| The complete set in one 3MF (all 40 shogi pieces) | `--per-file all` |
-| The complete set split across files, at most 20 pieces each | `--per-file 20` |
-| Only some pieces | their names after the game: `export shogi pawn king` |
-| A different output folder | `-o DIR` |
-| Pieces lying flat on the front face | `--orientation front-down` |
-| Pieces lying flat on the back face | `--orientation back-down` |
-| Pieces standing on the heel, whatever the preset says | `--orientation upright` |
-| Several pieces rendered at once | `-j N` (`--jobs N`) |
-| To see what would be written, without rendering | `-n` |
-| To export lettering the printability check rejects | `--no-print-check` |
-| To export again after a change | `-f` (existing files are skipped otherwise) |
-| A different name on layout files and in the manifest | `--name "My Shogi"` |
-
-### One file per piece, or complete sets
-
-Without `--per-file`, each different piece is exported once, under its preset
-name, and `manifest.json` records how many of it a complete set needs.
-
-With `--per-file`, the tool counts physical pieces: every piece is rendered
-once and placed as many times as the set needs, spaced so nothing overlaps.
-`--per-file all` puts the whole set in one file; a number splits it into
-layout files of at most that many pieces. A full shogi set is about
-242 × 95 mm standing upright and about 242 × 228 mm lying flat, so use a
-smaller number if that does not fit your bed, or rearrange in the slicer.
-
-The quantities come from a top-level `pieceCounts` object in the preset file.
-The bundled game files get theirs from `presets/games.json`; presets a file
-does not mention count once.
-
-A file that mixes piece sizes can also plan its rows with a top-level
-`layoutRows` array: the number of pieces in each row, back of the bed first.
-Each row is then only as deep and as wide as its own pieces. It applies when
-one file holds every piece, so with `--per-file all` or a large enough number,
-and its numbers must add up to the pieces placed. The
-[print test page](print-test-page.md) uses it:
-
-```json
-"layoutRows": [5, 5, 10, 11]
-```
-
-### Rendering faster
-
-`-j N` renders up to N different pieces at once. Each OpenSCAD run uses one
-processor core and can need a gigabyte or more of memory, so choose N to fit
-both:
-
-```bash
-python3 komascad.py export shogi --per-file all -j 4
-```
-
-The files hold geometry and colors only, with no printer, nozzle, filament,
-bed or process settings, so choose those normally in your slicer after
-importing. Each piece appears under its preset name with its colored parts
-listed beneath it.
-
-### Resuming
-
-Completed files are skipped, so cancelling and running the same command again
-continues with the remaining work. A piece in progress uses a hidden
-`.partial` filename and only becomes a `.3mf` once it is complete. Use `-f`
-after changing a design to write the files again.
-
-When a whole game or preset file is exported, `manifest.json` in the output
-folder records the files, their sizes and checksums. Exporting only chosen
-pieces writes no manifest.
-
-### Print orientation
-
-`--orientation` sets how every exported piece sits on the bed, overriding the
-orientation saved in the presets:
-
-| Value | Result |
-| --- | --- |
-| `upright` | Stands on the broad heel |
-| `front-down` | Lies flat with the front face on the bed |
-| `back-down` | Lies flat with the back face on the bed |
-
-Raised lettering cannot be on the face that lies on the bed; the export stops
-with a message if a preset asks for that. The
-[print guide](printing/print-guide.md) explains why we print face down.
-
-### Changing a piece on the way out
-
-Text and colors can be overridden without editing the preset. The options
-apply to every piece being exported, so name the one you mean:
-
-```bash
-python3 komascad.py export shogi "King (Osho)" --body-color Purple --front-color Silver --signature-text "KomaSCAD"
-```
-
-The options are `--front-text`, `--back-text`, `--body-color`,
-`--front-color`, `--back-color`, `--signature-text` and
-`--signature-color`. Save set-wide changes in the presets instead.
-
-### Your own presets
-
-A preset you saved in the Customizer lives in `shogi_piece.json`. Export it by
-naming that file and the preset:
-
-```bash
-python3 komascad.py export shogi_piece.json "My piece"
-```
-
-Any other Customizer JSON works the same way. `--scad FILE` renders a
-different model file, and `--openscad PATH` uses a specific OpenSCAD
-executable.
-
-## preview
-
-```bash
-python3 komascad.py preview minishogi
-```
-
-renders every piece of the game, front and back, at one scale, and writes
-`exports/preview/minishogi/index.html`. Open it in a browser and refresh after
-each new preview. `-o DIR` chooses another folder.
 
 ## build
 
@@ -179,38 +46,154 @@ each new preview. `-o DIR` chooses another folder.
 python3 komascad.py build
 ```
 
-turns the piece files in `presets/pieces/` and the recipes in
-`presets/games.json` into `presets/games/*.json` and `shogi_piece.json`. Run
-it after editing either source. It also writes the
-[print test page](print-test-page.md) plates in `presets/print-test/`, whose
-settings are fixed in `komascad.py` itself. `export` and `preview` refuse to use a game
-file that is older than its piece files and ask you to build first.
+Makes `presets/games/*.json` and `shogi_piece.json` from `presets/pieces/`
+and `presets/games.json`. Run it after you edit these files. It also writes
+the [print test page](print-test-page.md) files in `presets/print-test/`.
+
+`preview`, `check` and `export` do not use a game file that is older than
+its piece files. They tell you to build first.
 
 | Option | Effect |
 | --- | --- |
-| `--check` | Exit with status 1 if any generated file is out of date; write nothing |
-| `-f`, `--force` | Overwrite `shogi_piece.json` even if it holds unsaved Customizer edits |
+| `--check` | Show the generated files that are old. Write nothing. Exit with 1 if a file is old. |
+| `-f`, `--force` | Write `shogi_piece.json` even if it has Customizer changes |
 
-The build stops if `shogi_piece.json` holds Customizer changes that the piece
-files do not, and lists them; see
-[tuning by eye](user-guide.md#tuning-by-eye-in-openscad).
+The build stops if `shogi_piece.json` has Customizer changes that are not in
+the piece files. It shows each change. See
+[tune a piece by eye](user-guide.md#tune-a-piece-by-eye-in-openscad).
+
+## preview
+
+```bash
+python3 komascad.py preview minishogi
+```
+
+Renders the front and back of every piece at one scale. It writes
+`exports/preview/minishogi/index.html`. Open it in a browser. `-o DIR` sets
+another folder.
 
 ## check
 
 ```bash
 python3 komascad.py check shogi
+python3 komascad.py check presets/misc/chu-shogi-learner.json
 ```
 
-measures every piece's lettering at `Print_Line_Width` and prints, per face,
-the share of strokes thinner than one printed line and of gaps narrower than
-one line. A piece over 2.5% or 5% is marked FAIL, and the exit status is 1.
-Open a failing piece in OpenSCAD with Output Mode **Inspect printability** to
-see where; [lettering printability](parameters.md#lettering-printability)
-explains the fixes.
+Measures the lettering of each face at **Print Line Width**. It shows the
+share of strokes thinner than one printed line, and of gaps narrower than one
+line. A piece above 2.5% or 5% shows FAIL, and the exit status is 1. See
+[lettering printability](parameters.md#lettering-printability).
 
-`export` runs the same check before rendering anything and stops when a piece
-fails. Add `--no-print-check` to export it anyway, as the
-[print test page](print-test-page.md) does on purpose.
+## export
+
+```bash
+python3 komascad.py export shogi
+```
+
+Writes one color 3MF for each different piece into `exports/shogi/`. Add
+options to change this:
+
+| To get | Add |
+| --- | --- |
+| The full set in one 3MF | `--per-file all` |
+| The full set in files of at most 20 pieces | `--per-file 20` |
+| Some pieces only | Their names: `export shogi pawn king` |
+| Another output folder | `-o DIR` |
+| Pieces flat on the front face | `--orientation front-down` |
+| Pieces flat on the back face | `--orientation back-down` |
+| Pieces standing on the heel | `--orientation upright` |
+| Several pieces rendered at the same time | `-j N` |
+| A list of the files, without rendering | `-n` |
+| New files after a change | `-f` |
+| Lettering that the check stops | `--no-print-check` |
+| Files without filament slots | `--plain` |
+| Another name on layout files | `--name "My Shogi"` |
+
+Before it renders, `export` runs the same test as `check`. It stops if a piece
+fails.
+
+### One file for each piece, or full sets
+
+Without `--per-file`, the tool exports each different piece one time.
+`manifest.json` in the output folder gives how many of each a set needs.
+
+With `--per-file`, the tool renders each piece one time and places it as many
+times as the set needs. `--per-file all` puts the full set in one file. A
+number puts at most that many pieces in each file. A full shogi set is about
+242 × 95 mm upright, and 242 × 228 mm flat. If that is too large for your
+bed, use a smaller number.
+
+The counts come from `pieceCounts` in the preset file. A preset that is not
+in `pieceCounts` counts once.
+
+A preset file can also have `layoutRows`: the number of pieces in each row,
+from the back of the bed. Each row is then only as deep as its own pieces.
+The numbers must add up to all the pieces in the file. The tool uses
+`layoutRows` only when one file holds all the pieces. The print test page
+uses it:
+
+```json
+"layoutRows": [5, 5, 10, 11]
+```
+
+### Print orientation
+
+`--orientation` sets the orientation of all pieces. Without it, each piece
+uses its saved **Print Orientation**. The bundled sets stand upright. The
+[print guide](printing/print-guide.md) tells you why we print face down.
+Raised text cannot be on the face that touches the bed: the export stops.
+
+### Render faster
+
+`-j N` renders N different pieces at the same time. Each OpenSCAD run uses
+one processor core and can use 1 GB of memory or more. Select N for your
+computer:
+
+```bash
+python3 komascad.py export shogi --per-file all -j 4
+```
+
+### Stop and continue
+
+The tool does not write a file that exists. Stop an export, then run the same
+command again: it continues with the remaining files. A file is complete when
+it has its `.3mf` name. Use `-f` after a change, to write the files again.
+
+When you export a full game or preset file, `manifest.json` lists the files,
+their sizes and their checksums.
+
+### Filament slots
+
+Each 3MF holds the standard 3MF colors. It also holds the filament slot of
+each part, for Bambu Studio, OrcaSlicer and Elegoo Slicer. See
+[the print guide](printing/print-guide.md#import-a-color-3mf). Use `--plain`
+to leave the slots out, for a tool that cannot read them. Bambu Studio's
+command line is one such tool.
+
+### Change text or colors on export
+
+Change the text and colors of the exported pieces without a change to the
+preset:
+
+```bash
+python3 komascad.py export shogi "King (Osho)" --body-color Purple --front-color Silver --signature-text "KomaSCAD"
+```
+
+The options are `--front-text`, `--back-text`, `--body-color`,
+`--front-color`, `--back-color`, `--signature-text` and `--signature-color`.
+They change every exported piece, so name the piece. `--signature-text` also
+turns the signature on.
+
+### Your own presets
+
+The Customizer saves your presets in `shogi_piece.json`. Export one by name:
+
+```bash
+python3 komascad.py export shogi_piece.json "My piece"
+```
+
+Any Customizer preset file works the same way. `--openscad PATH` uses a
+specific OpenSCAD program.
 
 ## set
 
@@ -218,25 +201,26 @@ fails. Add `--no-print-check` to export it anyway, as the
 python3 komascad.py set my-presets.json Base_Width=30 --category "grid search"
 ```
 
-applies the same value to a chosen group of presets in a preset file you keep
-by hand, such as those in `presets/misc/`. Give one or more `NAME=VALUE`
-pairs and say which presets to change:
+Sets the same value in a group of presets in a file that you keep by hand,
+such as a file in `presets/misc/`. Give one or more `NAME=VALUE` pairs. Then
+select the presets:
 
 | Option | Selects |
 | --- | --- |
-| `--preset TEXT` | Presets whose name contains TEXT; may be repeated |
-| `--category TEXT` | Presets whose Category contains TEXT; may be repeated |
-| `--all` | Every preset in the file |
+| `--preset TEXT` | Presets with TEXT in their name. You can use it more than once. |
+| `--category TEXT` | Presets with TEXT in their Category. You can use it more than once. |
+| `--all` | All presets in the file |
 
-Names are the exact Customizer parameter names with underscores, such as
-`Front_Spacing_Scale`. Values are stored as text, as the Customizer saves
-them; quote a pair that contains brackets, commas or spaces:
+Use the exact parameter names. Put quotes around a pair with brackets, commas
+or spaces:
 
 ```bash
 python3 komascad.py set my-presets.json 'Front_Glyph_Width=[1.0, 1.1, 1.0]' --preset 'Grid 05'
 ```
 
-Each change is printed as it is made. Add `-n` to see the changes without
-writing the file. A parameter that a preset does not already have is treated
-as a typo. For the bundled games, change `presets/pieces/` and run `build`
-instead: the next build overwrites edits to the generated files.
+The command shows each change. Add `-n` to see the changes without a change to
+the file. A parameter that a preset does not have stops the command: it is
+usually a spelling mistake.
+
+Do not use `set` on the generated game files. The next build overwrites
+them. Edit `presets/pieces/` instead.

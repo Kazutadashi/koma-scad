@@ -1,27 +1,20 @@
-# Presets
+# Preset files
 
-New here? The [user guide](../docs/user-guide.md) walks through the whole workflow.
-This page is the file-format reference.
+The [user guide](../docs/user-guide.md) tells you how to use these files. This
+page gives their format.
 
-| Path | What it is | Edit it? |
+| Path | Contents | Edit? |
 | --- | --- | --- |
-| `pieces/` | Master list: one file per piece, plus `_defaults.json` | Yes |
-| `games.json` | Which pieces, how many, and which character styles make up each game | Yes |
-| `games/` | One complete Customizer file per game | No, generated |
-| `../shogi_piece.json` | Every game in one file, so the Customizer lists them all | No, generated |
-| `print-test/` | The [print test page](../docs/print-test-page.md): a fixed reference print | No, generated |
-| `misc/` | Older studies and the separately licensed Taikyoku set | Independent files |
+| `pieces/` | One file for each piece, and `_defaults.json` | Yes |
+| `games.json` | The pieces, and how many, in each game | Yes |
+| `games/` | One preset file for each game | No: `build` makes it |
+| `../shogi_piece.json` | All games in one file, for the Customizer | No: `build` makes it |
+| `print-test/` | The [print test page](../docs/print-test-page.md) | No: `build` makes it |
+| `misc/` | Chu shogi learner pieces, and the Taikyoku set (CC BY-SA 4.0) | Yes, by hand |
 
-After editing a piece or `games.json`, rebuild:
+After you edit a piece or `games.json`, run `python3 komascad.py build`.
 
-```bash
-python3 komascad.py build
-```
-
-## Pieces
-
-A piece file holds its body and one block per face style. Parameter names are
-the exact Customizer names; values are strings, as the Customizer saves them.
+## Piece file
 
 ```json
 {
@@ -30,26 +23,29 @@ the exact Customizer names; values are strings, as the Customizer saves them.
     "body":  { "Piece_Length": "28", "Base_Width": "24.5" },
     "front": {
         "two": { "Front_Characters": "歩兵", "Front_Font_Size": "8.94" },
-        "one": { "Front_Characters": "歩", "Front_Font_Size": "13.4" }
+        "one": { "Front_Characters": "歩", "Front_Font_Size": "13.4" },
+        "learner": { "Front_Characters": "歩", "Front_Moves": "o/@" }
     },
     "back": {
-        "one": { "Back_Characters": "と", "Back_Font_Size": "13.4" }
+        "one": { "Back_Characters": "と", "Back_Font_Size": "13.4" },
+        "learner": { "Back_Characters": "と", "Back_Moves": "ooo/o@o/.o." }
     }
 }
 ```
 
-Leave out `back` for a piece with a blank reverse. Any parameter may go in any
-block, so a body tweak applies to every game and a `front.one` tweak applies
-only to games that use one-character fronts.
+- The keys in each block are the exact OpenSCAD parameter names.
+- The values are text, as the Customizer saves them.
+- For a piece with a blank back, leave out `back`.
 
-`_defaults.json` holds what pieces share: `common` for everything (font,
-colors, engraving), and `front` / `back` for the layout of each style. Each
-preset is layered, later entries winning:
+## _defaults.json
 
-    common -> front style defaults -> back style defaults
-    -> piece body -> piece front style -> piece back style
+`common` holds the settings of all pieces. `front` and `back` hold the
+settings of each style. The build puts the settings together in this order.
+A later layer wins:
 
-## Games
+    common -> front style -> back style -> piece body -> piece front style -> piece back style
+
+## games.json
 
 ```json
 "shogi-1char": {
@@ -60,18 +56,21 @@ preset is layered, later entries winning:
 }
 ```
 
-The key is the output filename in `games/`, `title` prefixes the preset names,
-`front` and `back` pick the face style, and `pieces` maps piece filenames, in
-order, to how many a complete set needs. To add a game, add an entry and
-rebuild.
+- The key is the game name and the file name in `games/`.
+- `title` starts each preset name.
+- `front` and `back` select the style in each piece file.
+- `pieces` gives the piece files, in order, and how many a set needs.
 
-The counts are written into each game file as a top-level `pieceCounts`
-object. OpenSCAD ignores it; the exporter's `--per-file` uses it to place
-the right number of every piece.
+The build writes the counts into each game file as `pieceCounts`. OpenSCAD
+ignores it. `export --per-file` uses it to place the correct number of each
+piece.
 
-## Tuning in the Customizer
+## Customizer preset files
 
-The Customizer saves into `shogi_piece.json`, which the build regenerates. If
-that file holds changes the piece files do not, the build stops and lists each
-changed parameter. Copy the ones you want into the piece file and rebuild;
-`--force` discards them instead.
+A preset file is a normal OpenSCAD Customizer file. You can export any of
+them with `komascad.py`. Two extra keys are optional:
+
+- `pieceCounts`: how many of each preset a set needs. A preset that is not in
+  the list counts once.
+- `layoutRows`: the number of pieces in each row of a layout, from the back of
+  the bed. See [the command reference](../docs/cli.md#one-file-for-each-piece-or-full-sets).

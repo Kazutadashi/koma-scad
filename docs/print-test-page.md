@@ -1,15 +1,16 @@
 # Print test page
 
-The print test page is KomaSCAD's fixed reference print: the same pieces with
-the same settings, every time. Print it to answer three questions:
+The print test page is a fixed reference print: the same pieces, with the
+same settings, every time. Print it to find:
 
-- Can this printer, filament and slicer profile produce a given piece size and
-  stroke weight?
-- Is this setup as good as the recorded baseline, or better?
-- What is the thinnest line and narrowest gap it can reproduce, in millimeters?
+- The piece sizes and stroke weights that your printer, filament and slicer
+  profile can make.
+- Whether your setup is as good as the recorded baseline.
+- The thinnest line and the narrowest gap that your setup can make, in mm.
 
-It is baseline **version 1**. The files in `presets/print-test/` are generated
-and must not be edited; see [Changing the baseline](#changing-the-baseline).
+This is baseline **version 1**. `komascad.py build` makes the files in
+`presets/print-test/`. Do not edit them. See
+[Change the baseline](#change-the-baseline).
 
 ## What is on the page
 
@@ -135,8 +136,8 @@ one running heel to point (widest at one side), so both bed axes are measured.
 
 ## Export
 
-Install both bundled fonts first: Yuji Syuku and LXGW WenKai Mono, from
-[fonts/](../fonts/suggested_fonts.md). The exporter stops if either is missing.
+Install the two bundled fonts first: Yuji Syuku and LXGW WenKai Mono, from
+[fonts/](../fonts/suggested_fonts.md). The export stops if a font is missing.
 
 ```bash
 for plate in 1 2 3; do
@@ -144,13 +145,12 @@ for plate in 1 2 3; do
 done
 ```
 
-This writes one layout 3MF per plate, already arranged in the rows above:
-each plate file carries a `layoutRows` plan that the exporter follows.
-`--no-print-check` is needed because the page goes below what prints on
-purpose: that is what it measures. The
-dense characters are slow to build: `--jobs 8` renders eight pieces at once
-and needs about 1 GB of memory for each. Allow about 15 minutes in all; without
-`--jobs` it takes over an hour.
+This writes one 3MF for each plate, in the rows above. Each plate file has a
+`layoutRows` plan for the export. The page has pieces that cannot print, on
+purpose, so the command needs `--no-print-check`. Dense characters are slow
+to render. `--jobs 8` renders eight pieces at the same time and needs about
+1 GB of memory for each. Allow about 15 minutes. Without `--jobs`, it takes
+more than one hour.
 
 | Plate | Pieces | Footprint | Height |
 | --- | --- | --- | --- |
@@ -260,19 +260,23 @@ whether a setup is better or worse overall, and the cells say where.
 - **Fit and feel.** The page checks lettering, not how a piece handles on a
   board.
 
-## Changing the baseline
+## Change the baseline
 
-Every setting of every piece is written out in the print test page section of
-`komascad.py`. It does not read `presets/pieces/`, so tuning the game sets
-never moves the reference. The `build` command writes the plate files along
-with the game presets:
+The print test page section of `komascad.py` holds every setting of every
+piece. It does not read `presets/pieces/`, so a change to the game sets does
+not change the reference. The `build` command writes the plate files with the
+game presets:
 
 ```bash
 python3 komascad.py build           # rebuild the plate files
 python3 komascad.py build --check   # report stale files, change nothing
 ```
 
-Any change that alters what is printed, in that section or in how
-`shogi_piece.scad` draws these presets, makes earlier records incomparable.
-When that is intended, raise `TEST_PAGE_VERSION` in `komascad.py`, rebuild,
-update the version at the top of this page, and print a new baseline.
+A change to what prints makes the earlier records useless for comparison.
+This includes a change in that section, or in how `shogi_piece.scad` draws
+these presets. If you must make such a change:
+
+1. Increase `TEST_PAGE_VERSION` in `komascad.py`.
+2. Run `python3 komascad.py build`.
+3. Change the version at the top of this page.
+4. Print a new baseline.

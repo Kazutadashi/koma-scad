@@ -1,7 +1,6 @@
 # Released print files
 
-Put only intentionally distributable STL and 3MF files in this directory.
-Every print file requires the matching license sidecar described in
-[print-file licensing](../docs/print-file-licenses.md).
+Put only print files that you want to release in this folder. Give each file
+the license file that [LICENSES.md](../LICENSES.md#print-files) describes.
 
-Do not commit slicer projects, G-code, printer profiles, or local test exports.
+Do not put slicer projects, G-code, printer profiles or test exports here.

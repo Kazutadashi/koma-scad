@@ -20,7 +20,7 @@
         "learner": {
             "Front_Characters": "歩",
             "Front_Moves": "o/@",
-            "Front_Font_Size": "8.4"
+            "Front_Font_Size": "8.96"
         }
     },
     "back": {
@@ -33,7 +33,7 @@
         "learner": {
             "Back_Characters": "と",
             "Back_Moves": "ooo/o@o/.o.",
-            "Back_Font_Size": "8.4"
+            "Back_Font_Size": "8.96"
         }
     }
 }

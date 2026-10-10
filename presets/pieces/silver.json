@@ -20,7 +20,7 @@
         "learner": {
             "Front_Characters": "銀",
             "Front_Moves": "ooo/.@./o.o",
-            "Front_Font_Size": "9"
+            "Front_Font_Size": "9.6"
         }
     },
     "back": {
@@ -32,7 +32,7 @@
         "learner": {
             "Back_Characters": "全",
             "Back_Moves": "ooo/o@o/.o.",
-            "Back_Font_Size": "9"
+            "Back_Font_Size": "9.6"
         }
     }
 }

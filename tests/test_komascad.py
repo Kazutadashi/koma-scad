@@ -79,14 +79,15 @@ class BuildTests(unittest.TestCase):
         """Every generated preset can be turned into OpenSCAD definitions."""
         for sets, _ in komascad.build_games().values():
             for name, values in sets.items():
-                komascad.scad_definitions(komascad.SCAD, name, values, {})
+                komascad.scad_definitions(name, values, {})
 
 
 EDITOR = ROOT / "move-editor.html"
 EXAMPLE_GRIDS = [
     "o/@", "#/@", "x.x/.../.@.", "ooo/.@./o.o", "o#o/#@#/o#o", ".x./#!#/#@#/###",
     "xxxxx/xooox/xo@ox/xooox/xxxxx", "o..o..o/.oxoxo./.xooox./ooo@ooo/.xooox./.oxoxo./o..o..o",
-    "#3#/.@./#3#", "===/=@=/===", ".L./L@L/.L.", "234/5@6/.7.", "#/x/./@",
+    "#3#/.@./#3#", "===/=@=/===", ".L./L@L/.L.", "234/5@6/.7.", "#/x/./@", "#/x/x/./@",
+    "#..=..#/......./..x!x../..#@#../...#.../.L...L.", "o/x/./@", "=/!/@", "!@!", "L.L/.@./L.L",
 ]
 
 
@@ -110,7 +111,8 @@ class MoveEditorTests(unittest.TestCase):
         for sets, _ in komascad.build_games().values():
             for preset in sets.values():
                 grids.update(preset[side + "_Moves"] for side in ("Front", "Back") if preset.get(side + "_Moves"))
-        errors = editor_solver("console.log(JSON.stringify(%s.map(g => S.parseGrid(g).errors)))" % json.dumps(sorted(grids)))
+        errors = editor_solver(
+            "console.log(JSON.stringify(%s.map(g => S.parseGrid(g).errors)))" % json.dumps(sorted(grids)))
         self.assertEqual(dict(zip(sorted(grids), errors)), {grid: [] for grid in sorted(grids)})
 
     def test_invalid_grids_are_explained(self):
@@ -130,12 +132,34 @@ class MoveEditorTests(unittest.TestCase):
                 echo = Path(folder) / "moves.echo"
                 subprocess.run(["openscad", "-o", str(echo), "-D", 'Front_Characters=""',
                                 "-D", "Front_Moves=" + json.dumps(grid), "-D", "Move_Stroke=0.8", "-D", "Move_Gap=0.8",
+                                # Spacing is in final mm; a large piece keeps wide grids clear of the fit checks.
+                                "-D", "Model_Scale=2",
                                 str(komascad.SCAD)], capture_output=True, check=True)
                 line = re.search(r'"KOMASCAD_MOVES", "Front", (.*)$', echo.read_text(encoding="utf-8"), re.M).group(1)
             values = json.loads("[%s]" % line)
             model = [values[2], values[3][0], values[3][1]]
             for a, b in zip(model, expected):
                 self.assertAlmostEqual(a, b, places=3, msg=grid)
+
+
+@unittest.skipUnless(shutil.which("openscad"), "needs OpenSCAD")
+class ModelTests(unittest.TestCase):
+    """Every Output Mode draws without an OpenSCAD warning or error."""
+
+    def test_every_output_mode_draws_cleanly(self):
+        modes = ["Model", "Blank", "Inspect front", "Inspect back", "Inspect printability",
+                 "Inspect signature", "Inspect pawn circle"]
+        settings = ["-D", 'Front_Characters="歩"', "-D", 'Back_Characters="と"', "-D", 'Front_Moves="o/@"',
+                    "-D", "Front_Font_Size=0", "-D", "Front_Character_Spacing=0",
+                    "-D", "Signature_Enabled=true", "-D", 'Signature_Text="KS"']
+        with tempfile.TemporaryDirectory() as folder:
+            for mode in modes:
+                image = Path(folder) / "view.png"
+                status, log = komascad.run_openscad(
+                    ["openscad", "--hardwarnings", "-o", str(image), "--imgsize=200,200"] + settings
+                    + ["-D", 'Output_Mode="%s"' % mode, str(komascad.SCAD)])
+                self.assertEqual(status, 0, "%s: %s" % (mode, log[-800:]))
+                self.assertNotIn("WARNING", log, mode)
 
 
 class SelectionTests(unittest.TestCase):
@@ -228,6 +252,44 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual(len(set(komascad.re.findall(r'<item objectid="(\d+)"', model))), 4)
         self.assertEqual(len({(entry["x"], entry["y"]) for entry in placed}), 4)
 
+    def test_slicer_settings_put_each_part_on_its_filament_slot(self):
+        """Orca-family slicers read model_settings.config: ids must match the model, slots the materials."""
+        def part(role, material, colour):
+            return (role, material, colour, TRIANGLE, [(0, 1, 2)])
+        pawn = [part("body", "Wood", (0.8, 0.6, 0.4, 1)), part("front", "Black", (0, 0, 0, 1)),
+                part("back", "Red", (1, 0, 0, 1))]
+        gold = [part("body", "Wood", (0.8, 0.6, 0.4, 1)), part("front", "Black", (0, 0, 0, 1))]
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "set.3mf"
+            komascad.create_3mf(output, [("Pawn", pawn), ("Pawn", pawn), ("Gold", gold)], "Set")
+            with zipfile.ZipFile(output) as archive:
+                model = komascad.ET.fromstring(archive.read("3D/3dmodel.model"))
+                config = komascad.ET.fromstring(archive.read("Metadata/model_settings.config"))
+                content_types = archive.read("[Content_Types].xml").decode("utf-8")
+        ns = {"c": komascad.MODEL_NAMESPACE}
+        items = [item.get("objectid") for item in model.find("c:build", ns)]
+        objects = config.findall("object")
+        # One block per placed piece, copies included, in build order.
+        self.assertEqual([o.get("id") for o in objects], items)
+        components = {o.get("id"): [c.get("objectid") for c in o.iter("{%s}component" % komascad.MODEL_NAMESPACE)]
+                      for o in model.iter("{%s}object" % komascad.MODEL_NAMESPACE)}
+        slots = {}
+        for o in objects:
+            self.assertEqual([p.get("id") for p in o.findall("part")], components[o.get("id")])
+            for p in o.findall("part"):
+                meta = {m.get("key"): m.get("value") for m in p.findall("metadata")}
+                slots[meta["name"]] = meta["extruder"]
+        self.assertEqual(slots, {"Body | Wood": "1", "Front | Black": "2", "Back | Red": "3"})
+        self.assertIn('Extension="config"', content_types)
+
+    def test_plain_files_leave_out_slicer_settings(self):
+        """--plain writes only standard 3MF, which Bambu Studio's command line can load."""
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "pawn.3mf"
+            komascad.create_3mf(output, [("Pawn", PARTS)], "Pawn", slicer_settings=False)
+            with zipfile.ZipFile(output) as archive:
+                self.assertNotIn("Metadata/model_settings.config", archive.namelist())
+
     def test_grid_centres_pieces_without_overlap(self):
         """Pieces fill a square-ish grid, each in its own cell around the origin."""
         self.assertEqual(komascad.grid_positions([(5.0, 15.0, 0.0, 20.0)]), [(0.0, 0.0)])
@@ -272,9 +334,9 @@ class ExportCommandTests(unittest.TestCase):
         self.measured = {"front": (1.0, 1.0)}
         original_check = komascad.check_printability
         self.addCleanup(lambda: setattr(komascad, "check_printability", original_check))
-        komascad.check_printability = lambda executable, scad, definitions: self.measured
+        komascad.check_printability = lambda executable, definitions: self.measured
 
-    def render(self, executable, scad, definitions):
+    def render(self, executable, definitions):
         self.rendered.append(definitions)
         return PARTS
 
@@ -364,10 +426,10 @@ class ExportCommandTests(unittest.TestCase):
 
     def test_failed_piece_keeps_completed_exports_for_resume(self):
         """A failed export retains completed files and leaves no partial one."""
-        def failing(executable, scad, definitions):
+        def failing(executable, definitions):
             if len(self.rendered) == 1:
                 raise RuntimeError("intentional failure")
-            return self.render(executable, scad, definitions)
+            return self.render(executable, definitions)
 
         komascad.render_parts = failing
         status, _, err = run("export", self.presets, "-o", self.out)
@@ -396,7 +458,7 @@ class TestPageTests(unittest.TestCase):
 
     def test_page_fills_its_budget_in_planned_rows(self):
         """The page uses its whole budget and each plate's rows place its pieces."""
-        self.assertEqual(len(self.pieces()), komascad.TEST_PAGE_PIECES)
+        self.assertEqual(len(self.pieces()), 59)
         for name, (sets, rows) in self.plates.items():
             self.assertEqual(sum(rows), len(sets), name)
             # The exporter places presets in sorted order; rows rely on it.
@@ -405,7 +467,7 @@ class TestPageTests(unittest.TestCase):
     def test_presets_use_only_parameters_the_model_declares(self):
         """Every plate preset can be turned into OpenSCAD definitions."""
         for name, preset in self.pieces().items():
-            komascad.scad_definitions(komascad.SCAD, name, preset, {})
+            komascad.scad_definitions(name, preset, {})
 
     def test_pieces_print_face_down_with_a_red_reverse(self):
         """The front lies on the bed, so it is never raised; the reverse is red."""
@@ -494,7 +556,8 @@ class PrintabilityTests(unittest.TestCase):
         """A 10 mm square with a 4 mm hole has 84 mm² of ink."""
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "ring.svg"
-            path.write_text('<svg><path d="M 0,0 L 10,0 L 10,10 L 0,10 z M 3,3 L 3,7 L 7,7 L 7,3 z"/></svg>', encoding="utf-8")
+            path.write_text('<svg><path d="M 0,0 L 10,0 L 10,10 L 0,10 z M 3,3 L 3,7 L 7,7 L 7,3 z"/></svg>',
+                            encoding="utf-8")
             self.assertAlmostEqual(komascad.svg_area(path), 84.0)
             self.assertEqual(komascad.svg_area(Path(folder) / "missing.svg"), 0.0)
 
@@ -509,13 +572,36 @@ class PrintabilityTests(unittest.TestCase):
         def measure(path, name, **changes):
             sets, _ = komascad.load_parameter_sets(path)
             return komascad.check_printability(
-                "openscad", komascad.SCAD, komascad.scad_definitions(komascad.SCAD, name, dict(sets[name], **changes), {}))
+                "openscad", komascad.scad_definitions(name, dict(sets[name], **changes), {}))
         chu = ROOT / "presets" / "misc" / "chu-shogi-learner.json"
         self.assertEqual(komascad.printability_problems(measure(komascad.GAMES / "shogi.json", "Shogi 09 - Pawn")), [])
         self.assertEqual(komascad.printability_problems(measure(chu, "Chu Shogi - Dragon Horse")), [])
         failing = komascad.printability_problems(measure(
             chu, "Chu Shogi - Dragon Horse", Font_Name="Yuji Syuku:style=Regular"))
         self.assertTrue(any(problem.startswith("back") for problem in failing), failing)
+
+
+class DocumentationTests(unittest.TestCase):
+    """The guides stay in step with the model and with each other."""
+
+    def test_parameter_reference_lists_every_setting(self):
+        reference = (ROOT / "docs" / "parameters.md").read_text(encoding="utf-8")
+        defaults, _ = komascad.scad_parameters()
+        self.assertEqual([name for name in defaults if "| `%s` |" % name not in reference], [])
+
+    def test_model_and_tool_have_the_same_version(self):
+        source = komascad.SCAD.read_text(encoding="utf-8")
+        self.assertIn('version = "%s";' % komascad.VERSION, source)
+
+    def test_relative_links_point_to_files(self):
+        broken = []
+        for page in ROOT.glob("**/*.md"):
+            if "ignored" in page.parts:
+                continue
+            for target in re.findall(r"\]\(([^)#\s]+)(?:#[^)]*)?\)", page.read_text(encoding="utf-8")):
+                if not re.match(r"[a-z]+:", target) and not (page.parent / target).exists():
+                    broken.append("%s -> %s" % (page.relative_to(ROOT), target))
+        self.assertEqual(broken, [])
 
 
 class SetCommandTests(unittest.TestCase):
