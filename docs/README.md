@@ -1,10 +1,11 @@
 # KomaSCAD documentation
 
-Start with the [README](../README.md). It tells you how to install KomaSCAD,
-print a set and design a piece.
+The [README](../README.md) describes the project. Start with
+[getting started](getting-started.md).
 
 | Guide | Use it to |
 | --- | --- |
+| [Getting started](getting-started.md) | Install KomaSCAD, print a set and design a first piece |
 | [User guide](user-guide.md) | Change the bundled sets, and add pieces and games |
 | [Design guide](design-guide.md) | Design a piece in OpenSCAD: shape, text, colors and signature |
 | [Movement diagrams](move-diagrams.md) | Draw the move diagrams of learner pieces |

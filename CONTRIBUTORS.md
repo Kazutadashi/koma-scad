@@ -1,7 +1,11 @@
 # Contributors
 
-KomaSCAD has benefited from design, testing, and practical fabrication work as well as source-code contributions.
+KomaSCAD depends on printing and testing work as much as on code.
 
-- [@imtrmu](https://github.com/imtrmu) — parametric-design and 3D-printing contributor. He proposed turning the original fixed models into a parametric system and has worked extensively on the printing side of the project: testing supplied models, trying alternative methods, evaluating slicer and fabrication behavior, identifying what will and will not print reliably, and providing detailed iterative feedback. His work has helped shape the geometry, lettering, multicolor approach, and overall model-to-print workflow.
+- [@imtrmu](https://github.com/imtrmu) suggested the parametric approach that KomaSCAD is built on, and works on every part of printing it:
+  - refining and optimizing the printer and slicer settings, including the settings in the [print guide](docs/printing/print-guide.md);
+  - testing different print choices, such as upright or flat pieces and different build plates;
+  - testing joints that would let a piece print in separate parts;
+  - giving feedback and suggestions on what to change so that the pieces are easier for others to print.
 
-Additional bug reports, print tests, documentation, historical research, and code contributions are welcome. See [README.md](README.md#contributing) for guidance.
+Bug reports, print results, documentation, historical research and code are all welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
