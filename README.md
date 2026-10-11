@@ -41,7 +41,7 @@ The movement diagram editor, `move-editor.html`, runs in a web browser with noth
 
 ## Documentation
 
-KomaSCAD requires OpenSCAD 2021.01 and, for the command-line tool, Python 3.8 or later; the tool uses only the Python standard library. New users should start with [getting started](docs/getting-started.md).
+KomaSCAD requires OpenSCAD 2021.01 and, for the command-line tool, Python 3.10 or later; the tool uses only the Python standard library. New users should start with [getting started](docs/getting-started.md).
 
 | Guide | Contents |
 | --- | --- |
@@ -62,6 +62,7 @@ KomaSCAD requires OpenSCAD 2021.01 and, for the command-line tool, Python 3.8 or
 | `shogi_piece.scad` | The piece generator |
 | `move_diagrams.scad` | The movement diagram solver used by the generator |
 | `komascad.py` | The command-line tool: build, preview, check and export |
+| `komascad_lib/` | The code of the command-line tool |
 | `move-editor.html` | The movement diagram editor |
 | `presets/` | Piece definitions, game definitions and generated presets |
 | `docs/` | Guides and references |

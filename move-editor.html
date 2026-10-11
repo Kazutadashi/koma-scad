@@ -1,929 +1,3112 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KomaSCAD Move Editor</title>
-<style>
-@font-face { font-family: "KS WenKai"; src: url("fonts/LXGWWenKaiMono-Regular.ttf"); }
-@font-face { font-family: "KS Yuji Syuku"; src: url("fonts/YujiSyuku-Regular.ttf"); }
-@font-face { font-family: "KS Yuji Mai"; src: url("fonts/YujiMai-Regular.ttf"); }
-@font-face { font-family: "KS Iansui"; src: url("fonts/Iansui-Regular.ttf"); }
-@font-face { font-family: "KS Kaisei"; src: url("fonts/KaiseiTokumin-ExtraBold.ttf"); }
-:root {
-  --bg: #f6f1e7; --panel: #fffdf8; --ink: #22201c; --muted: #6f675b; --line: #e2d8c6; --soft: #efe7d6;
-  --wood: #c9a26a; --wood-edge: #a8834f; --front-ink: #1d1a16; --back-ink: #9b1b14; --accent: #9b1b14;
-  --accent-ink: #fff; --bad: #b3261e; --good: #2f6b3a; --cell: #f3ead9; --cell-hover: #eadbbd; --focus: #c2410c;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #161411; --panel: #201d19; --ink: #efe8db; --muted: #a79e90; --line: #383229; --soft: #2a2620;
-    --wood: #b38c55; --wood-edge: #8e6c3d; --accent: #e0644f; --accent-ink: #161411; --bad: #f2867d; --good: #8fd19e;
-    --cell: #2b2721; --cell-hover: #3a342b; --focus: #fb923c;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #161411; --panel: #201d19; --ink: #efe8db; --muted: #a79e90; --line: #383229; --soft: #2a2620;
-  --wood: #b38c55; --wood-edge: #8e6c3d; --accent: #e0644f; --accent-ink: #161411; --bad: #f2867d; --good: #8fd19e;
-  --cell: #2b2721; --cell-hover: #3a342b; --focus: #fb923c;
-}
-* { box-sizing: border-box; }
-html { background: var(--bg); }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
-main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 48px; }
-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; margin-bottom: 18px; }
-h1 { font-size: 24px; margin: 0; letter-spacing: -0.01em; }
-.lede { color: var(--muted); margin: 4px 0 0; max-width: 62ch; }
-.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
-section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
-section + section { margin-top: 16px; }
-h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; font-weight: 650; }
-button, select, input { font: inherit; color: var(--ink); }
-button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.tabs { display: flex; gap: 6px; margin-bottom: 14px; }
-.tabs button { flex: 1; border: 1px solid var(--line); background: var(--cell); border-radius: 9px; padding: 8px 10px; text-align: left; }
-.tabs button[aria-selected="true"] { background: var(--panel); border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--accent); }
-.tabs .face-name { display: block; font-weight: 650; }
-.tabs .face-sub { display: block; font-size: 12px; color: var(--muted); }
-.chars { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.chars input { width: 7.5em; font-size: 22px; padding: 4px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); text-align: center; }
-.chars .hint { font-size: 13px; color: var(--muted); }
-.palette { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; margin-bottom: 8px; }
-.ranges { display: flex; align-items: center; gap: 4px; margin-bottom: 14px; font-size: 13px; color: var(--muted); }
-.ranges span { margin-right: 4px; }
-.ranges button { border: 1px solid var(--line); background: var(--cell); border-radius: 7px; min-width: 34px; padding: 4px 0; font: 700 14px ui-monospace, monospace; }
-.ranges button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.palette button { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--cell); border-radius: 8px; padding: 5px 8px; text-align: left; font-size: 13px; }
-.palette button svg { flex: none; }
-.palette button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.palette kbd { margin-left: auto; font: 11px ui-monospace, monospace; opacity: .7; }
-.board-wrap { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
-.board { display: grid; grid-template-columns: repeat(9, 1fr); grid-template-rows: repeat(9, 1fr); gap: 3px; width: min(100%, 396px); aspect-ratio: 1; }
-.board button { border: 1px solid var(--line); border-radius: 6px; background: var(--cell); padding: 0; min-width: 0; min-height: 0; display: grid; place-items: center; position: relative; overflow: hidden; }
-.board button:hover:not([aria-disabled="true"]) { background: var(--cell-hover); }
-.board button.ray::after { content: ""; position: absolute; inset: 3px; border: 1px dashed var(--line); border-radius: 4px; pointer-events: none; }
-.board button.piece { background: var(--ink); border-color: var(--ink); cursor: default; }
-.board button[aria-disabled="true"] { opacity: .35; cursor: not-allowed; }
-.board svg { width: 74%; height: 74%; }
-.side-tools { display: flex; flex-direction: column; gap: 8px; min-width: 150px; }
-.tool { border: 1px solid var(--line); background: var(--cell); border-radius: 8px; padding: 6px 10px; text-align: left; }
-.tool:disabled { opacity: .45; cursor: not-allowed; }
-label.check { display: flex; align-items: center; gap: 8px; }
-select { border: 1px solid var(--line); background: var(--cell); border-radius: 8px; padding: 6px 8px; }
-.msg { min-height: 1.5em; font-size: 14px; margin: 10px 0 0; color: var(--bad); }
-.preview { background: radial-gradient(circle at 50% 30%, var(--soft), var(--bg)); border-radius: 10px; padding: 12px; }
-.preview svg { display: block; width: 100%; height: auto; }
-.status { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--muted); margin: 10px 0 8px; }
-.status .ok { color: var(--good); }
-.status .bad { color: var(--bad); font-weight: 600; }
-.fix { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 4px; color: var(--ink); }
-.fix button { border: 1px solid var(--accent); color: var(--accent); background: transparent; border-radius: 8px; padding: 4px 10px; font-size: 13px; font-weight: 600; }
-.msg.info { color: var(--muted); }
-details summary { cursor: pointer; font-weight: 600; margin: 4px 0; }
-.settings { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 14px; margin-top: 10px; }
-.settings label { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--muted); }
-.settings input, .settings select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); width: 100%; }
-.out { font: 13px/1.5 ui-monospace, monospace; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; white-space: pre; overflow-x: auto; margin: 8px 0 0; }
-.out-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
-.out-head:first-of-type { margin-top: 0; }
-.out-head span { font-weight: 600; }
-.copy { border: 1px solid var(--line); background: var(--cell); border-radius: 8px; padding: 5px 10px; font-size: 13px; }
-.legend { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; font-size: 14px; align-items: center; margin: 0; }
-.legend dt { display: flex; align-items: center; gap: 6px; font: 600 13px ui-monospace, monospace; }
-.legend dd { margin: 0; color: var(--muted); }
-.foot { color: var(--muted); font-size: 13px; margin-top: 18px; }
-table.wiki { border-collapse: collapse; width: 100%; font-size: 14px; table-layout: fixed; }
-table.wiki th:nth-child(1) { width: 26%; } table.wiki th:nth-child(2) { width: 40%; }
-table.wiki th { text-align: left; font-size: 12px; color: var(--muted); font-weight: 600; padding: 4px 6px; }
-table.wiki td { padding: 6px; border-top: 1px solid var(--line); vertical-align: middle; }
-table.wiki td[data-mark] { display: table-cell; }
-table.wiki td[data-mark] svg { vertical-align: middle; margin-right: 6px; }
-.chip { display: inline-block; min-width: 2.2em; text-align: center; padding: 2px 6px; border-radius: 6px; color: #222; font-weight: 600; }
-.chip.blue { background: #d4d4f0; } .chip.red { background: #f1d0d4; } .chip.yellow { background: #eef0b4; }
-.chip.green { background: #ccefd0; } .chip.orange { background: #fddcab; }
-@media (prefers-reduced-motion: no-preference) { .board button, .palette button, .tabs button { transition: background-color .12s, border-color .12s; } }
-</style>
-</head>
-<body>
-<main>
-<header>
-  <div>
-    <h1>Move editor</h1>
-    <p class="lede">Draw how a piece moves on each face. The preview lays the piece out the way the model does,
-    and the result pastes straight into a piece file or the Customizer.</p>
-  </div>
-  <select id="examples" aria-label="Load an example piece"><option value="">Load an example piece…</option></select>
-</header>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KomaSCAD Move Editor</title>
+    <style>
+      @font-face {
+        font-family: "KS WenKai";
+        src: url("fonts/LXGWWenKaiMono-Regular.ttf");
+      }
+      @font-face {
+        font-family: "KS Yuji Syuku";
+        src: url("fonts/YujiSyuku-Regular.ttf");
+      }
+      @font-face {
+        font-family: "KS Yuji Mai";
+        src: url("fonts/YujiMai-Regular.ttf");
+      }
+      @font-face {
+        font-family: "KS Iansui";
+        src: url("fonts/Iansui-Regular.ttf");
+      }
+      @font-face {
+        font-family: "KS Kaisei";
+        src: url("fonts/KaiseiTokumin-ExtraBold.ttf");
+      }
+      :root {
+        --bg: #f6f1e7;
+        --panel: #fffdf8;
+        --ink: #22201c;
+        --muted: #6f675b;
+        --line: #e2d8c6;
+        --soft: #efe7d6;
+        --wood: #c9a26a;
+        --wood-edge: #a8834f;
+        --front-ink: #1d1a16;
+        --back-ink: #9b1b14;
+        --accent: #9b1b14;
+        --accent-ink: #fff;
+        --bad: #b3261e;
+        --good: #2f6b3a;
+        --cell: #f3ead9;
+        --cell-hover: #eadbbd;
+        --focus: #c2410c;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #161411;
+          --panel: #201d19;
+          --ink: #efe8db;
+          --muted: #a79e90;
+          --line: #383229;
+          --soft: #2a2620;
+          --wood: #b38c55;
+          --wood-edge: #8e6c3d;
+          --accent: #e0644f;
+          --accent-ink: #161411;
+          --bad: #f2867d;
+          --good: #8fd19e;
+          --cell: #2b2721;
+          --cell-hover: #3a342b;
+          --focus: #fb923c;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #161411;
+        --panel: #201d19;
+        --ink: #efe8db;
+        --muted: #a79e90;
+        --line: #383229;
+        --soft: #2a2620;
+        --wood: #b38c55;
+        --wood-edge: #8e6c3d;
+        --accent: #e0644f;
+        --accent-ink: #161411;
+        --bad: #f2867d;
+        --good: #8fd19e;
+        --cell: #2b2721;
+        --cell-hover: #3a342b;
+        --focus: #fb923c;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        background: var(--bg);
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.5 system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+      }
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px 16px;
+        margin-bottom: 18px;
+      }
+      h1 {
+        font-size: 24px;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        color: var(--muted);
+        margin: 4px 0 0;
+        max-width: 62ch;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 16px;
+        align-items: start;
+      }
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+      section {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 16px;
+        min-width: 0;
+      }
+      section + section {
+        margin-top: 16px;
+      }
+      h2 {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        margin: 0 0 12px;
+        font-weight: 650;
+      }
+      button,
+      select,
+      input {
+        font: inherit;
+        color: var(--ink);
+      }
+      button {
+        cursor: pointer;
+      }
+      :focus-visible {
+        outline: 2px solid var(--focus);
+        outline-offset: 2px;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 14px;
+      }
+      .tabs button {
+        flex: 1;
+        border: 1px solid var(--line);
+        background: var(--cell);
+        border-radius: 9px;
+        padding: 8px 10px;
+        text-align: left;
+      }
+      .tabs button[aria-selected="true"] {
+        background: var(--panel);
+        border-color: var(--ink);
+        box-shadow: inset 0 -3px 0 var(--accent);
+      }
+      .tabs .face-name {
+        display: block;
+        font-weight: 650;
+      }
+      .tabs .face-sub {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .chars {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .chars input {
+        width: 7.5em;
+        font-size: 22px;
+        padding: 4px 10px;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        text-align: center;
+      }
+      .chars .hint {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+      .ranges {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 14px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .ranges span {
+        margin-right: 4px;
+      }
+      .ranges button {
+        border: 1px solid var(--line);
+        background: var(--cell);
+        border-radius: 7px;
+        min-width: 34px;
+        padding: 4px 0;
+        font:
+          700 14px ui-monospace,
+          monospace;
+      }
+      .ranges button[aria-pressed="true"] {
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: var(--accent);
+      }
+      .palette button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid var(--line);
+        background: var(--cell);
+        border-radius: 8px;
+        padding: 5px 8px;
+        text-align: left;
+        font-size: 13px;
+      }
+      .palette button svg {
+        flex: none;
+      }
+      .palette button[aria-pressed="true"] {
+        background: var(--accent);
+        color: var(--accent-ink);
+        border-color: var(--accent);
+      }
+      .palette kbd {
+        margin-left: auto;
+        font:
+          11px ui-monospace,
+          monospace;
+        opacity: 0.7;
+      }
+      .board-wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        align-items: flex-start;
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        grid-template-rows: repeat(9, 1fr);
+        gap: 3px;
+        width: min(100%, 396px);
+        aspect-ratio: 1;
+      }
+      .board button {
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--cell);
+        padding: 0;
+        min-width: 0;
+        min-height: 0;
+        display: grid;
+        place-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .board button:hover:not([aria-disabled="true"]) {
+        background: var(--cell-hover);
+      }
+      .board button.ray::after {
+        content: "";
+        position: absolute;
+        inset: 3px;
+        border: 1px dashed var(--line);
+        border-radius: 4px;
+        pointer-events: none;
+      }
+      .board button.piece {
+        background: var(--ink);
+        border-color: var(--ink);
+        cursor: default;
+      }
+      .board button[aria-disabled="true"] {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+      .board svg {
+        width: 74%;
+        height: 74%;
+      }
+      .side-tools {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        min-width: 150px;
+      }
+      .tool {
+        border: 1px solid var(--line);
+        background: var(--cell);
+        border-radius: 8px;
+        padding: 6px 10px;
+        text-align: left;
+      }
+      .tool:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      label.check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      select {
+        border: 1px solid var(--line);
+        background: var(--cell);
+        border-radius: 8px;
+        padding: 6px 8px;
+      }
+      .msg {
+        min-height: 1.5em;
+        font-size: 14px;
+        margin: 10px 0 0;
+        color: var(--bad);
+      }
+      .preview {
+        background: radial-gradient(circle at 50% 30%, var(--soft), var(--bg));
+        border-radius: 10px;
+        padding: 12px;
+      }
+      .preview svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .status {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 13px;
+        color: var(--muted);
+        margin: 10px 0 8px;
+      }
+      .status .ok {
+        color: var(--good);
+      }
+      .status .bad {
+        color: var(--bad);
+        font-weight: 600;
+      }
+      .fix {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        margin-top: 4px;
+        color: var(--ink);
+      }
+      .fix button {
+        border: 1px solid var(--accent);
+        color: var(--accent);
+        background: transparent;
+        border-radius: 8px;
+        padding: 4px 10px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .msg.info {
+        color: var(--muted);
+      }
+      details summary {
+        cursor: pointer;
+        font-weight: 600;
+        margin: 4px 0;
+      }
+      .settings {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 10px 14px;
+        margin-top: 10px;
+      }
+      .settings label {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .settings input,
+      .settings select {
+        padding: 5px 8px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: var(--bg);
+        color: var(--ink);
+        width: 100%;
+      }
+      .out {
+        font:
+          13px/1.5 ui-monospace,
+          monospace;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 10px 12px;
+        white-space: pre;
+        overflow-x: auto;
+        margin: 8px 0 0;
+      }
+      .out-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .out-head:first-of-type {
+        margin-top: 0;
+      }
+      .out-head span {
+        font-weight: 600;
+      }
+      .copy {
+        border: 1px solid var(--line);
+        background: var(--cell);
+        border-radius: 8px;
+        padding: 5px 10px;
+        font-size: 13px;
+      }
+      .legend {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 6px 10px;
+        font-size: 14px;
+        align-items: center;
+        margin: 0;
+      }
+      .legend dt {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font:
+          600 13px ui-monospace,
+          monospace;
+      }
+      .legend dd {
+        margin: 0;
+        color: var(--muted);
+      }
+      .foot {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 18px;
+      }
+      table.wiki {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+        table-layout: fixed;
+      }
+      table.wiki th:nth-child(1) {
+        width: 26%;
+      }
+      table.wiki th:nth-child(2) {
+        width: 40%;
+      }
+      table.wiki th {
+        text-align: left;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 600;
+        padding: 4px 6px;
+      }
+      table.wiki td {
+        padding: 6px;
+        border-top: 1px solid var(--line);
+        vertical-align: middle;
+      }
+      table.wiki td[data-mark] {
+        display: table-cell;
+      }
+      table.wiki td[data-mark] svg {
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      .chip {
+        display: inline-block;
+        min-width: 2.2em;
+        text-align: center;
+        padding: 2px 6px;
+        border-radius: 6px;
+        color: #222;
+        font-weight: 600;
+      }
+      .chip.blue {
+        background: #d4d4f0;
+      }
+      .chip.red {
+        background: #f1d0d4;
+      }
+      .chip.yellow {
+        background: #eef0b4;
+      }
+      .chip.green {
+        background: #ccefd0;
+      }
+      .chip.orange {
+        background: #fddcab;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .board button,
+        .palette button,
+        .tabs button {
+          transition:
+            background-color 0.12s,
+            border-color 0.12s;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <h1>Move editor</h1>
+          <p class="lede">
+            Draw how a piece moves on each face. The preview lays the piece out the way the model
+            does, and the result pastes straight into a piece file or the Customizer.
+          </p>
+        </div>
+        <select id="examples" aria-label="Load an example piece">
+          <option value="">Load an example piece…</option>
+        </select>
+      </header>
 
-<div class="layout">
-<div>
-  <section>
-    <div class="tabs" role="tablist" aria-label="Face">
-      <button role="tab" id="tab-front" aria-selected="true" aria-controls="editor"><span class="face-name">Front</span><span class="face-sub">Before promotion</span></button>
-      <button role="tab" id="tab-back" aria-selected="false" aria-controls="editor"><span class="face-name">Back</span><span class="face-sub">After promotion, in red</span></button>
-    </div>
-    <div id="editor" role="tabpanel">
-      <div class="chars">
-        <input id="chars" type="text" maxlength="3" lang="ja" aria-label="Characters on this face" spellcheck="false">
-        <span class="hint">Characters on this face, top to bottom. Leave the back empty for a piece that does not promote.</span>
-      </div>
-      <div class="palette" id="palette" role="toolbar" aria-label="Marks"></div>
-      <div class="ranges" id="ranges" role="toolbar" aria-label="Moves up to a number of squares"><span>Up to</span></div>
-      <div class="board-wrap">
-        <div class="board" id="board" aria-label="Squares around the piece; forward is up"></div>
-        <div class="side-tools">
-          <label class="check"><input type="checkbox" id="mirror" checked> Mirror left and right</label>
-          <button class="tool" id="undo" title="Undo (Ctrl+Z)">Undo</button>
-          <button class="tool" id="redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
-          <button class="tool" id="copy-front" title="Copy the front's moves to the back">Copy front moves to back</button>
-          <button class="tool" id="clear">Clear this face</button>
+      <div class="layout">
+        <div>
+          <section>
+            <div class="tabs" role="tablist" aria-label="Face">
+              <button role="tab" id="tab-front" aria-selected="true" aria-controls="editor">
+                <span class="face-name">Front</span><span class="face-sub">Before promotion</span>
+              </button>
+              <button role="tab" id="tab-back" aria-selected="false" aria-controls="editor">
+                <span class="face-name">Back</span
+                ><span class="face-sub">After promotion, in red</span>
+              </button>
+            </div>
+            <div id="editor" role="tabpanel">
+              <div class="chars">
+                <input
+                  id="chars"
+                  type="text"
+                  maxlength="3"
+                  lang="ja"
+                  aria-label="Characters on this face"
+                  spellcheck="false"
+                />
+                <span class="hint"
+                  >Characters on this face, top to bottom. Leave the back empty for a piece that
+                  does not promote.</span
+                >
+              </div>
+              <div class="palette" id="palette" role="toolbar" aria-label="Marks"></div>
+              <div
+                class="ranges"
+                id="ranges"
+                role="toolbar"
+                aria-label="Moves up to a number of squares"
+              >
+                <span>Up to</span>
+              </div>
+              <div class="board-wrap">
+                <div
+                  class="board"
+                  id="board"
+                  aria-label="Squares around the piece; forward is up"
+                ></div>
+                <div class="side-tools">
+                  <label class="check"
+                    ><input type="checkbox" id="mirror" checked /> Mirror left and right</label
+                  >
+                  <button class="tool" id="undo" title="Undo (Ctrl+Z)">Undo</button>
+                  <button class="tool" id="redo" title="Redo (Ctrl+Shift+Z)">Redo</button>
+                  <button class="tool" id="copy-front" title="Copy the front's moves to the back">
+                    Copy front moves to back
+                  </button>
+                  <button class="tool" id="clear">Clear this face</button>
+                </div>
+              </div>
+              <p class="msg" id="msg" role="status" aria-live="polite"></p>
+            </div>
+          </section>
+
+          <section>
+            <h2>Marks</h2>
+            <dl class="legend" id="legend"></dl>
+          </section>
+
+          <section>
+            <h2>From a Wikipedia diagram</h2>
+            <p class="foot" style="margin-top: 0">
+              Wikipedia's movement diagrams use the same grid: the piece in the middle, forward up.
+              Copy them square by square, using these marks.
+            </p>
+            <table class="wiki">
+              <thead>
+                <tr>
+                  <th>Wikipedia</th>
+                  <th>Meaning</th>
+                  <th>Use</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="chip blue">○</span></td>
+                  <td>Steps to this square; several in a row are a limited range</td>
+                  <td data-mark="o">Move</td>
+                </tr>
+                <tr>
+                  <td><span class="chip red">│ ─ ╲ ╱</span></td>
+                  <td>Ranges along the line</td>
+                  <td data-mark="#">Slide, on the first square of the line</td>
+                </tr>
+                <tr>
+                  <td><span class="chip red">╳ ┼</span></td>
+                  <td>May turn 90° at this square</td>
+                  <td data-mark="L">Hook, on the first square of the line</td>
+                </tr>
+                <tr>
+                  <td><span class="chip yellow">☆</span></td>
+                  <td>Jumps to this square</td>
+                  <td data-mark="x">Jump</td>
+                </tr>
+                <tr>
+                  <td><span class="chip yellow">○ │ ─ ╲ ╱</span></td>
+                  <td>Steps or ranges on after a ☆</td>
+                  <td data-mark="o">Move or Slide, beyond the jump on the same line</td>
+                </tr>
+                <tr>
+                  <td><span class="chip yellow">3</span></td>
+                  <td>
+                    Jumps up to 3 squares, then may range (Wikipedia notes the meaning is uncertain)
+                  </td>
+                  <td data-mark="x">Jump on squares 1–3, then Slide on square 4</td>
+                </tr>
+                <tr>
+                  <td><span class="chip green">☆</span></td>
+                  <td>Jumps there, or reaches it in two steps</td>
+                  <td data-mark="x">Jump; a lion with every square within two becomes a frame</td>
+                </tr>
+                <tr>
+                  <td><span class="chip green">!</span></td>
+                  <td>Igui: captures without moving</td>
+                  <td data-mark="!">Igui</td>
+                </tr>
+                <tr>
+                  <td><span class="chip orange">│ ─ ╲ ╱</span></td>
+                  <td>Flies over pieces of lower rank, capturing them</td>
+                  <td data-mark="=">Fly. The rank rule itself is not drawn</td>
+                </tr>
+              </tbody>
+            </table>
+          </section>
+        </div>
+
+        <div>
+          <section>
+            <h2>Preview</h2>
+            <div class="preview">
+              <svg id="preview" role="img" aria-label="Both faces of the piece"></svg>
+            </div>
+            <div class="status" id="status"></div>
+            <details>
+              <summary>Set settings</summary>
+              <p class="foot" style="margin-top: 4px">
+                Give every piece of a set the same values. These match the bundled learner sets.
+              </p>
+              <div class="settings">
+                <label
+                  >Piece
+                  <select id="body"></select
+                ></label>
+                <label
+                  >Font
+                  <select id="font"></select
+                ></label>
+                <label
+                  >Character size × length
+                  <input type="number" id="ratio" min="0.15" max="0.6" step="0.01"
+                /></label>
+                <label
+                  >Characters at (from heel)
+                  <input type="number" id="center" min="0.2" max="0.9" step="0.01"
+                /></label>
+                <label
+                  >Line, mm <input type="number" id="stroke" min="0.3" max="2" step="0.05"
+                /></label>
+                <label
+                  >Gap, mm <input type="number" id="gap" min="0.3" max="2" step="0.05"
+                /></label>
+                <label
+                  >Between squares, mm <input type="number" id="pitch" min="0" max="10" step="0.05"
+                /></label>
+                <label
+                  >Model scale <input type="number" id="scale" min="0.5" max="3" step="0.05"
+                /></label>
+              </div>
+            </details>
+          </section>
+
+          <section>
+            <h2>Result</h2>
+            <div class="out-head">
+              <span>Piece file, in its learner style</span
+              ><button class="copy" data-copy="json">Copy</button>
+            </div>
+            <div class="out" id="json"></div>
+            <div class="out-head">
+              <span>Customizer values</span><button class="copy" data-copy="custom">Copy</button>
+            </div>
+            <div class="out" id="custom"></div>
+            <p class="foot">
+              The preview follows the model's rules closely; the model has the final say. Run
+              <code>komascad.py check</code> on the piece file to confirm the lettering prints.
+            </p>
+          </section>
         </div>
       </div>
-      <p class="msg" id="msg" role="status" aria-live="polite"></p>
-    </div>
-  </section>
+    </main>
 
-  <section>
-    <h2>Marks</h2>
-    <dl class="legend" id="legend"></dl>
-  </section>
+    <script id="solver">
+      // Movement diagrams: a port of the solver in move_diagrams.scad, with the same
+      // steps in the same order. Change both in the same way: tests/test_model.py
+      // checks that they agree.
+      //
+      // Lengths are in millimetres. A point or a vector is [x, y], with x to the
+      // right of the piece and y forward of it.
+      "use strict";
 
-  <section>
-    <h2>From a Wikipedia diagram</h2>
-    <p class="foot" style="margin-top:0">Wikipedia's movement diagrams use the same grid: the piece in the middle,
-    forward up. Copy them square by square, using these marks.</p>
-    <table class="wiki">
-      <thead><tr><th>Wikipedia</th><th>Meaning</th><th>Use</th></tr></thead>
-      <tbody>
-        <tr><td><span class="chip blue">○</span></td><td>Steps to this square; several in a row are a limited range</td><td data-mark="o">Move</td></tr>
-        <tr><td><span class="chip red">│ ─ ╲ ╱</span></td><td>Ranges along the line</td><td data-mark="#">Slide, on the first square of the line</td></tr>
-        <tr><td><span class="chip red">╳ ┼</span></td><td>May turn 90° at this square</td><td data-mark="L">Hook, on the first square of the line</td></tr>
-        <tr><td><span class="chip yellow">☆</span></td><td>Jumps to this square</td><td data-mark="x">Jump</td></tr>
-        <tr><td><span class="chip yellow">○ │ ─ ╲ ╱</span></td><td>Steps or ranges on after a ☆</td><td data-mark="o">Move or Slide, beyond the jump on the same line</td></tr>
-        <tr><td><span class="chip yellow">3</span></td><td>Jumps up to 3 squares, then may range (Wikipedia notes the meaning is uncertain)</td><td data-mark="x">Jump on squares 1–3, then Slide on square 4</td></tr>
-        <tr><td><span class="chip green">☆</span></td><td>Jumps there, or reaches it in two steps</td><td data-mark="x">Jump; a lion with every square within two becomes a frame</td></tr>
-        <tr><td><span class="chip green">!</span></td><td>Igui: captures without moving</td><td data-mark="!">Igui</td></tr>
-        <tr><td><span class="chip orange">│ ─ ╲ ╱</span></td><td>Flies over pieces of lower rank, capturing them</td><td data-mark="=">Fly. The rank rule itself is not drawn</td></tr>
-      </tbody>
-    </table>
-  </section>
-</div>
+      // ---- Constants ------------------------------------------------------------------
 
-<div>
-  <section>
-    <h2>Preview</h2>
-    <div class="preview"><svg id="preview" role="img" aria-label="Both faces of the piece"></svg></div>
-    <div class="status" id="status"></div>
-    <details>
-      <summary>Set settings</summary>
-      <p class="foot" style="margin-top:4px">Give every piece of a set the same values. These match the bundled learner sets.</p>
-      <div class="settings">
-        <label>Piece <select id="body"></select></label>
-        <label>Font <select id="font"></select></label>
-        <label>Character size × length <input type="number" id="ratio" min="0.15" max="0.6" step="0.01"></label>
-        <label>Characters at (from heel) <input type="number" id="center" min="0.2" max="0.9" step="0.01"></label>
-        <label>Line, mm <input type="number" id="stroke" min="0.3" max="2" step="0.05"></label>
-        <label>Gap, mm <input type="number" id="gap" min="0.3" max="2" step="0.05"></label>
-        <label>Between squares, mm <input type="number" id="pitch" min="0" max="10" step="0.05"></label>
-        <label>Model scale <input type="number" id="scale" min="0.5" max="3" step="0.05"></label>
-      </div>
-    </details>
-  </section>
+      /** The eight lines from the piece, as steps of one square. A line's id is its index. */
+      const DIRECTIONS = [
+        [0, 1],
+        [1, 1],
+        [1, 0],
+        [1, -1],
+        [0, -1],
+        [-1, -1],
+        [-1, 0],
+        [-1, 1],
+      ];
 
-  <section>
-    <h2>Result</h2>
-    <div class="out-head"><span>Piece file, in its learner style</span><button class="copy" data-copy="json">Copy</button></div>
-    <div class="out" id="json"></div>
-    <div class="out-head"><span>Customizer values</span><button class="copy" data-copy="custom">Copy</button></div>
-    <div class="out" id="custom"></div>
-    <p class="foot">The preview follows the model's rules closely; the model has the final say.
-    Run <code>komascad.py check</code> on the piece file to confirm the lettering prints.</p>
-  </section>
-</div>
-</div>
-</main>
+      /** The symbols a move grid may use. docs/move-diagrams.md explains them. */
+      const SYMBOLS = [".", "o", "x", "!", "#", "=", "L", "2", "3", "4", "5", "6", "7", "@"];
 
-<script id="solver">
-// Movement-diagram layout: a port of move_diagrams.scad. Keep the two the same;
-// tests/test_komascad.py compares them.
-"use strict";
-const DIRECTIONS = [[0,1],[1,1],[1,0],[1,-1],[0,-1],[-1,-1],[-1,0],[-1,1]];
-const SLIDE_PAST = 0.35;  // squares past its farthest mark that a slide's arrowhead lies
-const SYMBOLS = [".","o","x","!","#","=","L","2","3","4","5","6","7","@"];
-const isDirection = c => c === "#" || c === "=" || c === "L";
-const isDigit = c => "234567".includes(c) && c.length === 1;
-const stops = c => c === "o" || c === "x" || c === "!";
-const onLine = m => m[0] === 0 || m[1] === 0 || Math.abs(m[0]) === Math.abs(m[1]);
-const cheb = m => Math.max(Math.abs(m[0]), Math.abs(m[1]));
-const unit = m => [Math.sign(m[0]), Math.sign(m[1])];
-const sameUnit = (a, b) => unit(a)[0] === unit(b)[0] && unit(a)[1] === unit(b)[1];
-const ray = u => DIRECTIONS.findIndex(d => d[0] === u[0] && d[1] === u[1]);
-const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
-const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
-const mul = (a, k) => [a[0] * k, a[1] * k];
-const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
-const norm = a => Math.hypot(a[0], a[1]);
+      /** The shortest arrowhead, in mm. A slicer turns a shorter one into a dot. */
+      const MIN_HEAD = 2.4;
 
-function parseGrid(text) {
-  const rows = text.replace(/ /g, "").split("/").map(r => [...r]);
-  const errors = [];
-  if (rows.some(r => r.some(c => !SYMBOLS.includes(c)))) errors.push("Only . o x ! # = L 2-7 @ and / are allowed.");
-  const ats = rows.flatMap((r, i) => r.map((c, j) => c === "@" ? [i, j] : null)).filter(Boolean);
-  if (ats.length !== 1) errors.push("The grid needs exactly one @ for the piece.");
-  if (rows.some(r => r.length !== rows[0].length)) errors.push("Rows must all be the same length.");
-  if (errors.length) return { errors, marks: [] };
-  const [r0, c0] = ats[0];
-  const marks = [];
-  rows.forEach((r, i) => r.forEach((c, j) => { if (c !== "." && c !== "@") marks.push([j - c0, r0 - i, c]); }));
-  for (const m of marks) {
-    if (isDirection(m[2]) && !onLine(m)) errors.push("# = and L must lie straight or diagonally from the @.");
-    if ((m[2] === "!" || isDigit(m[2])) && cheb(m) !== 1) errors.push("! and 2-7 go on a square next to the @.");
-  }
-  return { errors: [...new Set(errors)], marks };
-}
+      /** Squares from the last mark on a line to its arrowhead. */
+      const SLIDE_PAST = 0.35;
 
-function sizes(W, G) {
-  // igui: an upright "!" [width, height, wedge length, dot]; overrun: how far a hook's line runs past its crossbar.
-  return { W, G, dot: 2 * W, ring: 2 * W + G, igui: [1.7 * W, 2.4 * W + G + 1.4 * W, 2.4 * W, 1.4 * W], head: Math.max(2.5 * W, 2.4), tee: 3.5 * W,
-           overrun: 1.5 * W, piece: 3 * W,
-           digit: [2 * W + G, 3 * W + 2 * G] };
-}
+      /** A slide's shaft must show at least this many line widths. */
+      const MIN_SHAFT_LINES = 2;
 
-function layout(marks, p, z) {
-  const area = (() => {
-    for (let a = -2; a <= 2; a++) for (let b = -2; b <= 2; b++) {
-      if (Math.max(Math.abs(a), Math.abs(b)) === 0) continue;
-      if (!marks.some(m => m[0] === a && m[1] === b && stops(m[2]))) return false;
-    }
-    return true;
-  })();
-  const vis = marks.filter(m => !(area && cheb(m) <= 2 && stops(m[2])));
-  const rayReach = m => Math.max(1, ...vis.filter(k => onLine(k) && sameUnit(k, m) && (stops(k[2]) || isDigit(k[2])))
-    .map(k => isDigit(k[2]) ? 2 : cheb(k)));
-  // A step or slide beyond a jump on its line carries on from that jump.
-  const slideFrom = m => {
-    if (!onLine(m)) return 0;
-    const rings = vis.filter(k => k[2] === "x" && onLine(k) && sameUnit(k, m) && cheb(k) < cheb(m)).map(cheb);
-    return rings.length ? Math.max(...rings) : 0;
-  };
-  const startsSlide = k => vis.some(m => (isDirection(m[2]) || m[2] === "o") && onLine(m) && onLine(k) && sameUnit(m, k) && slideFrom(m) === cheb(k));
-  const iguiExt = nu => Math.abs(nu[0]) * z.igui[0] / 2 + Math.abs(nu[1]) * z.igui[1] / 2;
-  // At a jump it carries on from, else just past an igui on its line, else clear of the piece mark.
-  const lineStart = m => {
-    const u = unit(m), nu = mul(u, 1 / norm(u)), s = slideFrom(m);
-    const igui = onLine(m) && vis.some(k => k[2] === "!" && onLine(k) && sameUnit(k, m) && cheb(k) < cheb(m));
-    return s > 0 ? add(mul(u, s * p), mul(nu, z.ring / 2)) : igui ? add(mul(u, p), mul(nu, iguiExt(nu) + z.G + z.W / 2))
-      : mul(nu, z.piece / 2 + z.G + z.W / 2);
-  };
-  const S = [["piece", [0, 0], z.piece / 2, -1, 0]];
-  vis.forEach((m, i) => {
-    const c = [m[0] * p, m[1] * p];
-    const id = onLine(m) ? ray(unit(m)) : 100 + i;
-    if (m[2] === "o") S.push(["dot", c, z.dot / 2, id, 0]);
-    else if (m[2] === "!") S.push(["igui", c, z.igui[1] / 2, id, 0]);
-    else if (m[2] === "x") S.push(["ring", c, z.ring / 2, startsSlide(m) ? id : 100 + i, 0]);
-  });
-  for (const m of vis) if (isDigit(m[2])) {
-    const u = unit(m), nu = mul(u, 1 / norm(u)), d = +m[2];
-    const half = Math.abs(nu[0]) * z.digit[0] / 2 + Math.abs(nu[1]) * z.digit[1] / 2;
-    if (d === 2) S.push(["dot", mul(u, p), z.dot / 2, ray(u), 0], ["dot", mul(u, 2 * p), z.dot / 2, ray(u), 0]);
-    else S.push(["digit", add(mul(u, p), mul(nu, z.W / 2 + z.G + half)), norm(z.digit) / 2, ray(u), d]);
-  }
-  const headLength = c => c === "L" ? z.overrun + z.W / 2 : c === "=" ? 2 * z.head + z.G : z.head;
-  // Distance from the piece to the far edge of mark k on its line, as drawn.
-  const farEdge = k => {
-    const u = unit(k), nu = mul(u, 1 / norm(u)), nl = norm(u);
-    if (k[2] === "o") return cheb(k) * nl * p + z.dot / 2;
-    if (k[2] === "x") return cheb(k) * nl * p + z.ring / 2;
-    if (k[2] === "!") return nl * p + iguiExt(nu);
-    if (+k[2] === 2) return 2 * nl * p + z.dot / 2;
-    const half = Math.abs(nu[0]) * z.digit[0] / 2 + Math.abs(nu[1]) * z.digit[1] / 2;
-    return nl * p + z.W / 2 + z.G + 2 * half;
-  };
-  // Half a square past the farthest mark on its line, and never closer than that
-  // mark's edge, one gap, a two-stroke shaft and the head.
-  const tipOf = m => {
-    const u = unit(m), nu = mul(u, 1 / norm(u));
-    const edges = [z.piece / 2, ...vis.filter(k => (stops(k[2]) || isDigit(k[2])) && onLine(k) && sameUnit(k, m)).map(farEdge)];
-    return mul(nu, Math.max((Math.max(rayReach(m), slideFrom(m) + 1) + SLIDE_PAST) * p * norm(u),
-                            Math.max(...edges) + z.G + z.W / 2 + 2 * z.W + headLength(m[2])));
-  };
-  for (const m of vis) if (isDirection(m[2])) {
-    const u = unit(m), nu = mul(u, 1 / norm(u)), tip = tipOf(m), angle = Math.atan2(nu[1], nu[0]) * 180 / Math.PI;
-    if (m[2] === "L") S.push(["tee", sub(tip, mul(nu, z.overrun)), z.tee / 2, ray(u), angle]);
-    else {
-      S.push(["head", sub(tip, mul(nu, 0.55 * z.head)), 0.55 * z.head, ray(u), [tip, angle]]);
-      if (m[2] === "=") S.push(["head", sub(tip, mul(nu, 1.55 * z.head + z.G)), 0.55 * z.head, ray(u),
-                                [sub(tip, mul(nu, z.head + z.G)), angle]]);
-    }
-  }
-  const lines = [];
-  // Lines start one gap clear of the piece mark, so it stands on its own.
-  const clearOf = d => mul(d, (z.piece / 2 + z.G + z.W / 2) / norm(d));
-  // An igui has no line: the piece captures there without moving.
-  vis.forEach((m, i) => { if (m[2] === "o") lines.push([onLine(m) ? lineStart(m) : clearOf([m[0], m[1]]), [m[0] * p, m[1] * p], onLine(m) ? ray(unit(m)) : 100 + i, 1e9, false]); });
-  for (const m of vis) if (isDigit(m[2])) lines.push([clearOf(unit(m)), mul(unit(m), (+m[2] === 2 ? 2 : 1) * p), ray(unit(m)), 1e9, false]);
-  // A jump gets a dashed leader from the piece, or from the last mark on its line.
-  vis.forEach((m, i) => {
-    if (m[2] !== "x") return;
-    const d = [m[0], m[1]], nu = mul(d, 1 / norm(d));
-    const before = vis.filter(k => (k[2] === "o" || k[2] === "!" || k[2] === "x") && onLine(k) && onLine(m) && sameUnit(k, m) && cheb(k) < cheb(m));
-    const last = before.length ? before.find(k => cheb(k) === Math.max(...before.map(cheb))) : null;
-    const start = last === null ? mul(nu, z.piece / 2 + z.G + z.W / 2)
-      : add([last[0] * p, last[1] * p], mul(nu, (last[2] === "o" ? z.dot / 2 : last[2] === "x" ? z.ring / 2 : iguiExt(nu)) + z.G + z.W / 2));
-    const end = sub(mul(d, p), mul(nu, z.ring / 2 + z.G + z.W / 2));
-    if (dot(sub(end, start), nu) > 0) lines.push([start, end, startsSlide(m) ? ray(unit(m)) : 100 + i, 1e9, true]);
-  });
-  for (const m of vis) if (isDirection(m[2])) {
-    const u = unit(m), nu = mul(u, 1 / norm(u)), tip = tipOf(m), start = lineStart(m);
-    lines.push([start, m[2] === "L" ? tip : sub(tip, mul(nu, 0.5 * z.head)), ray(u), norm(sub(tip, start)) - headLength(m[2]), false]);
-  }
-  for (const m of S) m.push(capsules(m, z));
-  return { S, lines, frame: area ? 2 * p : 0 };
-}
+      /** A grid that marks every square this many steps around the piece is a lion. */
+      const LION_REACH = 2;
 
-function capsules(m, z) {
-  const c = m[1];
-  if (m[0] === "igui") { const [w, h, bar, d] = z.igui;
-    return [[add(c, [0, h / 2 - w / 2]), add(c, [0, h / 2 - bar + w / 2]), w / 2], [add(c, [0, -h / 2 + d / 2]), add(c, [0, -h / 2 + d / 2]), d / 2]]; }
-  if (m[0] === "tee") { const r = (m[4] + 90) * Math.PI / 180, n = mul([Math.cos(r), Math.sin(r)], (z.tee - z.W) / 2);
-    return [[sub(c, n), add(c, n), z.W / 2]]; }
-  if (m[0] === "digit") { const h = (z.digit[1] - z.digit[0]) / 2;
-    return [[sub(c, [0, h]), add(c, [0, h]), z.digit[0] / 2]]; }
-  return [[c, c, m[2]]];
-}
+      // The pitch search: from the start up to SEARCH_RANGE line widths more, in
+      // SEARCH_STEPS halvings.
+      const SEARCH_RANGE = 40;
+      const SEARCH_STEPS = 24;
 
-function pointSegment(q, a, b) {
-  const d = sub(b, a), dd = dot(d, d);
-  const t = Math.max(0, Math.min(1, dd === 0 ? 0 : dot(sub(q, a), d) / dd));
-  return norm(sub(q, add(a, mul(d, t))));
-}
-const cross2 = (u, v) => u[0] * v[1] - u[1] * v[0];
-function segmentsCross(a, b, c, d) {
-  const d1 = cross2(sub(b, a), sub(c, a)), d2 = cross2(sub(b, a), sub(d, a));
-  const d3 = cross2(sub(d, c), sub(a, c)), d4 = cross2(sub(d, c), sub(b, c));
-  return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
-}
-function segmentsDistance(a, b, c, d) {
-  if (segmentsCross(a, b, c, d)) return 0;
-  return Math.min(pointSegment(a, c, d), pointSegment(b, c, d), pointSegment(c, a, b), pointSegment(d, a, b));
-}
-const clear = (p, q) => segmentsDistance(p[0], p[1], q[0], q[1]) - p[2] - q[2];
+      /** Rounding slack: lengths closer than this are equal. */
+      const EPSILON = 1e-6;
 
-// The marks closer than one gap to another mark, to a line they are not on, or
-// to the lion frame. The model's mv_fits applies the same rules.
-function clashes(marks, p, z) {
-  const { S, lines, frame } = layout(marks, p, z), bad = new Set();
-  for (let i = 0; i < S.length; i++) for (let j = i + 1; j < S.length; j++) {
-    if (S[i][0] === "head" && S[j][0] === "head" && S[i][3] === S[j][3]) continue;
-    let best = Infinity;
-    for (const a of S[i][5]) for (const b of S[j][5]) best = Math.min(best, clear(a, b));
-    if (best < z.G - 1e-6) { bad.add(i); bad.add(j); }
-  }
-  S.forEach((s, i) => {
-    for (const l of lines) {
-      if (s[3] === -1 || s[3] === l[2]) continue;
-      if (Math.min(...s[5].map(c => clear(c, [l[0], l[1], z.W / 2]))) < z.G - 1e-6) bad.add(i);
-    }
-    if (frame > 0) {
-      const d = Math.max(Math.abs(s[1][0]), Math.abs(s[1][1]));
-      if (s[3] === -1 ? frame - z.W / 2 < z.piece / 2 + z.G : Math.abs(d - frame) < s[2] + z.W / 2 + z.G) bad.add(i);
-    }
-  });
-  return [...bad].map(i => S[i]);
-}
+      // Line ids: 0-7 are the eight lines from the piece. A mark off those lines
+      // gets its own id, from OWN_LINE_START up, so that it is checked against
+      // every line. The piece is on every line.
+      const PIECE_LINE = -1;
+      const OWN_LINE_START = 100;
 
-// True when nothing clashes and every slide shows a shaft at least two lines long.
-function fits(marks, p, z) {
-  return !layout(marks, p, z).lines.some(l => l[3] < 2 * z.W - 1e-6) && clashes(marks, p, z).length === 0;
-}
+      /** The shaft length of a line without an arrowhead: never too short. */
+      const NO_SHAFT = 1e9;
 
-// The smallest printable pitch, found the way the model finds it.
-function solve(marks, z) {
-  const start = z.W;
-  if (fits(marks, start, z)) return start;
-  let a = start, b = start + 40 * z.W;
-  for (let n = 0; n < 24; n++) { const m = (a + b) / 2; if (fits(marks, m, z)) b = m; else a = m; }
-  return b;
-}
+      // For the spacing checks, an arrowhead is a circle of this many head lengths
+      // in radius, the same distance behind the tip. The circle covers the triangle.
+      const HEAD_CIRCLE = 0.55;
 
-function box(marks, p, z) {
-  const L = layout(marks, p, z);
-  const pts = [];
-  for (const s of L.S) for (const c of s[5]) pts.push([c[0], c[2]], [c[1], c[2]]);
-  for (const l of L.lines) pts.push([l[0], z.W / 2], [l[1], z.W / 2]);
-  if (L.frame > 0) pts.push([[L.frame, L.frame], z.W / 2], [[-L.frame, -L.frame], z.W / 2]);
-  return [[Math.min(...pts.map(q => q[0][0] - q[1])), Math.min(...pts.map(q => q[0][1] - q[1]))],
-          [Math.max(...pts.map(q => q[0][0] + q[1])), Math.max(...pts.map(q => q[0][1] + q[1]))]];
-}
-if (typeof module !== "undefined") module.exports = { parseGrid, sizes, layout, solve, box, clashes };
-</script>
+      // ---- Vectors --------------------------------------------------------------------
 
-<script>
-"use strict";
-// ---- Data -----------------------------------------------------------------
+      const add = (a, b) => [a[0] + b[0], a[1] + b[1]];
+      const subtract = (a, b) => [a[0] - b[0], a[1] - b[1]];
+      const multiply = (a, k) => [a[0] * k, a[1] * k];
+      const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+      const cross = (a, b) => a[0] * b[1] - a[1] * b[0];
+      const norm = (a) => Math.hypot(a[0], a[1]);
+      /** The vector a, made one unit long. */
+      const normalize = (a) => multiply(a, 1 / norm(a));
+      const toRadians = (degrees) => (degrees * Math.PI) / 180;
+      const toDegrees = (radians) => (radians * 180) / Math.PI;
 
-const N = 4;   // squares from the piece to the edge of the board
-const TOOLS = [
-  ["o", "Move", "o", "Can move to this square. Beyond a jump on the same line, it steps on from the jump"],
-  ["x", "Jump", "x", "Jumps to this square, over anything between"],
-  ["!", "Igui", "!", "Captures on this square without moving (igui), a lion power. Next to the piece only"],
-  ["#", "Slide", "#", "Slides any distance this way. On the dashed lines only"],
-  ["=", "Fly", "=", "Flies over any number of pieces this way, capturing them. On the dashed lines only"],
-  ["L", "Hook", "l", "Slides this way and may turn 90° once, drawn as a crossbar. On the dashed lines only"],
-  ["2", "Up to 2", "2", "Moves up to 2 squares this way. Next to the piece only"],
-  ["3", "Up to 3", "3", ""], ["4", "Up to 4", "4", ""], ["5", "Up to 5", "5", ""], ["6", "Up to 6", "6", ""], ["7", "Up to 7", "7", ""],
-  [".", "Erase", "Backspace", "Empty square"],
-];
-// Piece bodies from presets/pieces: [length, width] in mm.
-const BODIES = { "King": [32, 28.5], "Rook, bishop": [31, 27.5], "Gold, silver": [30, 26.5],
-                 "Knight": [29, 25.5], "Lance": [29, 24.5], "Pawn": [28, 24.5] };
-// [label, CSS family, Customizer Font_Name]
-const FONTS = [
-  ["LXGW WenKai Mono", "KS WenKai", "LXGW WenKai Mono:style=Regular"],
-  ["Yuji Syuku", "KS Yuji Syuku", "Yuji Syuku:style=Regular"],
-  ["Yuji Mai", "KS Yuji Mai", "Yuji Mai:style=Regular"],
-  ["Iansui", "KS Iansui", "Iansui:style=Regular"],
-  ["Kaisei Tokumin", "KS Kaisei", "Kaisei Tokumin:style=ExtraBold"],
-  ["Noto Sans CJK JP", "Noto Sans CJK JP, sans-serif", "Noto Sans CJK JP:style=Medium"],
-];
-// The bundled learner sets; see presets/pieces/_defaults.json.
-const SET = { body: "King", font: 0, ratio: 0.32, center: 0.73, stroke: 0.6, gap: 0.6, pitch: 3.75, scale: 1, spacing: 0.96 };
-const EXAMPLES = {
-  "King": { body: "King", front: ["王", "ooo/o@o/ooo"], back: ["", ""] },
-  "Rook → Dragon": { body: "Rook, bishop", front: ["飛", ".#./#@#/.#."], back: ["龍", "o#o/#@#/o#o"] },
-  "Bishop → Horse": { body: "Rook, bishop", front: ["角", "#.#/.@./#.#"], back: ["馬", "#o#/o@o/#o#"] },
-  "Gold": { body: "Gold, silver", front: ["金", "ooo/o@o/.o."], back: ["", ""] },
-  "Silver → promoted silver": { body: "Gold, silver", front: ["銀", "ooo/.@./o.o"], back: ["全", "ooo/o@o/.o."] },
-  "Knight → promoted knight": { body: "Knight", front: ["桂", "x.x/.../.@."], back: ["圭", "ooo/o@o/.o."] },
-  "Lance → promoted lance": { body: "Lance", front: ["香", "#/@"], back: ["杏", "ooo/o@o/.o."] },
-  "Pawn → tokin": { body: "Pawn", front: ["歩", "o/@"], back: ["と", "ooo/o@o/.o."] },
-  "Chu shogi: dragon horse → horned falcon (igui)": { body: "King", scale: 1.4, ratio: 0.34, pitch: 4,
-    front: ["馬", "#o#/o@o/#o#"], back: ["鷹", ".x./#!#/#@#/###"] },
-  "Chu shogi: phoenix → free king": { body: "King", front: ["鳳", "x...x/..o../.o@o./..o../x...x"], back: ["奔", "###/#@#/###"] },
-  "Chu shogi: lion": { body: "King", front: ["獅", "xxxxx/xooox/xo@ox/xooox/xxxxx"], back: ["", ""] },
-  "Taikyoku: great general (flies)": { body: "King", front: ["大", "===/=@=/==="], back: ["", ""] },
-  "Taikyoku: hook mover": { body: "King", front: ["鉤", ".L./L@L/.L."], back: ["", ""] },
-  "Taikyoku: great dragon (up to 3)": { body: "King", front: ["龍", "#3#/.@./#3#"], back: ["", ""] },
-  "Move type: jumps 2 or 3 squares, then slides on": { body: "King", front: ["跳", "#/x/x/./@"], back: ["", ""] },
-};
+      // ---- Moves ----------------------------------------------------------------------
 
-// ---- State ----------------------------------------------------------------
+      /**
+       * One marked square of a move grid.
+       *
+       * @typedef {object} Move
+       * @property {number} dx Squares to the right of the piece.
+       * @property {number} dy Squares forward of the piece.
+       * @property {string} symbol The grid symbol, such as "o" or "#".
+       */
 
-const $ = id => document.getElementById(id);
-let state = { face: "front", tool: "o", set: { ...SET },
-              front: { chars: "飛", cells: {} }, back: { chars: "龍", cells: {} } };
-let history = [], future = [];
+      /** True for a slide, a fly or a hook: the marks that end in an arrowhead or a crossbar. */
+      const isDirection = (symbol) => symbol === "#" || symbol === "=" || symbol === "L";
+      /** True for a range number, 2 to 7. */
+      const isDigit = (symbol) => symbol.length === 1 && "234567".includes(symbol);
+      /** True for a mark that stops on its square: a step, a jump or an igui. */
+      const isStop = (symbol) => symbol === "o" || symbol === "x" || symbol === "!";
+      /** True for a mark that marks a square: a stop, or a range number. */
+      const marksSquare = (symbol) => isStop(symbol) || isDigit(symbol);
 
-function snapshot() { return JSON.stringify({ front: state.front, back: state.back }); }
-function commit(before) {
-  if (before !== snapshot()) { history.push(before); future = []; if (history.length > 200) history.shift(); }
-  save(); render();
-}
-function restore(text) { const s = JSON.parse(text); state.front = s.front; state.back = s.back; save(); render(); }
-function save() {
-  try { localStorage.setItem("komascad-move-editor", JSON.stringify({ front: state.front, back: state.back, set: state.set })); } catch {}
-}
-function load() {
-  try {
-    const s = JSON.parse(localStorage.getItem("komascad-move-editor") || "null");
-    if (s && s.front && s.back) { state.front = s.front; state.back = s.back; state.set = { ...SET, ...(s.set || {}) }; return true; }
-  } catch {}
-  return false;
-}
+      /** The move as a vector, in squares. */
+      const offset = (move) => [move.dx, move.dy];
+      /** True when the move is straight ahead, to the side or diagonal from the piece. */
+      const onLine = (move) =>
+        move.dx === 0 || move.dy === 0 || Math.abs(move.dx) === Math.abs(move.dy);
+      /** Squares from the piece. A diagonal step counts as one square. */
+      const distance = (move) => Math.max(Math.abs(move.dx), Math.abs(move.dy));
+      /** The step of one square toward the move, such as [1, 1]. */
+      const unitStep = (move) => [Math.sign(move.dx), Math.sign(move.dy)];
+      /** The id (0-7) of the line that a step of one square follows. */
+      const lineId = (step) => DIRECTIONS.findIndex((d) => d[0] === step[0] && d[1] === step[1]);
+      /** True when both moves are on the same line from the piece. */
+      const sameLine = (a, b) =>
+        onLine(a) &&
+        onLine(b) &&
+        unitStep(a)[0] === unitStep(b)[0] &&
+        unitStep(a)[1] === unitStep(b)[1];
 
-// ---- Grids ----------------------------------------------------------------
+      /**
+       * Reads a move grid, such as ".#./#@#/.#.".
+       *
+       * Rows go from the point of the piece to its heel, with / between them.
+       * Spaces are ignored.
+       *
+       * @param {string} text The grid.
+       * @returns {{errors: string[], moves: Move[]}} The moves, or why the grid is wrong.
+       */
+      function parseGrid(text) {
+        const rows = text
+          .replace(/ /g, "")
+          .split("/")
+          .map((row) => [...row]);
 
-const onRay = (dx, dy) => dx === 0 || dy === 0 || Math.abs(dx) === Math.abs(dy);
-function allowed(sym, dx, dy) {
-  if (sym === ".") return null;
-  if (isDirection(sym) && !onRay(dx, dy)) return "Slides, flies and hooks go on the dashed lines from the piece.";
-  if ((sym === "!" || isDigit(sym)) && Math.max(Math.abs(dx), Math.abs(dy)) !== 1) return "Igui and ranges go on a square next to the piece.";
-  return null;
-}
-function gridText(cells) {
-  const pts = Object.keys(cells).filter(k => cells[k] && cells[k] !== ".").map(k => k.split(",").map(Number)).concat([[0, 0]]);
-  if (pts.length === 1) return "";
-  const x0 = Math.min(...pts.map(p => p[0])), x1 = Math.max(...pts.map(p => p[0]));
-  const y0 = Math.min(...pts.map(p => p[1])), y1 = Math.max(...pts.map(p => p[1]));
-  const rows = [];
-  for (let y = y1; y >= y0; y--) {
-    let row = "";
-    for (let x = x0; x <= x1; x++) row += x === 0 && y === 0 ? "@" : (cells[x + "," + y] || ".");
-    rows.push(row);
-  }
-  return rows.join("/");
-}
-function cellsFrom(text) {
-  if (!text) return {};
-  const parsed = parseGrid(text);
-  if (parsed.errors.length) throw new Error(parsed.errors.join(" "));
-  if (parsed.marks.some(m => cheb(m) > N)) throw new Error("The editor shows four squares each way; this grid reaches further.");
-  return Object.fromEntries(parsed.marks.map(m => [m[0] + "," + m[1], m[2]]));
-}
+        const errors = [];
+        if (rows.some((row) => row.some((symbol) => !SYMBOLS.includes(symbol)))) {
+          errors.push("Only . o x ! # = L 2-7 @ and / are allowed.");
+        }
+        const pieces = []; // [row, column] of each @
+        rows.forEach((row, r) =>
+          row.forEach((symbol, c) => {
+            if (symbol === "@") pieces.push([r, c]);
+          }),
+        );
+        if (pieces.length !== 1) {
+          errors.push("The grid needs exactly one @ for the piece.");
+        }
+        if (rows.some((row) => row.length !== rows[0].length)) {
+          errors.push("Rows must all be the same length.");
+        }
+        if (errors.length) return { errors, moves: [] };
 
-// ---- Mark icons (the same shapes the model prints) --------------------------
+        const [pieceRow, pieceColumn] = pieces[0];
+        const moves = [];
+        rows.forEach((row, r) =>
+          row.forEach((symbol, c) => {
+            if (symbol !== "." && symbol !== "@") {
+              moves.push({ dx: c - pieceColumn, dy: pieceRow - r, symbol });
+            }
+          }),
+        );
 
-// One mark in a 24 x 24 box, pointing along (dx, dy) for marks that have a direction.
-function icon(sym, dx = 0, dy = 1, color = "currentColor") {
-  const a = Math.atan2(-dy, dx) * 180 / Math.PI;   // SVG y runs down
-  const body = {
-    "o": `<circle cx="12" cy="12" r="4.2" fill="${color}"/>`,
-    "x": `<circle cx="12" cy="12" r="4.6" fill="none" stroke="${color}" stroke-width="3"/>`,
-    "!": `<path d="M9.4 3.5H14.6L13.2 15H10.8Z" fill="${color}"/><circle cx="12" cy="19.2" r="2.3" fill="${color}"/>`,
-    "#": `<g transform="rotate(${a} 12 12)"><path d="M3 12H15" stroke="${color}" stroke-width="2.6" stroke-linecap="round"/><path d="M21.5 12L12.5 6.8V17.2Z" fill="${color}"/></g>`,
-    "=": `<g transform="rotate(${a} 12 12)"><path d="M2 12H10" stroke="${color}" stroke-width="2.6" stroke-linecap="round"/><path d="M22.5 12L15.5 7.6V16.4Z M14.5 12L7.5 7.6V16.4Z" fill="${color}"/></g>`,
-    "L": `<g transform="rotate(${a} 12 12)"><path d="M3 12H21" stroke="${color}" stroke-width="2.6" stroke-linecap="round" fill="none"/><path d="M15.5 5V19" stroke="${color}" stroke-width="3" stroke-linecap="butt" fill="none"/></g>`,
-    ".": `<path d="M6 18L18 6" stroke="${color}" stroke-width="2" stroke-linecap="round" opacity=".6"/>`,
-  }[sym];
-  const svg = body || `<text x="12" y="13" text-anchor="middle" dominant-baseline="central" font-size="17" font-weight="700" fill="${color}" font-family="ui-monospace, monospace">${sym}</text>`;
-  return `<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">${svg}</svg>`;
-}
-function pieceIcon() {
-  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3L18 6L21 21H3L6 6Z" fill="var(--panel)"/></svg>`;
-}
+        for (const move of moves) {
+          if (isDirection(move.symbol) && !onLine(move)) {
+            errors.push("# = and L must lie straight or diagonally from the @.");
+          }
+          if ((move.symbol === "!" || isDigit(move.symbol)) && distance(move) !== 1) {
+            errors.push("! and 2-7 go on a square next to the @.");
+          }
+        }
+        // Each message once, however many moves break its rule.
+        return { errors: [...new Set(errors)], moves };
+      }
 
-// ---- Piece geometry --------------------------------------------------------
+      // ---- Mark sizes -----------------------------------------------------------------
 
-// Plan-view outline: base angle 81°, tip angle 144°, as the bundled pieces use.
-function outline(L, W) {
-  const base = 81 * Math.PI / 180, tipSlope = Math.tan(18 * Math.PI / 180);
-  const t = (L - W / 2 * tipSlope) / (Math.sin(base) - Math.cos(base) * tipSlope);
-  const sx = W / 2 - t * Math.cos(base), sy = t * Math.sin(base);
-  return [[-W / 2, 0], [W / 2, 0], [sx, sy], [0, L], [-sx, sy]];
-}
-// Inset a convex polygon by d (the model's Text_Margin keeps lettering this far from the edges).
-function inset(poly, d) {
-  const n = poly.length, lines = [];
-  for (let i = 0; i < n; i++) {
-    const a = poly[i], b = poly[(i + 1) % n], e = sub(b, a), len = norm(e), nrm = [-e[1] / len, e[0] / len];
-    lines.push([add(a, mul(nrm, d)), e]);
-  }
-  return lines.map((l, i) => {
-    const [p1, d1] = lines[(i + n - 1) % n], [p2, d2] = l, den = cross2(d1, d2);
-    return add(p1, mul(d1, cross2(sub(p2, p1), d2) / den));
-  });
-}
+      /**
+       * The sizes of the marks. Every mark is built from the line width and the gap.
+       *
+       * @param {number} line The thinnest printed line (Move_Stroke).
+       * @param {number} gap The smallest space between two marks (Move_Gap).
+       * @returns {object} The sizes, in mm.
+       */
+      function markSizes(line, gap) {
+        return {
+          line,
+          gap,
+          // o: a square the piece can move to.
+          dot: 2 * line,
+          // x: a square it jumps to. The hole is one gap.
+          ring: 2 * line + gap,
+          // !: igui, an upright "!": a wedge that narrows to one line, a gap, then a dot.
+          igui: {
+            width: 1.7 * line,
+            height: 2.4 * line + gap + 1.4 * line,
+            wedge: 2.4 * line,
+            dot: 1.4 * line,
+          },
+          // # and =: the arrowhead length.
+          head: Math.max(2.5 * line, MIN_HEAD),
+          // L: the crossbar near the end of a hook move.
+          tee: 3.5 * line,
+          // L: how far the line runs past the crossbar.
+          overrun: 1.5 * line,
+          // @: the piece, a pentagon that points forward.
+          piece: 3 * line,
+          // 3-7: a seven-segment number.
+          digit: { width: 2 * line + gap, height: 3 * line + 2 * gap },
+        };
+      }
 
-function insideConvex(q, poly) {
-  const sides = poly.map((a, i) => { const b = poly[(i + 1) % poly.length]; return cross2(sub(b, a), sub(q, a)); });
-  return Math.min(...sides) >= -1e-6 || Math.max(...sides) <= 1e-6;
-}
+      /** Half the size of a box (an igui or a digit) along the unit vector `direction`. */
+      const halfExtent = (direction, box) =>
+        (Math.abs(direction[0]) * box.width) / 2 + (Math.abs(direction[1]) * box.height) / 2;
 
-const ARROWS = { "0,1": "↑", "1,1": "↗", "1,0": "→", "1,-1": "↘", "0,-1": "↓", "-1,-1": "↙", "-1,0": "←", "-1,1": "↖" };
-// A mark's name and direction, such as "arrow ↗", for messages.
-function describe(mark) {
-  const names = { dot: "move", ring: "jump", igui: "igui", head: "arrow", tee: "hook", digit: "range", piece: "piece" };
-  if (mark[0] === "piece") return "the piece";
-  const c = mark[1], u = [Math.sign(Math.round(c[0] * 100)), Math.sign(Math.round(c[1] * 100))];
-  return `${names[mark[0]]} ${ARROWS[u.join(",")] || ""}`.trim();
-}
+      /**
+       * The length of the end of a slide, back from its tip: the arrowheads, or the line past a
+       * crossbar.
+       */
+      function headLength(symbol, sizes) {
+        if (symbol === "L") return sizes.overrun + sizes.line / 2;
+        if (symbol === "=") return 2 * sizes.head + sizes.gap; // two heads, one gap apart
+        return sizes.head;
+      }
 
-// ---- Layout of one face (mirrors the model's stacking) ---------------------
+      /** Distance from the center of the piece to where a line clears the piece mark. */
+      const pieceClearance = (sizes) => sizes.piece / 2 + sizes.gap + sizes.line / 2;
 
-function faceLayout(face, s) {
-  const [L0, W0] = BODIES[s.body], L = L0 * s.scale, W = W0 * s.scale;
-  const chars = [...state[face].chars];
-  const grid = gridText(state[face].cells);
-  const z = sizes(s.stroke, s.gap);
-  const F = s.ratio * L, spacing = F * 1.42 * s.spacing, gapAbove = spacing - F;
-  const safe = inset(outline(L, W), 0.9 * s.scale);
-  const safeTop = Math.max(...safe.map(p => p[1])), safeBottom = Math.min(...safe.map(p => p[1]));
-  let diagram = null, problem = null;
-  if (grid) {
-    const marks = parseGrid(grid).marks;
-    const pmin = solve(marks, z), minBox = box(marks, pmin, z);
-    const minSize = [minBox[1][0] - minBox[0][0], minBox[1][1] - minBox[0][1]];
-    let p;
-    if (s.pitch > 0) {
-      p = s.pitch;
-      if (p < pmin - 1e-6) problem = { kind: "pitch", pmin, text: `marks collide at ${p.toFixed(2)} mm between squares: it needs ${pmin.toFixed(2)} mm` };
-    } else {
-      const letters = chars.length * spacing + gapAbove;
-      const room = ((safeTop - safeBottom) * 0.9 - letters) / minSize[1];
-      p = pmin * Math.max(1, Math.min(1.2 * F / Math.max(...minSize), room));
-    }
-    const b = box(marks, p, z);
-    diagram = { marks, p, pmin, z, b, h: b[1][1] - b[0][1] + gapAbove, clash: p < pmin - 1e-6 ? clashes(marks, p, z) : [] };
-  }
-  const slots = chars.map(() => spacing).concat(diagram ? [diagram.h] : []);
-  const total = slots.reduce((a, b) => a + b, 0);
-  let top;
-  if (diagram && s.pitch > 0 && chars.length) top = s.center * L + chars.length * spacing / 2;   // characters anchored
-  else {
-    top = s.center * L + total / 2;
-    if (diagram) top = Math.min(safeTop, Math.max(safeBottom + total, top));                     // slid inside the face
-  }
-  const centers = []; let y = top;
-  for (const h of slots) { centers.push(y - h / 2); y -= h; }
-  if (diagram && !problem && (top > safeTop + 0.01 || top - total < safeBottom - 0.01))
-    problem = { kind: "length", text: "runs off the top or bottom of the face" };
-  if (diagram && !problem) {
-    // Across the face too, as the model checks: every corner of the diagram inside the safe area.
-    const yc = centers[centers.length - 1], w = diagram.b[1][0] - diagram.b[0][0], h = diagram.b[1][1] - diagram.b[0][1];
-    if ([[-1, -1], [1, -1], [1, 1], [-1, 1]].some(([sx, sy]) => !insideConvex([sx * w / 2, yc + sy * h / 2], safe)))
-      problem = { kind: "width", text: `is ${w.toFixed(1)} mm wide and runs past the sides of the face` };
-  }
-  return { L, W, F, chars, grid, diagram, centers, problem, outline: outline(L, W), safe };
-}
+      /** The point on the unit vector `direction` where a line clears the piece mark. */
+      const clearOfPiece = (direction, sizes) => multiply(direction, pieceClearance(sizes));
 
-// ---- Drawing ---------------------------------------------------------------
+      // ---- Rules for the marks, as Wikipedia's diagrams use them ----------------------
 
-function diagramSVG(d, ox, oy, color) {
-  const { marks, p, z, b } = d, L = layout(marks, p, z);
-  const cx = (b[0][0] + b[1][0]) / 2, cy = (b[0][1] + b[1][1]) / 2;
-  const X = v => (ox + v[0] - cx).toFixed(3), Y = v => (oy - (v[1] - cy)).toFixed(3);
-  const seg = (a, c) => `<line x1="${X(a)}" y1="${Y(a)}" x2="${X(c)}" y2="${Y(c)}"/>`;
-  let out = `<g stroke="${color}" fill="${color}" stroke-width="${z.W}" stroke-linecap="round" stroke-linejoin="round">`;
-  const s = z.piece, pent = [[0, .62 * s], [.36 * s, .42 * s], [.5 * s, -.5 * s], [-.5 * s, -.5 * s], [-.36 * s, .42 * s]];
-  out += `<polygon stroke="none" points="${pent.map(q => X(q) + "," + Y(q)).join(" ")}"/>`;
-  for (const l of L.lines) {
-    if (!l[4]) { out += seg(l[0], l[1]); continue; }
-    const length = norm(sub(l[1], l[0])), nu = mul(sub(l[1], l[0]), 1 / length), period = 2 * z.W + z.G;
-    const n = Math.max(1, Math.floor((length - z.W) / period) + 1), offset = (length - ((n - 1) * period + z.W)) / 2;
-    for (let j = 0; j < n; j++) { const a = add(l[0], mul(nu, Math.max(0, offset) + j * period)); out += seg(a, add(a, mul(nu, Math.min(z.W, length)))); }
-  }
-  for (const m of L.S) {
-    const c = m[1];
-    if (m[0] === "dot") out += `<circle stroke="none" cx="${X(c)}" cy="${Y(c)}" r="${z.dot / 2}"/>`;
-    if (m[0] === "ring") out += `<circle fill="none" cx="${X(c)}" cy="${Y(c)}" r="${(z.ring - z.W) / 2}"/>`;
-    if (m[0] === "tee") for (const k of m[5]) out += seg(k[0], k[1]).replace("<line", '<line stroke-linecap="butt"');
-    if (m[0] === "igui") {
-      const [w, h, bar, d] = z.igui, q = v => X(add(c, v)) + "," + Y(add(c, v));
-      out += `<polygon stroke="none" points="${[[-w / 2, h / 2], [w / 2, h / 2], [z.W / 2, h / 2 - bar], [-z.W / 2, h / 2 - bar]].map(q).join(" ")}"/>`;
-      out += `<circle stroke="none" cx="${X(add(c, [0, -h / 2 + d / 2]))}" cy="${Y(add(c, [0, -h / 2 + d / 2]))}" r="${d / 2}"/>`;
-    }
-    if (m[0] === "head") {
-      const [tip, ang] = m[4], r = ang * Math.PI / 180;
-      const rot = v => [tip[0] + v[0] * Math.cos(r) - v[1] * Math.sin(r), tip[1] + v[0] * Math.sin(r) + v[1] * Math.cos(r)];
-      const tri = [[0, 0], [-z.head, z.head / 2], [-z.head, -z.head / 2]].map(rot);
-      out += `<polygon stroke="none" points="${tri.map(q => X(q) + "," + Y(q)).join(" ")}"/>`;
-    }
-    if (m[0] === "digit") {
-      const [dw, dh] = z.digit, o = [c[0] - dw / 2, c[1] - dh / 2], i = z.W / 2;
-      const segs = { 2: [6, 5, 0, 2, 3], 3: [6, 5, 0, 4, 3], 4: [1, 0, 5, 4], 5: [6, 1, 0, 4, 3], 6: [6, 1, 2, 3, 4, 0], 7: [6, 5, 4] }[m[4]];
-      const ends = [[[i, dh / 2], [dw - i, dh / 2]], [[i, dh / 2], [i, dh - i]], [[i, i], [i, dh / 2]], [[i, i], [dw - i, i]],
-                    [[dw - i, i], [dw - i, dh / 2]], [[dw - i, dh / 2], [dw - i, dh - i]], [[i, dh - i], [dw - i, dh - i]]];
-      for (const k of segs) out += seg(add(o, ends[k][0]), add(o, ends[k][1]));
-    }
-  }
-  if (L.frame > 0) { const f = L.frame;
-    out += `<rect fill="none" x="${X([-f, 0])}" y="${Y([0, f])}" width="${2 * f}" height="${2 * f}"/>`; }
-  out += "</g>";
-  for (const m of d.clash || [])
-    out += `<circle cx="${X(m[1])}" cy="${Y(m[1])}" r="${(m[2] + z.G / 2).toFixed(3)}" fill="none" stroke="var(--bad)" stroke-width="0.35"/>`;
-  return out;
-}
+      /**
+       * True when the moves reach every square within LION_REACH: one frame replaces those marks.
+       */
+      function isLion(moves) {
+        for (let dx = -LION_REACH; dx <= LION_REACH; dx++) {
+          for (let dy = -LION_REACH; dy <= LION_REACH; dy++) {
+            if (dx === 0 && dy === 0) continue;
+            const stopsHere = moves.some((m) => m.dx === dx && m.dy === dy && isStop(m.symbol));
+            if (!stopsHere) return false;
+          }
+        }
+        return true;
+      }
 
-function faceSVG(face, lay, ox, s) {
-  const font = FONTS[s.font];
-  const color = face === "front" ? "var(--front-ink)" : "var(--back-ink)";
-  const Y = v => (lay.L + 4 - v).toFixed(3), X = v => (ox + v).toFixed(3);
-  const pts = q => q.map(p => X(p[0]) + "," + Y(p[1])).join(" ");
-  let out = `<polygon points="${pts(lay.outline)}" fill="var(--wood)" stroke="var(--wood-edge)" stroke-width="0.5"/>`;
-  if (lay.problem) out += `<polygon points="${pts(lay.safe)}" fill="none" stroke="var(--bad)" stroke-width="0.35" stroke-dasharray="1 0.8"/>`;
-  lay.chars.forEach((ch, i) => {
-    out += `<text x="${X(0)}" y="${Y(lay.centers[i])}" font-family="${font[1]}" font-size="${(1.32 * lay.F).toFixed(3)}"
-      text-anchor="middle" dominant-baseline="central" fill="${color}">${ch}</text>`;
-  });
-  if (lay.diagram) out += diagramSVG(lay.diagram, ox, lay.L + 4 - lay.centers[lay.centers.length - 1], color);
-  const label = face === "front" ? "Front" : (lay.chars.length || lay.grid ? "Back" : "Back: blank");
-  out += `<text x="${X(0)}" y="${(lay.L + 9.5).toFixed(2)}" font-size="2.6" text-anchor="middle" fill="var(--muted)"
-    font-family="system-ui, sans-serif">${label}</text>`;
-  return out;
-}
+      /** The moves that get their own mark: a lion's frame stands in for its nearby stops. */
+      function visibleMoves(moves, lion) {
+        return moves.filter(
+          (move) => !(lion && distance(move) <= LION_REACH && isStop(move.symbol)),
+        );
+      }
 
-// ---- Rendering -------------------------------------------------------------
+      /** The farthest square marked on the line of `move`. A range number counts as two. */
+      function rayReach(visible, move) {
+        const reaches = visible
+          .filter((k) => sameLine(k, move) && marksSquare(k.symbol))
+          .map((k) => (isDigit(k.symbol) ? 2 : distance(k)));
+        return Math.max(1, ...reaches);
+      }
 
-function render() {
-  const s = state.set, cells = state[state.face].cells;
-  for (const f of ["front", "back"]) $("tab-" + f).setAttribute("aria-selected", state.face === f);
-  if (document.activeElement !== $("chars")) $("chars").value = state[state.face].chars;
+      /**
+       * A step or slide beyond a jump on its line carries on from that jump.
+       *
+       * @returns {number} The squares to that jump, or 0.
+       */
+      function slideFrom(visible, move) {
+        if (!onLine(move)) return 0;
+        const jumps = visible
+          .filter((k) => k.symbol === "x" && sameLine(k, move) && distance(k) < distance(move))
+          .map(distance);
+        return jumps.length ? Math.max(...jumps) : 0;
+      }
 
-  for (const b of document.querySelectorAll("[data-tool]")) b.setAttribute("aria-pressed", b.dataset.tool === state.tool);
-  const board = $("board");
-  board.textContent = "";
-  for (let dy = N; dy >= -N; dy--) for (let dx = -N; dx <= N; dx++) {
-    const b = document.createElement("button");
-    const piece = dx === 0 && dy === 0, sym = cells[dx + "," + dy];
-    if (piece) {
-      b.className = "piece"; b.innerHTML = pieceIcon(); b.setAttribute("aria-label", "The piece");
-      b.tabIndex = -1;
-    } else {
-      b.className = onRay(dx, dy) ? "ray" : "";
-      if (sym) b.innerHTML = isDigit(sym) ? icon(sym) : icon(sym, dx, dy, state.face === "front" ? "var(--ink)" : "var(--accent)");
-      const blocked = allowed(state.tool, dx, dy);
-      if (blocked) { b.setAttribute("aria-disabled", "true"); b.title = blocked; }
-      b.setAttribute("aria-label", `${Math.abs(dx)} ${dx < 0 ? "left" : "right"}, ${Math.abs(dy)} ${dy < 0 ? "back" : "forward"}: ${
-        sym ? TOOLS.find(t => t[0] === sym)[1] : "empty"}`);
-      b.addEventListener("click", () => place(dx, dy));
-    }
-    board.appendChild(b);
-  }
-  $("undo").disabled = !history.length;
-  $("redo").disabled = !future.length;
+      /** True when a step or slide carries on from the jump `jump`. */
+      function startsSlide(visible, jump) {
+        return visible.some(
+          (move) =>
+            (isDirection(move.symbol) || move.symbol === "o") &&
+            sameLine(move, jump) &&
+            slideFrom(visible, move) === distance(jump),
+        );
+      }
 
-  // Preview: both faces side by side, in millimetres.
-  const front = faceLayout("front", s), back = faceLayout("back", s);
-  const gap = 8, w = front.W + back.W + gap + 4, h = front.L + 12;
-  const svg = $("preview");
-  svg.setAttribute("viewBox", `0 0 ${w.toFixed(2)} ${h.toFixed(2)}`);
-  svg.innerHTML = faceSVG("front", front, 2 + front.W / 2, s) + faceSVG("back", back, 2 + front.W + gap + back.W / 2, s);
+      /** Distance from the piece to the far edge of the mark of `move`, along its line. */
+      function farEdge(move, pitch, sizes) {
+        const step = unitStep(move);
+        const direction = normalize(step);
+        const stepLength = norm(step); // 1 straight, about 1.41 diagonally
 
-  const notes = [];
-  for (const [name, lay] of [["Front", front], ["Back", back]]) {
-    if (!lay.diagram) continue;
-    const d = lay.diagram, size = `${(d.b[1][0] - d.b[0][0]).toFixed(1)} × ${(d.b[1][1] - d.b[0][1]).toFixed(1)} mm`;
-    const who = d.clash.length ? ` (circled: ${[...new Set(d.clash.map(describe))].join(", ")})` : "";
-    notes.push(`<span>${lay.problem ? `<span class="bad">✕ ${name} ${lay.problem.text}${who}</span>` : `<span class="ok">✓ ${name} fits</span>`}
-      · diagram ${size} · ${d.p.toFixed(2)} mm between squares (at least ${d.pmin.toFixed(2)})</span>`);
-  }
-  notes.push(`<span>Characters ${front.F.toFixed(1)} mm on a ${front.L.toFixed(0)} × ${front.W.toFixed(1)} mm piece</span>`);
-  const fix = suggestFix();
-  if (fix) {
-    const far = [front, back].some(l => l.problem) ? ["front", "back"].filter(f => faceLayout(f, s).problem).map(farMarks).filter(Boolean).join(" ") : "";
-    notes.push(`<span class="fix">${fix.text}${fix.set ? ` <button id="apply-fix">${fix.label}</button>` : ""}</span>`);
-    if (far) notes.push(`<span>${far}</span>`);
-  }
-  $("status").innerHTML = notes.join("");
-  if (fix && fix.set) $("apply-fix").addEventListener("click", () => { Object.assign(state.set, fix.set); showSettings(); save(); render(); });
+        if (move.symbol === "o") return distance(move) * stepLength * pitch + sizes.dot / 2;
+        if (move.symbol === "x") return distance(move) * stepLength * pitch + sizes.ring / 2;
+        if (move.symbol === "!") return stepLength * pitch + halfExtent(direction, sizes.igui);
+        // A "2" is two dots; 3 to 7 are a number just past the first square.
+        if (Number(move.symbol) === 2) return 2 * stepLength * pitch + sizes.dot / 2;
+        const digitStart = stepLength * pitch + sizes.line / 2 + sizes.gap;
+        return digitStart + 2 * halfExtent(direction, sizes.digit);
+      }
 
-  // Results.
-  const fg = gridText(state.front.cells), bg = gridText(state.back.cells);
-  const learner = { front: { learner: { Front_Characters: state.front.chars, Front_Moves: fg } } };
-  if (state.back.chars || bg) learner.back = { learner: { Back_Characters: state.back.chars, Back_Moves: bg } };
-  $("json").textContent = JSON.stringify(learner, null, 4).replace(/^\{\n|\n\}$/g, "").replace(/^    /gm, "");
-  $("custom").textContent = [`Front_Characters = "${state.front.chars}"`, `Front_Moves = "${fg}"`,
-    `Back_Characters = "${state.back.chars}"`, `Back_Moves = "${bg}"`, `Font_Name = "${FONTS[s.font][2]}"`,
-    `Move_Stroke = ${s.stroke}`, `Move_Gap = ${s.gap}`, `Move_Pitch = ${s.pitch}`].join("\n");
-}
+      /**
+       * The arrowhead tip of the slide `move`.
+       *
+       * It lies SLIDE_PAST squares past the farthest mark on its line, and never
+       * nearer than that mark's edge, a gap, a shaft two lines long and the head.
+       */
+      function tipOf(visible, move, pitch, sizes) {
+        const step = unitStep(move);
+        const direction = normalize(step);
+        const markEdges = visible
+          .filter((k) => marksSquare(k.symbol) && sameLine(k, move))
+          .map((k) => farEdge(k, pitch, sizes));
+        const edge = Math.max(sizes.piece / 2, ...markEdges);
 
-// The smallest change that makes both faces fit, in order: enough space between
-// squares for marks that collide; then smaller marks at the same piece size
-// (closer squares, then thinner lines, never below one 0.5 mm printed line);
-// then a larger piece.
-const PRINT_LINE = 0.5;
-function suggestFix(base = state.set) {
-  const faces = s => ["front", "back"].map(f => faceLayout(f, s));
-  const fits = s => faces(s).every(l => !l.problem);
-  const neededPitch = s => Math.ceil(Math.max(0, ...faces(s).filter(l => l.diagram).map(l => l.diagram.pmin)) * 20 - 1e-6) / 20;
-  if (fits(base)) return null;
-  // Collisions: more space between squares, if that alone does it.
-  if (faces(base).some(l => l.problem && l.problem.kind === "pitch")) {
-    const t = { ...base, pitch: neededPitch(base) };
-    if (fits(t)) return { set: { pitch: t.pitch }, label: `Use ${t.pitch.toFixed(2)} mm`,
-      text: `This grid needs ${t.pitch.toFixed(2)} mm between squares. For a set, use it on every piece.` };
-  }
-  // Smaller marks at this piece size.
-  for (let w = Math.round(base.stroke * 20) / 20; w >= PRINT_LINE - 1e-9; w = Math.round((w - 0.05) * 100) / 100) {
-    const t = { ...base, stroke: w, gap: Math.min(base.gap, Math.max(PRINT_LINE, w)) };
-    t.pitch = neededPitch(t);
-    if (!fits(t)) continue;
-    const changes = [w !== base.stroke && `${w.toFixed(2)} mm lines`, t.gap !== base.gap && `${t.gap.toFixed(2)} mm gaps`,
-                     `${t.pitch.toFixed(2)} mm between squares`].filter(Boolean);
-    return { set: { stroke: t.stroke, gap: t.gap, pitch: t.pitch }, label: w !== base.stroke ? `Use ${w.toFixed(2)} mm lines` : `Use ${t.pitch.toFixed(2)} mm`,
-      text: `Fits on this piece with ${changes.join(", ")}. For a set, use the same values on every piece.` };
-  }
-  // A larger piece: the smallest one that fits, with the current marks or, if
-  // that needs a bigger piece, with the thinnest printable ones.
-  const smallest = marks => {
-    for (let scale = Math.round(base.scale * 20) / 20 + 0.05; scale <= 3.001; scale += 0.05) {
-      const t = { ...base, ...marks, scale: Math.round(scale * 100) / 100 };
-      t.pitch = Math.max(neededPitch(t), marks.stroke ? 0 : base.pitch);
-      if (fits(t)) return t;
-    }
-    return null;
-  };
-  const keep = smallest({}), thin = smallest({ stroke: PRINT_LINE, gap: PRINT_LINE });
-  const best = keep && (!thin || keep.scale <= thin.scale) ? keep : thin;
-  if (best) {
-    const thinner = best === thin && best !== keep;
-    return { set: { scale: best.scale, pitch: best.pitch, stroke: best.stroke, gap: best.gap }, label: `Use ${best.scale.toFixed(2)}×`,
-      text: `It will not fit this piece even with the thinnest printable marks. It fits on a ${best.scale.toFixed(2)}× piece` +
-        (thinner ? ` with ${PRINT_LINE.toFixed(2)} mm lines and gaps and ${best.pitch.toFixed(2)} mm between squares` + (keep ? ` (${keep.scale.toFixed(2)}× keeping the current marks)` : "")
-                 : best.pitch !== base.pitch ? ` with ${best.pitch.toFixed(2)} mm between squares` : "") + "." };
-  }
-  return { set: null, text: "Nothing up to a 3× piece fits this. Use fewer characters, or bring the outermost marks closer to the piece." };
-}
+        const squares = Math.max(rayReach(visible, move), slideFrom(visible, move) + 1);
+        const pastTheMarks = (squares + SLIDE_PAST) * pitch * norm(step);
+        // The line has round ends, so it starts half a line past the gap.
+        const shaftStart = edge + sizes.gap + sizes.line / 2;
+        const clearOfTheMarks =
+          shaftStart + MIN_SHAFT_LINES * sizes.line + headLength(move.symbol, sizes);
+        return multiply(direction, Math.max(pastTheMarks, clearOfTheMarks));
+      }
 
-// Marks three or more squares out are usually what makes a diagram large.
-function farMarks(face) {
-  const marks = Object.entries(state[face].cells).map(([k, v]) => [...k.split(",").map(Number), v]);
-  const reach = Math.max(0, ...marks.map(m => Math.max(Math.abs(m[0]), Math.abs(m[1]))));
-  if (reach < 3) return "";
-  const names = { o: "move", x: "jump", "#": "slide", "=": "fly", L: "hook" };
-  const far = marks.filter(m => Math.max(Math.abs(m[0]), Math.abs(m[1])) === reach)
-    .map(m => `${names[m[2]] || m[2]} ${ARROWS[[Math.sign(m[0]), Math.sign(m[1])].join(",")] || ""}`.trim());
-  return `The ${[...new Set(far)].join(", ")} ${far.length > 1 ? "are" : "is"} ${reach} squares out, so the diagram is ${2 * reach + 1} squares across. Moving ${far.length > 1 ? "them" : "it"} closer shrinks it most.`;
-}
+      /**
+       * Where the line of `move` starts: at the jump it carries on from, else just
+       * past an igui on its line (as Wikipedia draws it), else clear of the piece mark.
+       */
+      function lineStart(visible, move, pitch, sizes) {
+        const step = unitStep(move);
+        const direction = normalize(step);
 
-function place(dx, dy) {
-  const problem = allowed(state.tool, dx, dy);
-  $("msg").className = "msg";
-  if (problem) { $("msg").textContent = problem; return; }
-  $("msg").textContent = "";
-  const before = snapshot(), cells = state[state.face].cells;
-  const sym = state.tool === "." || cells[dx + "," + dy] === state.tool ? null : state.tool;   // same mark again erases
-  const targets = [[dx, dy]];
-  if ($("mirror").checked && dx !== 0) targets.push([-dx, dy]);
-  for (const [x, y] of targets) { if (sym) cells[x + "," + y] = sym; else delete cells[x + "," + y]; }
-  commit(before);
-}
+        const jumpDistance = slideFrom(visible, move);
+        if (jumpDistance > 0) {
+          return add(multiply(step, jumpDistance * pitch), multiply(direction, sizes.ring / 2));
+        }
+        const pastIgui =
+          onLine(move) &&
+          visible.some(
+            (k) => k.symbol === "!" && sameLine(k, move) && distance(k) < distance(move),
+          );
+        if (pastIgui) {
+          const iguiClearance = halfExtent(direction, sizes.igui) + sizes.gap + sizes.line / 2;
+          return add(multiply(step, pitch), multiply(direction, iguiClearance));
+        }
+        return clearOfPiece(direction, sizes);
+      }
 
-// ---- Wiring ----------------------------------------------------------------
+      // ---- Layout at one pitch --------------------------------------------------------
 
-const settingInputs = { body: "body", font: "font", ratio: "ratio", center: "center", stroke: "stroke", gap: "gap", pitch: "pitch", scale: "scale" };
-function showSettings() { for (const [key, id] of Object.entries(settingInputs)) $(id).value = state.set[key]; }
+      /**
+       * A drawn mark, placed at one pitch.
+       *
+       * Heads also have `tip` and `angle`, crossbars (tees) have `angle`, and
+       * digits have `value`. layout() adds `capsules`, the outline that the
+       * spacing checks measure.
+       *
+       * @typedef {object} Mark
+       * @property {string} kind piece, dot, ring, igui, digit, head or tee.
+       * @property {number[]} center The middle of the mark.
+       * @property {number} radius Its size, for the spacing checks and the box.
+       * @property {number} line The id of the line the mark is on.
+       */
 
-function init() {
-  for (const [key, name, shortcut, help] of TOOLS) {
-    const b = document.createElement("button");
-    const range = isDigit(key);
-    b.dataset.tool = key;
-    b.innerHTML = range ? key : `${icon(key)}<span>${name}</span><kbd>${shortcut === "Backspace" ? "⌫" : shortcut.toUpperCase()}</kbd>`;
-    b.title = help || `Moves up to ${key} squares this way. Next to the piece only (key ${key})`;
-    b.setAttribute("aria-label", range ? `Up to ${key} squares` : name);
-    b.addEventListener("click", () => { state.tool = key; $("msg").textContent = ""; render(); });
-    $(range ? "ranges" : "palette").appendChild(b);
-  }
-  $("legend").innerHTML = `<dt><svg viewBox="0 0 24 24" width="22" height="22"><path d="M12 3L18 6L21 21H3L6 6Z" fill="currentColor"/></svg>@</dt><dd>The piece. Forward, toward the point, is up.</dd>` +
-    TOOLS.filter(t => !"34567.".includes(t[0])).map(([key, name, , help]) =>
-      `<dt>${icon(key)}${key === "2" ? "2–7" : key}</dt><dd>${key === "2"
-        ? "Moves up to that many squares this way: two dots for 2, the number for 3–7. Next to the piece only" : help}.</dd>`).join("") +
-    `<dt><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 20L8 16M11 13L14 10" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><circle cx="18" cy="6" r="3.6" fill="none" stroke="currentColor" stroke-width="2.4"/></svg></dt>
-     <dd>Dashes lead from the piece to each jump: it leaps over the squares between.</dd>`;
+      /**
+       * A line from the piece, a jump's dashed leader, or a slide's shaft.
+       *
+       * @typedef {object} Line
+       * @property {number[]} start
+       * @property {number[]} end
+       * @property {number} id The line it is on, as for a mark.
+       * @property {number} shaft The visible shaft before an arrowhead, or NO_SHAFT.
+       * @property {boolean} dashed True for the leader to a jump.
+       */
 
-  for (const td of document.querySelectorAll("td[data-mark]")) td.insertAdjacentHTML("afterbegin", icon(td.dataset.mark));
-  for (const name of Object.keys(BODIES)) $("body").insertAdjacentHTML("beforeend", `<option>${name}</option>`);
-  FONTS.forEach(([label], i) => $("font").insertAdjacentHTML("beforeend", `<option value="${i}">${label}</option>`));
-  for (const name of Object.keys(EXAMPLES)) $("examples").insertAdjacentHTML("beforeend", `<option>${name}</option>`);
+      /** A new mark. `details` holds the extra fields of heads, tees and digits. */
+      const makeMark = (kind, center, radius, line, details = {}) => ({
+        kind,
+        center,
+        radius,
+        line,
+        ...details,
+      });
 
-  showSettings();
-  for (const [key, id] of Object.entries(settingInputs)) $(id).addEventListener("input", () => {
-    const v = $(id).value;
-    if (key === "body") state.set.body = v;
-    else if (v !== "" && !isNaN(+v)) state.set[key] = +v;
-    save(); render();
-  });
+      /** A new line. Only a slide's line has a shaft length, and only a jump's is dashed. */
+      const makeLine = (start, end, id, shaft = NO_SHAFT, dashed = false) => ({
+        start,
+        end,
+        id,
+        shaft,
+        dashed,
+      });
 
-  for (const f of ["front", "back"]) $("tab-" + f).addEventListener("click", () => { state.face = f; $("msg").textContent = ""; render(); });
-  $("chars").addEventListener("input", e => {
-    const before = snapshot();
-    state[state.face].chars = [...e.target.value.replace(/\s/g, "")].slice(0, 3).join("");
-    commit(before);
-  });
-  $("clear").addEventListener("click", () => { const before = snapshot(); state[state.face].cells = {}; commit(before); });
-  $("copy-front").addEventListener("click", () => {
-    const before = snapshot(); state.back.cells = { ...state.front.cells }; state.face = "back"; commit(before);
-  });
-  $("undo").addEventListener("click", () => { if (history.length) { future.push(snapshot()); restore(history.pop()); } });
-  $("redo").addEventListener("click", () => { if (future.length) { history.push(snapshot()); restore(future.pop()); } });
-  $("examples").addEventListener("change", e => {
-    const ex = EXAMPLES[e.target.value];
-    e.target.value = "";
-    if (!ex) return;
-    const before = snapshot();
-    try {
-      state.front = { chars: ex.front[0], cells: cellsFrom(ex.front[1]) };
-      state.back = { chars: ex.back[0], cells: cellsFrom(ex.back[1]) };
-      state.set = { ...state.set, body: ex.body, scale: ex.scale || SET.scale, ratio: ex.ratio || SET.ratio, pitch: ex.pitch || SET.pitch };
-      const fix = suggestFix();
-      Object.assign(state.set, fix && fix.set ? fix.set : {});
-      showSettings();
-      state.face = "front";
-      $("msg").className = "msg info";
-      $("msg").textContent = fix && fix.set && fix.set.scale ? `Loaded at ${fix.set.scale.toFixed(2)}× so it fits${fix.set.pitch !== SET.pitch ? `, with ${fix.set.pitch.toFixed(2)} mm between squares` : ""}.`
-        : fix && fix.set && fix.set.pitch ? `Loaded with ${fix.set.pitch.toFixed(2)} mm between squares so it prints.` : "";
-    } catch (err) { $("msg").textContent = err.message; }
-    commit(before);
-  });
-  for (const b of document.querySelectorAll(".copy")) b.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); b.textContent = "Copied"; }
-    catch { b.textContent = "Select and copy"; }
-    setTimeout(() => { b.textContent = "Copy"; }, 1400);
-  });
-  document.addEventListener("keydown", e => {
-    if (e.target instanceof Element && e.target.matches("input, select, textarea")) return;
-    const mod = e.ctrlKey || e.metaKey;
-    if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); (e.shiftKey ? $("redo") : $("undo")).click(); return; }
-    if (mod && e.key.toLowerCase() === "y") { e.preventDefault(); $("redo").click(); return; }
-    if (mod || e.altKey) return;
-    const key = e.key === "Backspace" || e.key === "Delete" ? "." : e.key.length === 1 ? (e.key.toLowerCase() === "l" ? "L" : e.key.toLowerCase()) : null;
-    if (key && TOOLS.some(t => t[0] === key)) { state.tool = key; $("msg").textContent = ""; render(); e.preventDefault(); }
-  });
+      /** The line id of visible move i: its line from the piece, or an id of its own. */
+      function lineOf(visible, i) {
+        const move = visible[i];
+        return onLine(move) ? lineId(unitStep(move)) : OWN_LINE_START + i;
+      }
 
-  if (!load()) {
-    state.front.cells = cellsFrom(".#./#@#/.#.");
-    state.back.cells = cellsFrom("o#o/#@#/o#o");
-  }
-  showSettings();
-  render();
-  // The preview's font arrives after the first draw.
-  if (document.fonts) { document.fonts.ready.then(render); document.fonts.addEventListener("loadingdone", () => render()); }
-}
-init();
-</script>
-</body>
+      /**
+       * The line id of the jump visible[i]: it is on its line only when a step or slide carries on
+       * from it.
+       */
+      function jumpLineOf(visible, i) {
+        return startsSlide(visible, visible[i]) ? lineOf(visible, i) : OWN_LINE_START + i;
+      }
+
+      /** The marks of the stops: dots, rings and igui. */
+      function stopMarks(visible, pitch, sizes) {
+        const marks = [];
+        visible.forEach((move, i) => {
+          const center = [move.dx * pitch, move.dy * pitch];
+          if (move.symbol === "o") {
+            marks.push(makeMark("dot", center, sizes.dot / 2, lineOf(visible, i)));
+          } else if (move.symbol === "!") {
+            marks.push(makeMark("igui", center, sizes.igui.height / 2, lineOf(visible, i)));
+          } else if (move.symbol === "x") {
+            marks.push(makeMark("ring", center, sizes.ring / 2, jumpLineOf(visible, i)));
+          }
+        });
+        return marks;
+      }
+
+      /** The marks of the ranges: "2" is two dots; 3 to 7 are numbers next to the piece. */
+      function rangeMarks(visible, pitch, sizes) {
+        const marks = [];
+        for (const move of visible) {
+          if (!isDigit(move.symbol)) continue;
+          const step = unitStep(move);
+          const direction = normalize(step);
+          const value = Number(move.symbol);
+
+          if (value === 2) {
+            marks.push(
+              makeMark("dot", multiply(step, pitch), sizes.dot / 2, lineId(step)),
+              makeMark("dot", multiply(step, 2 * pitch), sizes.dot / 2, lineId(step)),
+            );
+          } else {
+            const fromFirstSquare = sizes.line / 2 + sizes.gap + halfExtent(direction, sizes.digit);
+            const center = add(multiply(step, pitch), multiply(direction, fromFirstSquare));
+            const radius = norm([sizes.digit.width, sizes.digit.height]) / 2;
+            marks.push(makeMark("digit", center, radius, lineId(step), { value }));
+          }
+        }
+        return marks;
+      }
+
+      /**
+       * The ends of the slides: arrowheads (# and =) and hook crossbars (L).
+       * A fly (=) has a second arrowhead, one gap behind the first.
+       */
+      function endMarks(visible, pitch, sizes) {
+        const marks = [];
+        for (const move of visible) {
+          if (!isDirection(move.symbol)) continue;
+          const step = unitStep(move);
+          const direction = normalize(step);
+          const tip = tipOf(visible, move, pitch, sizes);
+          const angle = toDegrees(Math.atan2(direction[1], direction[0]));
+          const headRadius = HEAD_CIRCLE * sizes.head;
+
+          if (move.symbol === "L") {
+            const center = subtract(tip, multiply(direction, sizes.overrun));
+            marks.push(makeMark("tee", center, sizes.tee / 2, lineId(step), { angle }));
+            continue;
+          }
+          const center = subtract(tip, multiply(direction, headRadius));
+          marks.push(makeMark("head", center, headRadius, lineId(step), { tip, angle }));
+
+          if (move.symbol === "=") {
+            const secondTip = subtract(tip, multiply(direction, sizes.head + sizes.gap));
+            const secondCenter = subtract(
+              tip,
+              multiply(direction, (1 + HEAD_CIRCLE) * sizes.head + sizes.gap),
+            );
+            marks.push(
+              makeMark("head", secondCenter, headRadius, lineId(step), { tip: secondTip, angle }),
+            );
+          }
+        }
+        return marks;
+      }
+
+      /** The lines to the steps. An igui has no line: the piece captures there without moving. */
+      function stepLines(visible, pitch, sizes) {
+        const lines = [];
+        visible.forEach((move, i) => {
+          if (move.symbol !== "o") return;
+          const start = onLine(move)
+            ? lineStart(visible, move, pitch, sizes)
+            : clearOfPiece(normalize(offset(move)), sizes);
+          const end = multiply(offset(move), pitch);
+          lines.push(makeLine(start, end, lineOf(visible, i)));
+        });
+        return lines;
+      }
+
+      /** The lines to the range marks: to the far dot of a "2", or to the number. */
+      function rangeLines(visible, pitch, sizes) {
+        const lines = [];
+        for (const move of visible) {
+          if (!isDigit(move.symbol)) continue;
+          const step = unitStep(move);
+          const squares = Number(move.symbol) === 2 ? 2 : 1;
+          const start = clearOfPiece(normalize(step), sizes);
+          lines.push(makeLine(start, multiply(step, squares * pitch), lineId(step)));
+        }
+        return lines;
+      }
+
+      /** The radius of a stop mark along the unit vector `direction`. */
+      function stopRadius(symbol, direction, sizes) {
+        if (symbol === "o") return sizes.dot / 2;
+        if (symbol === "x") return sizes.ring / 2;
+        return halfExtent(direction, sizes.igui);
+      }
+
+      /** The dashed leaders to the jumps: from the piece, or from the last stop before the jump. */
+      function jumpLines(visible, pitch, sizes) {
+        const lines = [];
+        visible.forEach((jump, i) => {
+          if (jump.symbol !== "x") return;
+          const direction = normalize(offset(jump));
+
+          const before = visible.filter(
+            (k) => isStop(k.symbol) && sameLine(k, jump) && distance(k) < distance(jump),
+          );
+          let start = clearOfPiece(direction, sizes);
+          if (before.length) {
+            const farthest = Math.max(...before.map(distance));
+            const last = before.find((k) => distance(k) === farthest);
+            const clearance =
+              stopRadius(last.symbol, direction, sizes) + sizes.gap + sizes.line / 2;
+            start = add(multiply(offset(last), pitch), multiply(direction, clearance));
+          }
+          const ringClearance = sizes.ring / 2 + sizes.gap + sizes.line / 2;
+          const end = subtract(multiply(offset(jump), pitch), multiply(direction, ringClearance));
+
+          // No leader when the jump is too close to the mark before it to fit one.
+          if (dot(subtract(end, start), direction) > 0) {
+            lines.push(makeLine(start, end, jumpLineOf(visible, i), NO_SHAFT, true));
+          }
+        });
+        return lines;
+      }
+
+      /** The lines of the slides, flies and hooks, up to the back of the arrowhead. */
+      function slideLines(visible, pitch, sizes) {
+        const lines = [];
+        for (const move of visible) {
+          if (!isDirection(move.symbol)) continue;
+          const step = unitStep(move);
+          const direction = normalize(step);
+          const tip = tipOf(visible, move, pitch, sizes);
+          const start = lineStart(visible, move, pitch, sizes);
+
+          // A hook's line runs on through its crossbar; an arrow's stops inside its head.
+          const end =
+            move.symbol === "L" ? tip : subtract(tip, multiply(direction, sizes.head / 2));
+          const shaft = norm(subtract(tip, start)) - headLength(move.symbol, sizes);
+          lines.push(makeLine(start, end, lineId(step), shaft));
+        }
+        return lines;
+      }
+
+      /**
+       * Lays out a diagram at one pitch.
+       *
+       * @param {Move[]} moves The moves, from parseGrid().
+       * @param {number} pitch The distance between squares.
+       * @param {object} sizes The mark sizes, from markSizes().
+       * @returns {{marks: Mark[], lines: Line[], frame: number}} The marks, the lines,
+       *     and the half-size of the lion frame (0 for none).
+       */
+      function layout(moves, pitch, sizes) {
+        const lion = isLion(moves);
+        const visible = visibleMoves(moves, lion);
+
+        const piece = makeMark("piece", [0, 0], sizes.piece / 2, PIECE_LINE);
+        const marks = [
+          piece,
+          ...stopMarks(visible, pitch, sizes),
+          ...rangeMarks(visible, pitch, sizes),
+          ...endMarks(visible, pitch, sizes),
+        ];
+        const lines = [
+          ...stepLines(visible, pitch, sizes),
+          ...rangeLines(visible, pitch, sizes),
+          ...jumpLines(visible, pitch, sizes),
+          ...slideLines(visible, pitch, sizes),
+        ];
+        for (const m of marks) m.capsules = capsules(m, sizes);
+        return { marks, lines, frame: lion ? LION_REACH * pitch : 0 };
+      }
+
+      /** A segment from start to end, with a radius around it. */
+      const makeCapsule = (start, end, radius) => ({ start, end, radius });
+
+      /**
+       * The outline of a mark as capsules. The spacing checks measure these, so a
+       * mark between two diagonal lines is judged by its real shape.
+       */
+      function capsules(m, sizes) {
+        const c = m.center;
+        if (m.kind === "igui") {
+          const { width, height, wedge, dot } = sizes.igui;
+          const wedgeTop = add(c, [0, height / 2 - width / 2]);
+          const wedgeBottom = add(c, [0, height / 2 - wedge + width / 2]);
+          const dotCenter = add(c, [0, -height / 2 + dot / 2]);
+          return [
+            makeCapsule(wedgeTop, wedgeBottom, width / 2),
+            makeCapsule(dotCenter, dotCenter, dot / 2),
+          ];
+        }
+        if (m.kind === "tee") {
+          // The crossbar lies across the line, a quarter turn from it.
+          const across = toRadians(m.angle + 90);
+          const halfBar = multiply(
+            [Math.cos(across), Math.sin(across)],
+            (sizes.tee - sizes.line) / 2,
+          );
+          return [makeCapsule(subtract(c, halfBar), add(c, halfBar), sizes.line / 2)];
+        }
+        if (m.kind === "digit") {
+          const halfStem = (sizes.digit.height - sizes.digit.width) / 2;
+          return [
+            makeCapsule(subtract(c, [0, halfStem]), add(c, [0, halfStem]), sizes.digit.width / 2),
+          ];
+        }
+        return [makeCapsule(c, c, m.radius)];
+      }
+
+      // ---- Fit check ------------------------------------------------------------------
+
+      /** The distance from point q to the segment from a to b. */
+      function pointToSegment(q, a, b) {
+        const d = subtract(b, a);
+        const lengthSquared = dot(d, d);
+        // How far along the segment the nearest point is, from 0 (at a) to 1 (at b).
+        const along = lengthSquared === 0 ? 0 : dot(subtract(q, a), d) / lengthSquared;
+        const t = Math.max(0, Math.min(1, along));
+        return norm(subtract(q, add(a, multiply(d, t))));
+      }
+
+      /**
+       * True when the segments a-b and c-d cross. Each pair of ends is on opposite sides of the
+       * other segment.
+       */
+      function segmentsCross(a, b, c, d) {
+        const cSide = cross(subtract(b, a), subtract(c, a));
+        const dSide = cross(subtract(b, a), subtract(d, a));
+        const aSide = cross(subtract(d, c), subtract(a, c));
+        const bSide = cross(subtract(d, c), subtract(b, c));
+        const oppositeSides = (s, t) => (s > 0 && t < 0) || (s < 0 && t > 0);
+        return oppositeSides(cSide, dSide) && oppositeSides(aSide, bSide);
+      }
+
+      /** The shortest distance between the segments a-b and c-d. */
+      function segmentsDistance(a, b, c, d) {
+        if (segmentsCross(a, b, c, d)) return 0;
+        return Math.min(
+          pointToSegment(a, c, d),
+          pointToSegment(b, c, d),
+          pointToSegment(c, a, b),
+          pointToSegment(d, a, b),
+        );
+      }
+
+      /** The space between two capsules. */
+      const clearance = (p, q) =>
+        segmentsDistance(p.start, p.end, q.start, q.end) - p.radius - q.radius;
+
+      /** The space between two marks. */
+      function marksClearance(s, t) {
+        let smallest = Infinity;
+        for (const p of s.capsules) {
+          for (const q of t.capsules) smallest = Math.min(smallest, clearance(p, q));
+        }
+        return smallest;
+      }
+
+      /** The space between a mark and a line. */
+      function lineClearance(m, l, sizes) {
+        const lineCapsule = makeCapsule(l.start, l.end, sizes.line / 2);
+        return Math.min(...m.capsules.map((c) => clearance(c, lineCapsule)));
+      }
+
+      /** True for the two heads of one fly: they may touch. */
+      const sameHead = (s, t) => s.kind === "head" && t.kind === "head" && s.line === t.line;
+
+      /**
+       * True when the mark is less than a gap from the lion frame (a square `frame` from the
+       * piece).
+       */
+      function touchesFrame(m, frame, sizes) {
+        if (m.line === PIECE_LINE) return frame - sizes.line / 2 < sizes.piece / 2 + sizes.gap;
+        const squareDistance = Math.max(Math.abs(m.center[0]), Math.abs(m.center[1]));
+        return Math.abs(squareDistance - frame) < m.radius + sizes.line / 2 + sizes.gap;
+      }
+
+      /**
+       * The marks closer than one gap to another mark, to a line they are not on,
+       * or to the lion frame. The model's mv_fits applies the same rules.
+       *
+       * @returns {Mark[]} The marks, in layout order.
+       */
+      function clashes(moves, pitch, sizes) {
+        const { marks, lines, frame } = layout(moves, pitch, sizes);
+        const tooClose = sizes.gap - EPSILON;
+        const clashing = new Set(); // indexes into marks
+
+        for (let i = 0; i < marks.length; i++) {
+          for (let j = i + 1; j < marks.length; j++) {
+            if (sameHead(marks[i], marks[j])) continue;
+            if (marksClearance(marks[i], marks[j]) < tooClose) {
+              clashing.add(i);
+              clashing.add(j);
+            }
+          }
+        }
+        marks.forEach((m, i) => {
+          const tooNearALine = lines.some(
+            (l) =>
+              m.line !== PIECE_LINE && m.line !== l.id && lineClearance(m, l, sizes) < tooClose,
+          );
+          if (tooNearALine) clashing.add(i);
+          if (frame > 0 && touchesFrame(m, frame, sizes)) clashing.add(i);
+        });
+        return [...clashing].map((i) => marks[i]);
+      }
+
+      /** True when nothing clashes and every slide shows a shaft at least MIN_SHAFT_LINES long. */
+      function fits(moves, pitch, sizes) {
+        const shortShaft = layout(moves, pitch, sizes).lines.some(
+          (l) => l.shaft < MIN_SHAFT_LINES * sizes.line - EPSILON,
+        );
+        return !shortShaft && clashes(moves, pitch, sizes).length === 0;
+      }
+
+      /**
+       * The smallest printable pitch, found the way the model finds it. A larger
+       * pitch only widens the gaps, so a bisection finds it.
+       *
+       * @param {Move[]} moves The moves, from parseGrid().
+       * @param {object} sizes The mark sizes, from markSizes().
+       * @returns {number} The pitch, in mm.
+       */
+      function solve(moves, sizes) {
+        const start = sizes.line;
+        if (fits(moves, start, sizes)) return start;
+
+        let tooSmall = start;
+        let bigEnough = start + SEARCH_RANGE * sizes.line;
+        for (let n = 0; n < SEARCH_STEPS; n++) {
+          const middle = (tooSmall + bigEnough) / 2;
+          if (fits(moves, middle, sizes)) bigEnough = middle;
+          else tooSmall = middle;
+        }
+        return bigEnough;
+      }
+
+      /**
+       * The box around everything drawn at one pitch.
+       *
+       * @returns {number[][]} [[min x, min y], [max x, max y]].
+       */
+      function box(moves, pitch, sizes) {
+        const { marks, lines, frame } = layout(moves, pitch, sizes);
+
+        // Each point, with the radius drawn around it.
+        const points = [];
+        for (const m of marks) {
+          for (const c of m.capsules) points.push([c.start, c.radius], [c.end, c.radius]);
+        }
+        for (const l of lines) points.push([l.start, sizes.line / 2], [l.end, sizes.line / 2]);
+        if (frame > 0) {
+          points.push([[frame, frame], sizes.line / 2], [[-frame, -frame], sizes.line / 2]);
+        }
+
+        const lowest = (axis) => Math.min(...points.map(([point, r]) => point[axis] - r));
+        const highest = (axis) => Math.max(...points.map(([point, r]) => point[axis] + r));
+        return [
+          [lowest(0), lowest(1)],
+          [highest(0), highest(1)],
+        ];
+      }
+
+      /** The [width, height] of a box. */
+      const boxSize = (b) => subtract(b[1], b[0]);
+
+      // Node runs this block in the tests.
+      if (typeof module !== "undefined") {
+        module.exports = { parseGrid, markSizes, layout, solve, box, clashes };
+      }
+    </script>
+
+    <script>
+      // The editor: the board, the preview, the fix suggestions and the result.
+      // It uses the solver above for every diagram.
+      "use strict";
+
+      // ---- Data -----------------------------------------------------------------------
+
+      /** Squares from the piece to the edge of the editor's board. */
+      const BOARD_REACH = 4;
+
+      /** The most characters on one face. */
+      const MAX_CHARACTERS = 3;
+
+      /**
+       * The marks, in palette order. `key` is the keyboard shortcut. A range with
+       * no help text gets one from its number.
+       */
+      const TOOLS = [
+        {
+          symbol: "o",
+          name: "Move",
+          key: "o",
+          help:
+            "Can move to this square. " +
+            "Beyond a jump on the same line, it steps on from the jump",
+        },
+        {
+          symbol: "x",
+          name: "Jump",
+          key: "x",
+          help: "Jumps to this square, over anything between",
+        },
+        {
+          symbol: "!",
+          name: "Igui",
+          key: "!",
+          help:
+            "Captures on this square without moving (igui), a lion power. " +
+            "Next to the piece only",
+        },
+        {
+          symbol: "#",
+          name: "Slide",
+          key: "#",
+          help: "Slides any distance this way. On the dashed lines only",
+        },
+        {
+          symbol: "=",
+          name: "Fly",
+          key: "=",
+          help:
+            "Flies over any number of pieces this way, capturing them. " +
+            "On the dashed lines only",
+        },
+        {
+          symbol: "L",
+          name: "Hook",
+          key: "l",
+          help:
+            "Slides this way and may turn 90° once, drawn as a crossbar. " +
+            "On the dashed lines only",
+        },
+        {
+          symbol: "2",
+          name: "Up to 2",
+          key: "2",
+          help: "Moves up to 2 squares this way. Next to the piece only",
+        },
+        { symbol: "3", name: "Up to 3", key: "3", help: "" },
+        { symbol: "4", name: "Up to 4", key: "4", help: "" },
+        { symbol: "5", name: "Up to 5", key: "5", help: "" },
+        { symbol: "6", name: "Up to 6", key: "6", help: "" },
+        { symbol: "7", name: "Up to 7", key: "7", help: "" },
+        { symbol: ".", name: "Erase", key: "Backspace", help: "Empty square" },
+      ];
+
+      /** Piece bodies from presets/pieces, in mm. */
+      const BODIES = {
+        King: { length: 32, width: 28.5 },
+        "Rook, bishop": { length: 31, width: 27.5 },
+        "Gold, silver": { length: 30, width: 26.5 },
+        Knight: { length: 29, width: 25.5 },
+        Lance: { length: 29, width: 24.5 },
+        Pawn: { length: 28, width: 24.5 },
+      };
+
+      /** The fonts: the name to show, the CSS family, and the Customizer's Font_Name. */
+      const FONTS = [
+        {
+          label: "LXGW WenKai Mono",
+          family: "KS WenKai",
+          customizer: "LXGW WenKai Mono:style=Regular",
+        },
+        { label: "Yuji Syuku", family: "KS Yuji Syuku", customizer: "Yuji Syuku:style=Regular" },
+        { label: "Yuji Mai", family: "KS Yuji Mai", customizer: "Yuji Mai:style=Regular" },
+        { label: "Iansui", family: "KS Iansui", customizer: "Iansui:style=Regular" },
+        {
+          label: "Kaisei Tokumin",
+          family: "KS Kaisei",
+          customizer: "Kaisei Tokumin:style=ExtraBold",
+        },
+        {
+          label: "Noto Sans CJK JP",
+          family: "Noto Sans CJK JP, sans-serif",
+          customizer: "Noto Sans CJK JP:style=Medium",
+        },
+      ];
+
+      /** The settings of the bundled learner sets; see presets/pieces/_defaults.json. */
+      const DEFAULT_SETTINGS = {
+        body: "King",
+        font: 0,
+        ratio: 0.32,
+        center: 0.73,
+        stroke: 0.6,
+        gap: 0.6,
+        pitch: 3.75,
+        scale: 1,
+        spacing: 0.96,
+      };
+
+      /** The settings that have an input on the page. Each input's id is the setting's name. */
+      const SETTING_INPUTS = ["body", "font", "ratio", "center", "stroke", "gap", "pitch", "scale"];
+
+      /**
+       * The examples in the "Load an example piece" list. A face is its characters
+       * and its move grid. scale, ratio and pitch replace the default settings.
+       */
+      const EXAMPLES = {
+        King: {
+          body: "King",
+          front: { chars: "王", grid: "ooo/o@o/ooo" },
+          back: { chars: "", grid: "" },
+        },
+        "Rook → Dragon": {
+          body: "Rook, bishop",
+          front: { chars: "飛", grid: ".#./#@#/.#." },
+          back: { chars: "龍", grid: "o#o/#@#/o#o" },
+        },
+        "Bishop → Horse": {
+          body: "Rook, bishop",
+          front: { chars: "角", grid: "#.#/.@./#.#" },
+          back: { chars: "馬", grid: "#o#/o@o/#o#" },
+        },
+        Gold: {
+          body: "Gold, silver",
+          front: { chars: "金", grid: "ooo/o@o/.o." },
+          back: { chars: "", grid: "" },
+        },
+        "Silver → promoted silver": {
+          body: "Gold, silver",
+          front: { chars: "銀", grid: "ooo/.@./o.o" },
+          back: { chars: "全", grid: "ooo/o@o/.o." },
+        },
+        "Knight → promoted knight": {
+          body: "Knight",
+          front: { chars: "桂", grid: "x.x/.../.@." },
+          back: { chars: "圭", grid: "ooo/o@o/.o." },
+        },
+        "Lance → promoted lance": {
+          body: "Lance",
+          front: { chars: "香", grid: "#/@" },
+          back: { chars: "杏", grid: "ooo/o@o/.o." },
+        },
+        "Pawn → tokin": {
+          body: "Pawn",
+          front: { chars: "歩", grid: "o/@" },
+          back: { chars: "と", grid: "ooo/o@o/.o." },
+        },
+        "Chu shogi: dragon horse → horned falcon (igui)": {
+          body: "King",
+          scale: 1.4,
+          ratio: 0.34,
+          pitch: 4,
+          front: { chars: "馬", grid: "#o#/o@o/#o#" },
+          back: { chars: "鷹", grid: ".x./#!#/#@#/###" },
+        },
+        "Chu shogi: phoenix → free king": {
+          body: "King",
+          front: { chars: "鳳", grid: "x...x/..o../.o@o./..o../x...x" },
+          back: { chars: "奔", grid: "###/#@#/###" },
+        },
+        "Chu shogi: lion": {
+          body: "King",
+          front: { chars: "獅", grid: "xxxxx/xooox/xo@ox/xooox/xxxxx" },
+          back: { chars: "", grid: "" },
+        },
+        "Taikyoku: great general (flies)": {
+          body: "King",
+          front: { chars: "大", grid: "===/=@=/===" },
+          back: { chars: "", grid: "" },
+        },
+        "Taikyoku: hook mover": {
+          body: "King",
+          front: { chars: "鉤", grid: ".L./L@L/.L." },
+          back: { chars: "", grid: "" },
+        },
+        "Taikyoku: great dragon (up to 3)": {
+          body: "King",
+          front: { chars: "龍", grid: "#3#/.@./#3#" },
+          back: { chars: "", grid: "" },
+        },
+        "Move type: jumps 2 or 3 squares, then slides on": {
+          body: "King",
+          front: { chars: "跳", grid: "#/x/x/./@" },
+          back: { chars: "", grid: "" },
+        },
+      };
+
+      /** The grids shown on a first visit. */
+      const FIRST_FRONT = ".#./#@#/.#.";
+      const FIRST_BACK = "o#o/#@#/o#o";
+
+      /** The two faces, front first. */
+      const FACES = ["front", "back"];
+
+      // ---- State ----------------------------------------------------------------------
+
+      /** The browser storage key for the faces and the settings. */
+      const STORAGE_KEY = "komascad-move-editor";
+
+      /** The most changes that Undo goes back through. */
+      const UNDO_LIMIT = 200;
+
+      const byId = (id) => document.getElementById(id);
+
+      // A face's cells map "dx,dy" to the mark on that square.
+      let state = {
+        face: "front",
+        tool: "o",
+        settings: { ...DEFAULT_SETTINGS },
+        front: { chars: "飛", cells: {} },
+        back: { chars: "龍", cells: {} },
+      };
+      // Snapshots of the faces, for Undo and Redo.
+      let undoStack = [];
+      let redoStack = [];
+
+      /** Both faces as text, for the undo history. */
+      function snapshot() {
+        return JSON.stringify({ front: state.front, back: state.back });
+      }
+
+      /** Records the change made since the snapshot `before`, then saves and redraws. */
+      function commit(before) {
+        if (before !== snapshot()) {
+          undoStack.push(before);
+          redoStack = [];
+          if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+        }
+        save();
+        render();
+      }
+
+      /** Puts back the faces from a snapshot. */
+      function restore(text) {
+        const saved = JSON.parse(text);
+        state.front = saved.front;
+        state.back = saved.back;
+        save();
+        render();
+      }
+
+      // Storage can be off, such as in a private window. The editor then works
+      // without it, and starts fresh on the next visit.
+
+      /** Keeps the faces and settings for the next visit. */
+      function save() {
+        // The settings are stored as "set", the name earlier versions used.
+        const saved = { front: state.front, back: state.back, set: state.settings };
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+        } catch {
+          // Storage is off: nothing to do.
+        }
+      }
+
+      /** Loads the faces and settings from the last visit. Returns false when there are none. */
+      function load() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+          if (saved && saved.front && saved.back) {
+            state.front = saved.front;
+            state.back = saved.back;
+            state.settings = { ...DEFAULT_SETTINGS, ...(saved.set || {}) };
+            return true;
+          }
+        } catch {
+          // Storage is off, or holds something unreadable: start fresh.
+        }
+        return false;
+      }
+
+      // ---- Grids ----------------------------------------------------------------------
+
+      /** The key of a square in a face's cells, such as "1,-2". */
+      const cellKey = (dx, dy) => dx + "," + dy;
+
+      /** Why a mark cannot go on a square, or null when it can. */
+      function placementProblem(symbol, dx, dy) {
+        if (symbol === ".") return null;
+        const square = { dx, dy };
+        if (isDirection(symbol) && !onLine(square)) {
+          return "Slides, flies and hooks go on the dashed lines from the piece.";
+        }
+        if ((symbol === "!" || isDigit(symbol)) && distance(square) !== 1) {
+          return "Igui and ranges go on a square next to the piece.";
+        }
+        return null;
+      }
+
+      /** The move grid of a face's cells, such as ".#./#@#/.#.", or "" for no marks. */
+      function gridText(cells) {
+        const marked = Object.keys(cells)
+          .filter((key) => cells[key] && cells[key] !== ".")
+          .map((key) => key.split(",").map(Number));
+        if (marked.length === 0) return "";
+
+        // The grid is the smallest rectangle around the marks and the piece.
+        const squares = [...marked, [0, 0]];
+        const xs = squares.map((square) => square[0]);
+        const ys = squares.map((square) => square[1]);
+        const [left, right] = [Math.min(...xs), Math.max(...xs)];
+        const [bottom, top] = [Math.min(...ys), Math.max(...ys)];
+        const rows = [];
+        for (let y = top; y >= bottom; y--) {
+          let row = "";
+          for (let x = left; x <= right; x++) {
+            row += x === 0 && y === 0 ? "@" : cells[cellKey(x, y)] || ".";
+          }
+          rows.push(row);
+        }
+        return rows.join("/");
+      }
+
+      /** A face's cells from a move grid. Throws an Error that explains a wrong grid. */
+      function cellsFrom(text) {
+        if (!text) return {};
+        const parsed = parseGrid(text);
+        if (parsed.errors.length) throw new Error(parsed.errors.join(" "));
+        if (parsed.moves.some((move) => distance(move) > BOARD_REACH)) {
+          throw new Error("The editor shows four squares each way; this grid reaches further.");
+        }
+        return Object.fromEntries(
+          parsed.moves.map((move) => [cellKey(move.dx, move.dy), move.symbol]),
+        );
+      }
+
+      // ---- Mark icons (the same shapes the model prints) ------------------------------
+
+      /** The outline of a koma, in a 24 x 24 box. */
+      const PIECE_PATH = "M12 3L18 6L21 21H3L6 6Z";
+
+      /**
+       * One mark as a small SVG image, in a 24 x 24 box.
+       *
+       * @param {string} symbol The grid symbol.
+       * @param {number} dx With dy, the direction that a slide, fly or hook points.
+       * @param {number} dy
+       * @param {string} color A CSS color.
+       * @returns {string} The SVG markup.
+       */
+      function icon(symbol, dx = 0, dy = 1, color = "currentColor") {
+        const angle = toDegrees(Math.atan2(-dy, dx)); // SVG's y runs down
+        // Marks with a direction are drawn pointing right, then turned.
+        const turned = (shapes) => `<g transform="rotate(${angle} 12 12)">${shapes}</g>`;
+        // A line with round ends, as the model's lines have.
+        const shaft = (path, extra = "") =>
+          `<path d="${path}" stroke="${color}" stroke-width="2.6" stroke-linecap="round"${extra}/>`;
+
+        const shapes = {
+          o: `<circle cx="12" cy="12" r="4.2" fill="${color}"/>`,
+          x: `<circle cx="12" cy="12" r="4.6" fill="none" stroke="${color}" stroke-width="3"/>`,
+          "!":
+            `<path d="M9.4 3.5H14.6L13.2 15H10.8Z" fill="${color}"/>` +
+            `<circle cx="12" cy="19.2" r="2.3" fill="${color}"/>`,
+          "#": turned(shaft("M3 12H15") + `<path d="M21.5 12L12.5 6.8V17.2Z" fill="${color}"/>`),
+          "=": turned(
+            shaft("M2 12H10") +
+              `<path d="M22.5 12L15.5 7.6V16.4Z M14.5 12L7.5 7.6V16.4Z" fill="${color}"/>`,
+          ),
+          L: turned(
+            shaft("M3 12H21", ' fill="none"') +
+              `<path d="M15.5 5V19" stroke="${color}" stroke-width="3"` +
+              ` stroke-linecap="butt" fill="none"/>`,
+          ),
+          ".":
+            `<path d="M6 18L18 6" stroke="${color}" stroke-width="2"` +
+            ` stroke-linecap="round" opacity=".6"/>`,
+        };
+        // A range is its number.
+        const number =
+          `<text x="12" y="13" text-anchor="middle" dominant-baseline="central"` +
+          ` font-size="17" font-weight="700" fill="${color}"` +
+          ` font-family="ui-monospace, monospace">${symbol}</text>`;
+        const drawing = shapes[symbol] || number;
+        const box = `viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"`;
+        return `<svg ${box}>${drawing}</svg>`;
+      }
+
+      /** The piece in the middle of the board. */
+      function pieceIcon() {
+        const outline = `<path d="${PIECE_PATH}" fill="var(--panel)"/>`;
+        return `<svg viewBox="0 0 24 24" aria-hidden="true">${outline}</svg>`;
+      }
+
+      // ---- Piece geometry -------------------------------------------------------------
+
+      // The face outline of the bundled pieces, as the model draws it.
+      const FACE_BASE_ANGLE = 81;
+      const FACE_TIP_ANGLE = 144;
+
+      /** The model's Text_Margin, in mm at scale 1: the lettering keeps this far from the edges. */
+      const TEXT_MARGIN = 0.9;
+
+      /** The face outline, seen from above: the heel corners, the shoulders and the point. */
+      function outline(length, width) {
+        const base = toRadians(FACE_BASE_ANGLE);
+        // The two sides of the point fall away from it at this slope.
+        const tipSlope = Math.tan(toRadians((180 - FACE_TIP_ANGLE) / 2));
+        // The length of a long side, from a heel corner to a shoulder.
+        const side =
+          (length - (width / 2) * tipSlope) / (Math.sin(base) - Math.cos(base) * tipSlope);
+        const shoulderX = width / 2 - side * Math.cos(base);
+        const shoulderY = side * Math.sin(base);
+        return [
+          [-width / 2, 0],
+          [width / 2, 0],
+          [shoulderX, shoulderY],
+          [0, length],
+          [-shoulderX, shoulderY],
+        ];
+      }
+
+      /** A convex polygon with every edge moved in by `margin`. */
+      function inset(polygon, margin) {
+        const n = polygon.length;
+        // Each edge, moved in: a point on it, and its direction.
+        const edges = polygon.map((a, i) => {
+          const b = polygon[(i + 1) % n];
+          const along = subtract(b, a);
+          const length = norm(along);
+          const inward = [-along[1] / length, along[0] / length];
+          return { point: add(a, multiply(inward, margin)), along };
+        });
+        // Each corner is where the moved edge before it meets the moved edge after it.
+        return edges.map((edge, i) => {
+          const before = edges[(i + n - 1) % n];
+          const t =
+            cross(subtract(edge.point, before.point), edge.along) / cross(before.along, edge.along);
+          return add(before.point, multiply(before.along, t));
+        });
+      }
+
+      /** True when point q is inside (or on) a convex polygon, whichever way it winds. */
+      function insideConvex(q, polygon) {
+        const sides = polygon.map((a, i) => {
+          const b = polygon[(i + 1) % polygon.length];
+          return cross(subtract(b, a), subtract(q, a));
+        });
+        return Math.min(...sides) >= -EPSILON || Math.max(...sides) <= EPSILON;
+      }
+
+      // ---- Mark names, for messages ---------------------------------------------------
+
+      /** An arrow for each step of one square, keyed "dx,dy". */
+      const ARROWS = {
+        "0,1": "↑",
+        "1,1": "↗",
+        "1,0": "→",
+        "1,-1": "↘",
+        "0,-1": "↓",
+        "-1,-1": "↙",
+        "-1,0": "←",
+        "-1,1": "↖",
+      };
+
+      /** The arrow for a step of one square, such as "↗", or "" for none. */
+      const arrowFor = (step) => ARROWS[step.join(",")] || "";
+
+      /** The name of each kind of drawn mark, for messages. */
+      const KIND_NAMES = {
+        dot: "move",
+        ring: "jump",
+        igui: "igui",
+        head: "arrow",
+        tee: "hook",
+        digit: "range",
+        piece: "piece",
+      };
+
+      /** A drawn mark's name and direction, such as "arrow ↗". */
+      function describe(m) {
+        if (m.kind === "piece") return "the piece";
+        // Rounded to a hundredth of a mm, so that a mark on an axis counts as on it.
+        const step = m.center.map((v) => Math.sign(Math.round(v * 100)));
+        return `${KIND_NAMES[m.kind]} ${arrowFor(step)}`.trim();
+      }
+
+      // ---- The plan of one face (as the model stacks it) ------------------------------
+
+      // The model's text layout (shogi_piece.scad, section 3).
+      // Each character slot is SPACING_SIZES text sizes long.
+      const SPACING_SIZES = 1.42;
+      // The characters and the diagram fill this share of the safe face length.
+      const MOVE_FILL = 0.9;
+      // Without a set pitch, a diagram grows up to this many text sizes.
+      const DIAGRAM_GROWTH = 1.2;
+
+      /** Slack for the fit checks, in mm. */
+      const FIT_SLACK = 0.01;
+
+      /** The four corners of a box, as signs from its center. */
+      const CORNERS = [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ];
+
+      /**
+       * Plans one face as the model lays it out: the characters from the top, then the diagram.
+       *
+       * @param {string} face "front" or "back".
+       * @param {object} settings The set settings.
+       * @returns {object} The piece shape, the text size, the diagram, the center of
+       *     each slot (characters, then the diagram), and the problem, if any.
+       */
+      function planFace(face, settings) {
+        const piece = pieceShape(settings);
+        const chars = [...state[face].chars];
+        const grid = gridText(state[face].cells);
+
+        const textSize = settings.ratio * piece.length;
+        const spacing = textSize * SPACING_SIZES * settings.spacing;
+        const gapAbove = spacing - textSize;
+
+        let diagram = null;
+        if (grid) {
+          const letters = chars.length * spacing + gapAbove;
+          const room = (piece.safeTop - piece.safeBottom) * MOVE_FILL - letters;
+          diagram = solveDiagram(grid, settings, textSize, room, gapAbove);
+        }
+
+        // One slot for each character, then one for the diagram.
+        const slots = chars.map(() => spacing);
+        if (diagram) slots.push(diagram.height);
+        let total = 0;
+        for (const height of slots) total += height;
+
+        const top = stackTop(piece, {
+          center: settings.center * piece.length,
+          total,
+          // With a set pitch, the characters stay put and the diagram hangs below them.
+          anchored: Boolean(diagram) && settings.pitch > 0 && chars.length > 0,
+          letters: chars.length * spacing,
+          slide: Boolean(diagram),
+        });
+        const centers = slotCenters(top, slots);
+
+        const stack = { top, total, center: centers[centers.length - 1] };
+        const problem = diagram ? diagramProblem(diagram, stack, piece) : null;
+        return { ...piece, textSize, chars, grid, diagram, centers, problem };
+      }
+
+      /** The piece's size, its face outline, and the safe area for lettering, in mm. */
+      function pieceShape(settings) {
+        const body = BODIES[settings.body];
+        const length = body.length * settings.scale;
+        const width = body.width * settings.scale;
+        const shape = outline(length, width);
+        const safe = inset(shape, TEXT_MARGIN * settings.scale);
+        const safeYs = safe.map((point) => point[1]);
+        return {
+          length,
+          width,
+          outline: shape,
+          safe,
+          safeTop: Math.max(...safeYs),
+          safeBottom: Math.min(...safeYs),
+        };
+      }
+
+      /**
+       * The top of a face's stack of slots.
+       *
+       * The stack is centered on the face's center line. When it is anchored, only
+       * the characters are centered there, and the diagram hangs below them. A
+       * stack that may slide moves inside the safe area when it would run off it.
+       *
+       * @param {object} piece From pieceShape().
+       * @param {object} stack center (the center line), total (the stack's length),
+       *     anchored, letters (the characters' length) and slide.
+       * @returns {number} The top, in mm from the heel.
+       */
+      function stackTop(piece, { center, total, anchored, letters, slide }) {
+        if (anchored) return center + letters / 2;
+        const top = center + total / 2;
+        if (!slide) return top;
+        return Math.min(piece.safeTop, Math.max(piece.safeBottom + total, top));
+      }
+
+      /** The center of each slot, stacked down the face from `top`. */
+      function slotCenters(top, slots) {
+        const centers = [];
+        let y = top;
+        for (const height of slots) {
+          centers.push(y - height / 2);
+          y -= height;
+        }
+        return centers;
+      }
+
+      /**
+       * Solves a face's diagram, and picks its pitch.
+       *
+       * With a set pitch, the diagram uses it. Without one, the diagram grows to
+       * about one character, but only into the room the characters leave.
+       *
+       * @param {string} grid The move grid.
+       * @param {object} settings The set settings.
+       * @param {number} textSize The text size, in mm.
+       * @param {number} room The face length the characters leave for the diagram.
+       * @param {number} gapAbove The space between the characters and the diagram.
+       * @returns {object} The moves, pitch, smallest pitch, sizes, box, height, and clashing marks.
+       */
+      function solveDiagram(grid, settings, textSize, room, gapAbove) {
+        const moves = parseGrid(grid).moves;
+        const sizes = markSizes(settings.stroke, settings.gap);
+        const minPitch = solve(moves, sizes);
+        const minSize = boxSize(box(moves, minPitch, sizes));
+
+        let pitch;
+        if (settings.pitch > 0) {
+          pitch = settings.pitch;
+        } else {
+          const toOneCharacter = (DIAGRAM_GROWTH * textSize) / Math.max(...minSize);
+          const toTheRoom = room / minSize[1];
+          pitch = minPitch * Math.max(1, Math.min(toOneCharacter, toTheRoom));
+        }
+        const drawnBox = box(moves, pitch, sizes);
+        const tooTight = pitch < minPitch - EPSILON;
+        return {
+          moves,
+          pitch,
+          minPitch,
+          sizes,
+          box: drawnBox,
+          height: boxSize(drawnBox)[1] + gapAbove,
+          clashes: tooTight ? clashes(moves, pitch, sizes) : [],
+        };
+      }
+
+      /**
+       * Why a face's diagram does not print, or null when it does.
+       *
+       * @param {object} diagram From solveDiagram().
+       * @param {object} stack Where the face's slots lie: top, total, and center
+       *     (the diagram's center).
+       * @param {object} piece From pieceShape().
+       * @returns {{kind: string, text: string} | null} kind is "pitch", "length" or "width".
+       */
+      function diagramProblem(diagram, stack, piece) {
+        const { pitch, minPitch } = diagram;
+        if (pitch < minPitch - EPSILON) {
+          return {
+            kind: "pitch",
+            text:
+              `marks collide at ${pitch.toFixed(2)} mm between squares:` +
+              ` it needs ${minPitch.toFixed(2)} mm`,
+          };
+        }
+        const pastTop = stack.top > piece.safeTop + FIT_SLACK;
+        const pastBottom = stack.top - stack.total < piece.safeBottom - FIT_SLACK;
+        if (pastTop || pastBottom) {
+          return { kind: "length", text: "runs off the top or bottom of the face" };
+        }
+        // Across the face too, as the model checks: every corner of the diagram
+        // must be inside the safe area.
+        const [width, height] = boxSize(diagram.box);
+        const cornerOutside = CORNERS.some(
+          ([sx, sy]) =>
+            !insideConvex([(sx * width) / 2, stack.center + (sy * height) / 2], piece.safe),
+        );
+        if (cornerOutside) {
+          return {
+            kind: "width",
+            text: `is ${width.toFixed(1)} mm wide and runs past the sides of the face`,
+          };
+        }
+        return null;
+      }
+
+      // ---- Drawing --------------------------------------------------------------------
+
+      /** Which of the seven segments draw each number, as numbered in segmentEnds(). */
+      const DIGIT_SEGMENTS = {
+        2: [6, 5, 0, 2, 3],
+        3: [6, 5, 0, 4, 3],
+        4: [1, 0, 5, 4],
+        5: [6, 1, 0, 4, 3],
+        6: [6, 1, 2, 3, 4, 0],
+        7: [6, 5, 4],
+      };
+
+      /** The ends of the seven segments of a number, from its lower left corner. */
+      function segmentEnds(width, height, inside) {
+        const left = inside;
+        const right = width - inside;
+        const bottom = inside;
+        const middle = height / 2;
+        const top = height - inside;
+        const segment = (from, to) => [from, to];
+        return [
+          segment([left, middle], [right, middle]), // 0: middle
+          segment([left, middle], [left, top]), // 1: upper left
+          segment([left, bottom], [left, middle]), // 2: lower left
+          segment([left, bottom], [right, bottom]), // 3: bottom
+          segment([right, bottom], [right, middle]), // 4: lower right
+          segment([right, middle], [right, top]), // 5: upper right
+          segment([left, top], [right, top]), // 6: top
+        ];
+      }
+
+      /** The piece mark: a small koma outline that points forward, as a share of its size. */
+      const PIECE_MARK = [
+        [0, 0.62],
+        [0.36, 0.42],
+        [0.5, -0.5],
+        [-0.5, -0.5],
+        [-0.36, 0.42],
+      ];
+
+      /**
+       * Draws a diagram as SVG, centered on (centerX, centerY) of the preview.
+       *
+       * @param {object} diagram From solveDiagram().
+       * @param {number} centerX Where the diagram's center goes, in preview mm.
+       * @param {number} centerY
+       * @param {string} color A CSS color.
+       * @returns {string} The SVG markup.
+       */
+      function diagramSVG(diagram, centerX, centerY, color) {
+        const { moves, pitch, sizes } = diagram;
+        const drawn = layout(moves, pitch, sizes);
+        const middle = [
+          (diagram.box[0][0] + diagram.box[1][0]) / 2,
+          (diagram.box[0][1] + diagram.box[1][1]) / 2,
+        ];
+
+        // Diagram mm to preview mm. The preview's y runs down.
+        const pen = {
+          x: (v) => (centerX + v[0] - middle[0]).toFixed(3),
+          y: (v) => (centerY - (v[1] - middle[1])).toFixed(3),
+        };
+        pen.point = (v) => pen.x(v) + "," + pen.y(v);
+        pen.points = (list) => list.map(pen.point).join(" ");
+        pen.segment = (a, b, extra = "") =>
+          `<line${extra} x1="${pen.x(a)}" y1="${pen.y(a)}" x2="${pen.x(b)}" y2="${pen.y(b)}"/>`;
+
+        let out =
+          `<g stroke="${color}" fill="${color}" stroke-width="${sizes.line}"` +
+          ` stroke-linecap="round" stroke-linejoin="round">`;
+        const pieceMark = PIECE_MARK.map((point) => multiply(point, sizes.piece));
+        out += `<polygon stroke="none" points="${pen.points(pieceMark)}"/>`;
+        for (const l of drawn.lines) {
+          out += l.dashed ? dashesSVG(l, sizes, pen) : pen.segment(l.start, l.end);
+        }
+        for (const m of drawn.marks) out += markSVG(m, sizes, pen);
+        if (drawn.frame > 0) {
+          const f = drawn.frame;
+          out +=
+            `<rect fill="none" x="${pen.x([-f, 0])}" y="${pen.y([0, f])}"` +
+            ` width="${2 * f}" height="${2 * f}"/>`;
+        }
+        out += "</g>";
+
+        // A red circle around each mark that is too close to another.
+        for (const m of diagram.clashes) {
+          const r = (m.radius + sizes.gap / 2).toFixed(3);
+          out +=
+            `<circle cx="${pen.x(m.center)}" cy="${pen.y(m.center)}" r="${r}"` +
+            ` fill="none" stroke="var(--bad)" stroke-width="0.35"/>`;
+        }
+        return out;
+      }
+
+      /** A jump's leader: dashes two lines long, a gap apart, centered on the leader. */
+      function dashesSVG(l, sizes, pen) {
+        const length = norm(subtract(l.end, l.start));
+        const direction = normalize(subtract(l.end, l.start));
+        // Each dash is a dot of one line width drawn one line width long.
+        const period = 2 * sizes.line + sizes.gap;
+        const count = Math.max(1, Math.floor((length - sizes.line) / period) + 1);
+        const margin = (length - ((count - 1) * period + sizes.line)) / 2;
+
+        let out = "";
+        for (let j = 0; j < count; j++) {
+          const a = add(l.start, multiply(direction, Math.max(0, margin) + j * period));
+          out += pen.segment(a, add(a, multiply(direction, Math.min(sizes.line, length))));
+        }
+        return out;
+      }
+
+      /** One mark of a diagram. The piece mark is drawn on its own. */
+      function markSVG(m, sizes, pen) {
+        const c = m.center;
+        if (m.kind === "dot") {
+          return `<circle stroke="none" cx="${pen.x(c)}" cy="${pen.y(c)}" r="${sizes.dot / 2}"/>`;
+        }
+        if (m.kind === "ring") {
+          // The stroke is one line wide, centered on this radius.
+          const r = (sizes.ring - sizes.line) / 2;
+          return `<circle fill="none" cx="${pen.x(c)}" cy="${pen.y(c)}" r="${r}"/>`;
+        }
+        if (m.kind === "tee") {
+          const square = ' stroke-linecap="butt"';
+          return m.capsules.map((k) => pen.segment(k.start, k.end, square)).join("");
+        }
+        if (m.kind === "igui") return iguiSVG(c, sizes, pen);
+        if (m.kind === "head") return headSVG(m, sizes, pen);
+        if (m.kind === "digit") return digitSVG(m, sizes, pen);
+        return "";
+      }
+
+      /** An igui: an upright "!", a wedge over a dot. */
+      function iguiSVG(c, sizes, pen) {
+        const { width, height, wedge, dot } = sizes.igui;
+        const wedgePoints = [
+          [-width / 2, height / 2],
+          [width / 2, height / 2],
+          [sizes.line / 2, height / 2 - wedge],
+          [-sizes.line / 2, height / 2 - wedge],
+        ].map((point) => add(c, point));
+        const dotCenter = add(c, [0, -height / 2 + dot / 2]);
+        return (
+          `<polygon stroke="none" points="${pen.points(wedgePoints)}"/>` +
+          `<circle stroke="none" cx="${pen.x(dotCenter)}" cy="${pen.y(dotCenter)}" r="${dot / 2}"/>`
+        );
+      }
+
+      /** An arrowhead: a sharp triangle, so that the printed point stays crisp. */
+      function headSVG(m, sizes, pen) {
+        const turn = toRadians(m.angle);
+        // A triangle that points along +x from the origin, turned and moved to the tip.
+        const place = (v) => [
+          m.tip[0] + v[0] * Math.cos(turn) - v[1] * Math.sin(turn),
+          m.tip[1] + v[0] * Math.sin(turn) + v[1] * Math.cos(turn),
+        ];
+        const triangle = [
+          [0, 0],
+          [-sizes.head, sizes.head / 2],
+          [-sizes.head, -sizes.head / 2],
+        ].map(place);
+        return `<polygon stroke="none" points="${pen.points(triangle)}"/>`;
+      }
+
+      /** A range number, drawn as a seven-segment digit. */
+      function digitSVG(m, sizes, pen) {
+        const { width, height } = sizes.digit;
+        const corner = [m.center[0] - width / 2, m.center[1] - height / 2];
+        const ends = segmentEnds(width, height, sizes.line / 2);
+        let out = "";
+        for (const k of DIGIT_SEGMENTS[m.value]) {
+          out += pen.segment(add(corner, ends[k][0]), add(corner, ends[k][1]));
+        }
+        return out;
+      }
+
+      // The preview, in mm: a margin around the faces, a space between them, and
+      // room below them for the face names.
+      const PREVIEW_MARGIN = 2;
+      const PREVIEW_TOP = 4;
+      const PREVIEW_BETWEEN = 8;
+      const PREVIEW_BELOW = 8;
+      const LABEL_Y = 9.5; // the baseline of the face names, below the top of the face
+      const LABEL_SIZE = 2.6;
+
+      /** A browser font size that draws characters about as large as the model's text size. */
+      const FONT_SIZE_PER_TEXT_SIZE = 1.32;
+
+      /**
+       * Draws one face as SVG: the outline, the characters and the diagram.
+       *
+       * @param {string} face "front" or "back".
+       * @param {object} plan The face's plan, from planFace().
+       * @param {number} middleX The x of the face's center line, in preview mm.
+       * @param {object} settings The set settings.
+       * @returns {string} The SVG markup.
+       */
+      function faceSVG(face, plan, middleX, settings) {
+        const font = FONTS[settings.font];
+        const color = face === "front" ? "var(--front-ink)" : "var(--back-ink)";
+        // Face mm to preview mm: the point of the piece at the top.
+        const x = (v) => (middleX + v).toFixed(3);
+        const y = (v) => (plan.length + PREVIEW_TOP - v).toFixed(3);
+        const points = (list) => list.map((p) => x(p[0]) + "," + y(p[1])).join(" ");
+
+        let out =
+          `<polygon points="${points(plan.outline)}"` +
+          ` fill="var(--wood)" stroke="var(--wood-edge)" stroke-width="0.5"/>`;
+        // A face with a problem shows its safe area.
+        if (plan.problem) {
+          out +=
+            `<polygon points="${points(plan.safe)}" fill="none"` +
+            ` stroke="var(--bad)" stroke-width="0.35" stroke-dasharray="1 0.8"/>`;
+        }
+        const fontSize = (FONT_SIZE_PER_TEXT_SIZE * plan.textSize).toFixed(3);
+        plan.chars.forEach((char, i) => {
+          out +=
+            `<text x="${x(0)}" y="${y(plan.centers[i])}"` +
+            ` font-family="${font.family}" font-size="${fontSize}"` +
+            ` text-anchor="middle" dominant-baseline="central" fill="${color}">${char}</text>`;
+        });
+        if (plan.diagram) {
+          const diagramCenter = plan.centers[plan.centers.length - 1];
+          out += diagramSVG(
+            plan.diagram,
+            middleX,
+            plan.length + PREVIEW_TOP - diagramCenter,
+            color,
+          );
+        }
+
+        let label = "Front";
+        if (face === "back") label = plan.chars.length || plan.grid ? "Back" : "Back: blank";
+        out +=
+          `<text x="${x(0)}" y="${(plan.length + LABEL_Y).toFixed(2)}" font-size="${LABEL_SIZE}"` +
+          ` text-anchor="middle" fill="var(--muted)"` +
+          ` font-family="system-ui, sans-serif">${label}</text>`;
+        return out;
+      }
+
+      // ---- Rendering ------------------------------------------------------------------
+
+      /** Redraws the whole page from the state. */
+      function render() {
+        renderControls();
+        renderBoard();
+        const settings = state.settings;
+        const front = planFace("front", settings);
+        const back = planFace("back", settings);
+        renderPreview(front, back);
+        renderStatus(front, back);
+        renderResult();
+      }
+
+      /** The face tabs, the characters, the pressed tool, and Undo and Redo. */
+      function renderControls() {
+        for (const face of FACES) {
+          byId("tab-" + face).setAttribute("aria-selected", state.face === face);
+        }
+        // Leave the characters alone while someone types in them.
+        if (document.activeElement !== byId("chars")) byId("chars").value = state[state.face].chars;
+        for (const button of document.querySelectorAll("[data-tool]")) {
+          button.setAttribute("aria-pressed", button.dataset.tool === state.tool);
+        }
+        byId("undo").disabled = !undoStack.length;
+        byId("redo").disabled = !redoStack.length;
+      }
+
+      /** The board: one button for each square around the piece. */
+      function renderBoard() {
+        const board = byId("board");
+        board.textContent = "";
+        for (let dy = BOARD_REACH; dy >= -BOARD_REACH; dy--) {
+          for (let dx = -BOARD_REACH; dx <= BOARD_REACH; dx++) {
+            board.appendChild(dx === 0 && dy === 0 ? pieceSquare() : boardSquare(dx, dy));
+          }
+        }
+      }
+
+      /** The piece's square, in the middle of the board. It takes no marks. */
+      function pieceSquare() {
+        const button = document.createElement("button");
+        button.className = "piece";
+        button.innerHTML = pieceIcon();
+        button.setAttribute("aria-label", "The piece");
+        button.tabIndex = -1;
+        return button;
+      }
+
+      /** One square of the board: its mark, and whether the current tool may go there. */
+      function boardSquare(dx, dy) {
+        const button = document.createElement("button");
+        const symbol = state[state.face].cells[cellKey(dx, dy)];
+        // The dashed lines show where slides, flies and hooks may go.
+        button.className = onLine({ dx, dy }) ? "ray" : "";
+        if (symbol) {
+          const color = state.face === "front" ? "var(--ink)" : "var(--accent)";
+          button.innerHTML = isDigit(symbol) ? icon(symbol) : icon(symbol, dx, dy, color);
+        }
+        const blocked = placementProblem(state.tool, dx, dy);
+        if (blocked) {
+          button.setAttribute("aria-disabled", "true");
+          button.title = blocked;
+        }
+        button.setAttribute("aria-label", squareLabel(dx, dy, symbol));
+        button.addEventListener("click", () => place(dx, dy));
+        return button;
+      }
+
+      /** A square's name for screen readers, such as "1 left, 2 forward: Jump". */
+      function squareLabel(dx, dy, symbol) {
+        const across = `${Math.abs(dx)} ${dx < 0 ? "left" : "right"}`;
+        const along = `${Math.abs(dy)} ${dy < 0 ? "back" : "forward"}`;
+        const mark = symbol ? TOOLS.find((tool) => tool.symbol === symbol).name : "empty";
+        return `${across}, ${along}: ${mark}`;
+      }
+
+      /** Both faces side by side, in mm. */
+      function renderPreview(front, back) {
+        const width = front.width + back.width + PREVIEW_BETWEEN + 2 * PREVIEW_MARGIN;
+        const height = front.length + PREVIEW_TOP + PREVIEW_BELOW;
+        const backX = PREVIEW_MARGIN + front.width + PREVIEW_BETWEEN + back.width / 2;
+        const svg = byId("preview");
+        svg.setAttribute("viewBox", `0 0 ${width.toFixed(2)} ${height.toFixed(2)}`);
+        svg.innerHTML =
+          faceSVG("front", front, PREVIEW_MARGIN + front.width / 2, state.settings) +
+          faceSVG("back", back, backX, state.settings);
+      }
+
+      /** One status line for a face's diagram: whether it fits, its size and its pitch. */
+      function diagramNote(name, plan) {
+        const d = plan.diagram;
+        const [width, height] = boxSize(d.box);
+        const size = `${width.toFixed(1)} × ${height.toFixed(1)} mm`;
+
+        let verdict = `<span class="ok">✓ ${name} fits</span>`;
+        if (plan.problem) {
+          const circled = [...new Set(d.clashes.map(describe))].join(", ");
+          const who = d.clashes.length ? ` (circled: ${circled})` : "";
+          verdict = `<span class="bad">✕ ${name} ${plan.problem.text}${who}</span>`;
+        }
+        const atLeast = d.minPitch.toFixed(2);
+        const pitch = `${d.pitch.toFixed(2)} mm between squares (at least ${atLeast})`;
+        return `<span>${verdict} · diagram ${size} · ${pitch}</span>`;
+      }
+
+      /**
+       * The status under the preview: each diagram, the text size, and a fix when one is needed.
+       */
+      function renderStatus(front, back) {
+        const notes = [];
+        if (front.diagram) notes.push(diagramNote("Front", front));
+        if (back.diagram) notes.push(diagramNote("Back", back));
+        notes.push(
+          `<span>Characters ${front.textSize.toFixed(1)} mm` +
+            ` on a ${front.length.toFixed(0)} × ${front.width.toFixed(1)} mm piece</span>`,
+        );
+
+        const fix = suggestFix();
+        if (fix) {
+          const button = fix.settings ? ` <button id="apply-fix">${fix.label}</button>` : "";
+          notes.push(`<span class="fix">${fix.text}${button}</span>`);
+          const far = [front, back]
+            .map((plan, i) => (plan.problem ? farMarks(FACES[i]) : ""))
+            .filter(Boolean)
+            .join(" ");
+          if (far) notes.push(`<span>${far}</span>`);
+        }
+        byId("status").innerHTML = notes.join("");
+
+        if (fix && fix.settings) {
+          byId("apply-fix").addEventListener("click", () => {
+            Object.assign(state.settings, fix.settings);
+            showSettings();
+            save();
+            render();
+          });
+        }
+      }
+
+      /** Indent of the piece file text, as in the bundled piece files. */
+      const JSON_INDENT = 4;
+
+      /** The result: a piece file entry, and the Customizer values. */
+      function renderResult() {
+        const frontGrid = gridText(state.front.cells);
+        const backGrid = gridText(state.back.cells);
+
+        const entry = {
+          front: { learner: { Front_Characters: state.front.chars, Front_Moves: frontGrid } },
+        };
+        if (state.back.chars || backGrid) {
+          entry.back = { learner: { Back_Characters: state.back.chars, Back_Moves: backGrid } };
+        }
+        // Without the outer braces and their indent, so that it pastes into a piece file.
+        byId("json").textContent = JSON.stringify(entry, null, JSON_INDENT)
+          .replace(/^\{\n|\n\}$/g, "")
+          .replace(/^ {4}/gm, "");
+
+        const settings = state.settings;
+        byId("custom").textContent = [
+          `Front_Characters = "${state.front.chars}"`,
+          `Front_Moves = "${frontGrid}"`,
+          `Back_Characters = "${state.back.chars}"`,
+          `Back_Moves = "${backGrid}"`,
+          `Font_Name = "${FONTS[settings.font].customizer}"`,
+          `Move_Stroke = ${settings.stroke}`,
+          `Move_Gap = ${settings.gap}`,
+          `Move_Pitch = ${settings.pitch}`,
+        ].join("\n");
+      }
+
+      // ---- Fix suggestions ------------------------------------------------------------
+
+      /** The thinnest line a 0.4 mm nozzle prints, in mm: no suggestion goes below it. */
+      const PRINT_LINE = 0.5;
+
+      // Suggested sizes are rounded to the Customizer's steps of 0.05 (STEPS_PER_UNIT
+      // to one). HUNDREDTHS rounds away floating-point noise.
+      const SETTING_STEP = 0.05;
+      const STEPS_PER_UNIT = 20;
+      const HUNDREDTHS = 100;
+
+      /** The largest model scale a suggestion goes up to. */
+      const MAX_SCALE = 3;
+
+      const roundToStep = (value) => Math.round(value * STEPS_PER_UNIT) / STEPS_PER_UNIT;
+      const roundToHundredths = (value) => Math.round(value * HUNDREDTHS) / HUNDREDTHS;
+
+      /** Both faces, planned with other settings. */
+      const plansWith = (settings) => FACES.map((face) => planFace(face, settings));
+      /** True when both faces print with these settings. */
+      const bothFit = (settings) => plansWith(settings).every((plan) => !plan.problem);
+
+      /** The smallest pitch that both faces need, rounded up to the next step. */
+      function neededPitch(settings) {
+        const minPitches = plansWith(settings)
+          .filter((plan) => plan.diagram)
+          .map((plan) => plan.diagram.minPitch);
+        const pitch = Math.max(0, ...minPitches);
+        return Math.ceil(pitch * STEPS_PER_UNIT - EPSILON) / STEPS_PER_UNIT;
+      }
+
+      /**
+       * The smallest change that makes both faces fit, or null when they fit.
+       *
+       * In order: enough space between squares for marks that collide; then smaller
+       * marks at the same piece size (closer squares, then thinner lines, never
+       * below PRINT_LINE); then a larger piece.
+       *
+       * @param {object} base The settings to start from.
+       * @returns {{settings: object | null, label: string, text: string} | null}
+       *     The settings to change, the button label and the message.
+       */
+      function suggestFix(base = state.settings) {
+        if (bothFit(base)) return null;
+        const fix = pitchFix(base) || thinnerMarksFix(base) || largerPieceFix(base);
+        if (fix) return fix;
+        return {
+          settings: null,
+          text:
+            "Nothing up to a 3× piece fits this. Use fewer characters," +
+            " or bring the outermost marks closer to the piece.",
+        };
+      }
+
+      /** More space between squares, when marks collide and that alone is enough. */
+      function pitchFix(base) {
+        const collides = plansWith(base).some(
+          (plan) => plan.problem && plan.problem.kind === "pitch",
+        );
+        if (!collides) return null;
+        const pitch = neededPitch(base);
+        if (!bothFit({ ...base, pitch })) return null;
+        return {
+          settings: { pitch },
+          label: `Use ${pitch.toFixed(2)} mm`,
+          text:
+            `This grid needs ${pitch.toFixed(2)} mm between squares.` +
+            " For a set, use it on every piece.",
+        };
+      }
+
+      /**
+       * Smaller marks at this piece size: the same lines with closer squares, then thinner lines.
+       */
+      function thinnerMarksFix(base) {
+        for (
+          let line = roundToStep(base.stroke);
+          line >= PRINT_LINE - EPSILON;
+          line = roundToHundredths(line - SETTING_STEP)
+        ) {
+          // The gap shrinks with the line, but never below one printed line.
+          const gap = Math.min(base.gap, Math.max(PRINT_LINE, line));
+          const tried = { ...base, stroke: line, gap };
+          tried.pitch = neededPitch(tried);
+          if (!bothFit(tried)) continue;
+
+          const changes = [];
+          if (line !== base.stroke) changes.push(`${line.toFixed(2)} mm lines`);
+          if (gap !== base.gap) changes.push(`${gap.toFixed(2)} mm gaps`);
+          changes.push(`${tried.pitch.toFixed(2)} mm between squares`);
+          const label =
+            line !== base.stroke
+              ? `Use ${line.toFixed(2)} mm lines`
+              : `Use ${tried.pitch.toFixed(2)} mm`;
+          return {
+            settings: { stroke: line, gap, pitch: tried.pitch },
+            label,
+            text:
+              `Fits on this piece with ${changes.join(", ")}.` +
+              " For a set, use the same values on every piece.",
+          };
+        }
+        return null;
+      }
+
+      /**
+       * The smallest scale above the current one at which both faces fit.
+       *
+       * @param {object} base The settings to start from.
+       * @param {object} marks Mark settings to use instead, or {} to keep them.
+       *     Kept marks also keep at least the current pitch.
+       * @returns {object | null} The settings that fit, or null when none up to MAX_SCALE do.
+       */
+      function smallestPiece(base, marks) {
+        const keepPitch = marks.stroke ? 0 : base.pitch;
+        for (
+          let scale = roundToStep(base.scale) + SETTING_STEP;
+          scale <= MAX_SCALE + EPSILON;
+          scale += SETTING_STEP
+        ) {
+          const tried = { ...base, ...marks, scale: roundToHundredths(scale) };
+          tried.pitch = Math.max(neededPitch(tried), keepPitch);
+          if (bothFit(tried)) return tried;
+        }
+        return null;
+      }
+
+      /** A larger piece: the smallest that fits, with the current marks or the thinnest ones. */
+      function largerPieceFix(base) {
+        const keep = smallestPiece(base, {});
+        const thin = smallestPiece(base, { stroke: PRINT_LINE, gap: PRINT_LINE });
+        const best = keep && (!thin || keep.scale <= thin.scale) ? keep : thin;
+        if (!best) return null;
+
+        let how = "";
+        if (best === thin && best !== keep) {
+          how =
+            ` with ${PRINT_LINE.toFixed(2)} mm lines and gaps` +
+            ` and ${best.pitch.toFixed(2)} mm between squares`;
+          if (keep) how += ` (${keep.scale.toFixed(2)}× keeping the current marks)`;
+        } else if (best.pitch !== base.pitch) {
+          how = ` with ${best.pitch.toFixed(2)} mm between squares`;
+        }
+        return {
+          settings: { scale: best.scale, pitch: best.pitch, stroke: best.stroke, gap: best.gap },
+          label: `Use ${best.scale.toFixed(2)}×`,
+          text:
+            "It will not fit this piece even with the thinnest printable marks." +
+            ` It fits on a ${best.scale.toFixed(2)}× piece${how}.`,
+        };
+      }
+
+      /** Marks this many squares out are usually what makes a diagram large. */
+      const FAR_SQUARES = 3;
+
+      /** A hint that names a face's farthest marks, or "" when none are far out. */
+      function farMarks(face) {
+        const moves = Object.entries(state[face].cells).map(([key, symbol]) => {
+          const [dx, dy] = key.split(",").map(Number);
+          return { dx, dy, symbol };
+        });
+        const reach = Math.max(0, ...moves.map(distance));
+        if (reach < FAR_SQUARES) return "";
+
+        const names = { o: "move", x: "jump", "#": "slide", "=": "fly", L: "hook" };
+        const far = moves
+          .filter((move) => distance(move) === reach)
+          .map((move) => `${names[move.symbol] || move.symbol} ${arrowFor(unitStep(move))}`.trim());
+        const several = far.length > 1;
+        return (
+          `The ${[...new Set(far)].join(", ")} ${several ? "are" : "is"} ${reach} squares out,` +
+          ` so the diagram is ${2 * reach + 1} squares across.` +
+          ` Moving ${several ? "them" : "it"} closer shrinks it most.`
+        );
+      }
+
+      // ---- Editing --------------------------------------------------------------------
+
+      /** Puts the current tool's mark on a square, and on its mirror square when Mirror is on. */
+      function place(dx, dy) {
+        const message = byId("msg");
+        message.className = "msg";
+        const problem = placementProblem(state.tool, dx, dy);
+        if (problem) {
+          message.textContent = problem;
+          return;
+        }
+        message.textContent = "";
+
+        const before = snapshot();
+        const cells = state[state.face].cells;
+        // The same mark again erases it.
+        const erase = state.tool === "." || cells[cellKey(dx, dy)] === state.tool;
+        const squares = [[dx, dy]];
+        if (byId("mirror").checked && dx !== 0) squares.push([-dx, dy]);
+        for (const [x, y] of squares) {
+          if (erase) delete cells[cellKey(x, y)];
+          else cells[cellKey(x, y)] = state.tool;
+        }
+        commit(before);
+      }
+
+      /** Picks a tool, and clears any message about the last one. */
+      function pickTool(symbol) {
+        state.tool = symbol;
+        byId("msg").textContent = "";
+        render();
+      }
+
+      /** Shows the settings in their inputs. */
+      function showSettings() {
+        for (const name of SETTING_INPUTS) byId(name).value = state.settings[name];
+      }
+
+      /** The message after loading an example whose settings had to change. */
+      function loadedMessage(fix) {
+        if (!fix || !fix.settings) return "";
+        const { scale, pitch } = fix.settings;
+        if (scale) {
+          const spacing =
+            pitch !== DEFAULT_SETTINGS.pitch ? `, with ${pitch.toFixed(2)} mm between squares` : "";
+          return `Loaded at ${scale.toFixed(2)}× so it fits${spacing}.`;
+        }
+        if (pitch) return `Loaded with ${pitch.toFixed(2)} mm between squares so it prints.`;
+        return "";
+      }
+
+      /** Loads an example piece, with the settings it needs to print. */
+      function loadExample(example) {
+        const before = snapshot();
+        const message = byId("msg");
+        try {
+          state.front = { chars: example.front.chars, cells: cellsFrom(example.front.grid) };
+          state.back = { chars: example.back.chars, cells: cellsFrom(example.back.grid) };
+          state.settings = {
+            ...state.settings,
+            body: example.body,
+            scale: example.scale || DEFAULT_SETTINGS.scale,
+            ratio: example.ratio || DEFAULT_SETTINGS.ratio,
+            pitch: example.pitch || DEFAULT_SETTINGS.pitch,
+          };
+          const fix = suggestFix();
+          if (fix && fix.settings) Object.assign(state.settings, fix.settings);
+          showSettings();
+          state.face = "front";
+          message.className = "msg info";
+          message.textContent = loadedMessage(fix);
+        } catch (error) {
+          message.textContent = error.message;
+        }
+        commit(before);
+      }
+
+      // ---- Keyboard -------------------------------------------------------------------
+
+      /** The tool symbol for a key, or null. */
+      function toolForKey(key) {
+        if (key === "Backspace" || key === "Delete") return ".";
+        if (key.length !== 1) return null;
+        const lower = key.toLowerCase();
+        return lower === "l" ? "L" : lower;
+      }
+
+      /** Ctrl+Z undoes, Ctrl+Shift+Z and Ctrl+Y redo, and a tool's key picks it. */
+      function onKeyDown(event) {
+        const inField =
+          event.target instanceof Element && event.target.matches("input, select, textarea");
+        if (inField) return;
+
+        const modifier = event.ctrlKey || event.metaKey;
+        const key = event.key.toLowerCase();
+        if (modifier && key === "z") {
+          event.preventDefault();
+          byId(event.shiftKey ? "redo" : "undo").click();
+          return;
+        }
+        if (modifier && key === "y") {
+          event.preventDefault();
+          byId("redo").click();
+          return;
+        }
+        if (modifier || event.altKey) return;
+
+        const symbol = toolForKey(event.key);
+        if (symbol && TOOLS.some((tool) => tool.symbol === symbol)) {
+          pickTool(symbol);
+          event.preventDefault();
+        }
+      }
+
+      // ---- Start-up -------------------------------------------------------------------
+
+      /** How long a Copy button shows "Copied", in milliseconds. */
+      const COPIED_MS = 1400;
+
+      /** The mark buttons: the palette, then the "Up to" ranges. */
+      function buildTools() {
+        for (const tool of TOOLS) {
+          const button = document.createElement("button");
+          const range = isDigit(tool.symbol);
+          button.dataset.tool = tool.symbol;
+          if (range) {
+            button.innerHTML = tool.symbol;
+          } else {
+            const shortcut = tool.key === "Backspace" ? "⌫" : tool.key.toUpperCase();
+            const name = `<span>${tool.name}</span>`;
+            button.innerHTML = `${icon(tool.symbol)}${name}<kbd>${shortcut}</kbd>`;
+          }
+          button.title =
+            tool.help ||
+            `Moves up to ${tool.symbol} squares this way. Next to the piece only (key ${tool.key})`;
+          button.setAttribute("aria-label", range ? `Up to ${tool.symbol} squares` : tool.name);
+          button.addEventListener("click", () => pickTool(tool.symbol));
+          byId(range ? "ranges" : "palette").appendChild(button);
+        }
+      }
+
+      /** The key to the marks. The ranges 2 to 7 share one entry. */
+      function buildLegend() {
+        const piece =
+          `<dt><svg viewBox="0 0 24 24" width="22" height="22">` +
+          `<path d="${PIECE_PATH}" fill="currentColor"/></svg>@</dt>` +
+          `<dd>The piece. Forward, toward the point, is up.</dd>`;
+        const shared = ["3", "4", "5", "6", "7", "."];
+        const marks = TOOLS.filter((tool) => !shared.includes(tool.symbol)).map((tool) => {
+          if (tool.symbol === "2") {
+            const help =
+              "Moves up to that many squares this way: two dots for 2, the number for 3–7." +
+              " Next to the piece only";
+            return `<dt>${icon("2")}2–7</dt><dd>${help}.</dd>`;
+          }
+          return `<dt>${icon(tool.symbol)}${tool.symbol}</dt><dd>${tool.help}.</dd>`;
+        });
+        const leader =
+          `<dt><svg viewBox="0 0 24 24" width="22" height="22">` +
+          `<path d="M4 20L8 16M11 13L14 10" stroke="currentColor" stroke-width="2.6"` +
+          ` stroke-linecap="round"/>` +
+          `<circle cx="18" cy="6" r="3.6" fill="none" stroke="currentColor"` +
+          ` stroke-width="2.4"/></svg></dt>` +
+          `<dd>Dashes lead from the piece to each jump: it leaps over the squares between.</dd>`;
+        byId("legend").innerHTML = piece + marks.join("") + leader;
+      }
+
+      /** The icons in the Wikipedia table, and the choices in the lists. */
+      function fillPage() {
+        for (const cell of document.querySelectorAll("td[data-mark]")) {
+          cell.insertAdjacentHTML("afterbegin", icon(cell.dataset.mark));
+        }
+        for (const name of Object.keys(BODIES)) {
+          byId("body").insertAdjacentHTML("beforeend", `<option>${name}</option>`);
+        }
+        FONTS.forEach((font, i) => {
+          byId("font").insertAdjacentHTML(
+            "beforeend",
+            `<option value="${i}">${font.label}</option>`,
+          );
+        });
+        for (const name of Object.keys(EXAMPLES)) {
+          byId("examples").insertAdjacentHTML("beforeend", `<option>${name}</option>`);
+        }
+      }
+
+      /**
+       * Each settings input updates its setting. Text in a number field waits until it is a number.
+       */
+      function wireSettings() {
+        for (const name of SETTING_INPUTS) {
+          byId(name).addEventListener("input", () => {
+            const value = byId(name).value;
+            if (name === "body") state.settings.body = value;
+            else if (value !== "" && !isNaN(Number(value))) state.settings[name] = Number(value);
+            save();
+            render();
+          });
+        }
+      }
+
+      /** The tabs, the characters, and the buttons beside the board. */
+      function wireEditing() {
+        for (const face of FACES) {
+          byId("tab-" + face).addEventListener("click", () => {
+            state.face = face;
+            byId("msg").textContent = "";
+            render();
+          });
+        }
+        byId("chars").addEventListener("input", (event) => {
+          const before = snapshot();
+          const chars = [...event.target.value.replace(/\s/g, "")];
+          state[state.face].chars = chars.slice(0, MAX_CHARACTERS).join("");
+          commit(before);
+        });
+        byId("clear").addEventListener("click", () => {
+          const before = snapshot();
+          state[state.face].cells = {};
+          commit(before);
+        });
+        byId("copy-front").addEventListener("click", () => {
+          const before = snapshot();
+          state.back.cells = { ...state.front.cells };
+          state.face = "back";
+          commit(before);
+        });
+        byId("undo").addEventListener("click", () => {
+          if (!undoStack.length) return;
+          redoStack.push(snapshot());
+          restore(undoStack.pop());
+        });
+        byId("redo").addEventListener("click", () => {
+          if (!redoStack.length) return;
+          undoStack.push(snapshot());
+          restore(redoStack.pop());
+        });
+        byId("examples").addEventListener("change", (event) => {
+          const example = EXAMPLES[event.target.value];
+          event.target.value = ""; // back to "Load an example piece…"
+          if (example) loadExample(example);
+        });
+      }
+
+      /** The Copy buttons, with a fallback message when the clipboard is not allowed. */
+      function wireCopyButtons() {
+        for (const button of document.querySelectorAll(".copy")) {
+          button.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(byId(button.dataset.copy).textContent);
+              button.textContent = "Copied";
+            } catch {
+              button.textContent = "Select and copy";
+            }
+            setTimeout(() => {
+              button.textContent = "Copy";
+            }, COPIED_MS);
+          });
+        }
+      }
+
+      function init() {
+        buildTools();
+        buildLegend();
+        fillPage();
+        showSettings();
+        wireSettings();
+        wireEditing();
+        wireCopyButtons();
+        document.addEventListener("keydown", onKeyDown);
+
+        if (!load()) {
+          state.front.cells = cellsFrom(FIRST_FRONT);
+          state.back.cells = cellsFrom(FIRST_BACK);
+        }
+        showSettings();
+        render();
+        // The preview's fonts arrive after the first draw.
+        if (document.fonts) {
+          document.fonts.ready.then(render);
+          document.fonts.addEventListener("loadingdone", () => render());
+        }
+      }
+
+      init();
+    </script>
+  </body>
 </html>

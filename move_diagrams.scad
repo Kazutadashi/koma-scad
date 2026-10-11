@@ -21,7 +21,7 @@
 // one gap from the others.
 //
 // move-editor.html has the same solver in JavaScript. Change both in the same
-// way: tests/test_komascad.py checks that they agree.
+// way: tests/test_model.py checks that they agree.
 
 
 // --- Mark sizes ---------------------------------------------------------------

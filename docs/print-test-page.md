@@ -262,7 +262,7 @@ whether a setup is better or worse overall, and the cells say where.
 
 ## Change the baseline
 
-The print test page section of `komascad.py` holds every setting of every
+`komascad_lib/print_test_page.py` holds every setting of every
 piece. It does not read `presets/pieces/`, so a change to the game sets does
 not change the reference. The `build` command writes the plate files with the
 game presets:
@@ -276,7 +276,7 @@ A change to what prints makes the earlier records useless for comparison.
 This includes a change in that section, or in how `shogi_piece.scad` draws
 these presets. If you must make such a change:
 
-1. Increase `TEST_PAGE_VERSION` in `komascad.py`.
+1. Increase `TEST_PAGE_VERSION` in `komascad_lib/print_test_page.py`.
 2. Run `python3 komascad.py build`.
 3. Change the version at the top of this page.
 4. Print a new baseline.

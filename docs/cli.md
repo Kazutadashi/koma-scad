@@ -1,6 +1,6 @@
 # Command reference
 
-`komascad.py` is the command-line tool. It needs Python 3.8 or later.
+`komascad.py` is the command-line tool. It needs Python 3.10 or later.
 `preview`, `check` and `export` also need the `openscad` command on your PATH.
 
 ```bash

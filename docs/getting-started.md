@@ -7,7 +7,7 @@ your first piece.
 
 - [OpenSCAD 2021.01](https://openscad.org/downloads.html). The `openscad`
   command must be on your PATH.
-- Python 3.8 or later. The tool uses only the standard library.
+- Python 3.10 or later. The tool uses only the standard library.
 - The fonts in [fonts/](../fonts/suggested_fonts.md). The bundled sets use
   Yuji Syuku and LXGW WenKai Mono.
 - A filament 3D printer. For color, you need a printer that can change

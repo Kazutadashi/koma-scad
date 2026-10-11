@@ -1,0 +1,43 @@
+# Code style for the Python files, checked and applied by Ruff (https://docs.astral.sh/ruff/).
+# Ruff needs no install: run it with uvx.
+#
+#   uvx ruff format    lay out the code (compatible with the Black formatter)
+#   uvx ruff check     report style problems and likely bugs
+#
+# The style is PEP 8, with Google-style docstrings.
+
+line-length = 100
+target-version = "py310"
+extend-exclude = ["ignored", "exports"]
+
+[lint]
+select = [
+    "E", "W",   # pycodestyle: PEP 8 layout
+    "F",        # pyflakes: unused names, undefined names
+    "I",        # isort: import order
+    "N",        # pep8-naming: names
+    "D",        # pydocstyle: docstrings (Google convention, below)
+    "UP",       # pyupgrade: modern Python 3.10 syntax
+    "B",        # flake8-bugbear: likely bugs
+    "SIM",      # flake8-simplify: simpler forms
+    "C4",       # flake8-comprehensions: clear comprehensions
+    "C90",      # mccabe: function complexity
+]
+
+ignore = [
+    # This project prefers a plain if/else block and a plain loop when they read
+    # more easily than a conditional expression or an any()/all() call.
+    "SIM108",
+    "SIM110",
+]
+
+[lint.pydocstyle]
+convention = "google"
+
+[lint.mccabe]
+# A function with more branches than this is hard to follow: split it.
+max-complexity = 10
+
+[lint.per-file-ignores]
+# A test's name says what it checks, so a test method needs no docstring.
+"tests/*" = ["D102"]
