@@ -20,9 +20,10 @@ class DocumentationTests(unittest.TestCase):
         for page in ROOT.glob("**/*.md"):
             if "ignored" in page.parts:
                 continue
-            for target in re.findall(
-                r"\]\(([^)#\s]+)(?:#[^)]*)?\)", page.read_text(encoding="utf-8")
-            ):
+            # A link inside an HTML comment is not shown, such as a placeholder
+            # for a picture that is not taken yet.
+            text = re.sub(r"<!--.*?-->", "", page.read_text(encoding="utf-8"), flags=re.S)
+            for target in re.findall(r"\]\(([^)#\s]+)(?:#[^)]*)?\)", text):
                 if not re.match(r"[a-z]+:", target) and not (page.parent / target).exists():
                     broken.append(f"{page.relative_to(ROOT)} -> {target}")
         self.assertEqual(broken, [])

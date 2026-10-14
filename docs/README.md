@@ -5,8 +5,8 @@ The [README](../README.md) describes the project. Start with
 
 | Guide | Use it to |
 | --- | --- |
-| [Getting started](getting-started.md) | Install KomaSCAD, print a set and design a first piece |
-| [User guide](user-guide.md) | Change the bundled sets, and add pieces and games |
+| [Getting started](getting-started.md) | Install KomaSCAD, then design, export and print a first piece |
+| [User guide](user-guide.md) | Print and change the bundled sets, and add pieces and games |
 | [Design guide](design-guide.md) | Design a piece in OpenSCAD: shape, text, colors and signature |
 | [Movement diagrams](move-diagrams.md) | Draw the move diagrams of learner pieces |
 | [Command reference](cli.md) | Use every `komascad.py` command and option |

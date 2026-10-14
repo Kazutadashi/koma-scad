@@ -17,6 +17,20 @@ slicer and the layer height.
 
 ## How the code is organized
 
+| Path | Contents |
+| --- | --- |
+| `shogi_piece.scad` | The piece generator |
+| `move_diagrams.scad` | The movement diagram solver used by the generator |
+| `komascad.py` | The command-line tool: build, preview, check and export |
+| `komascad_lib/` | The code of the command-line tool |
+| `move-editor.html` | The movement diagram editor |
+| `presets/` | Piece definitions, game definitions and generated presets |
+| `docs/` | Guides and references |
+| `fonts/` | Redistributable open fonts and their licenses |
+| `data/` | Taikyoku piece data (CC BY-SA 4.0) |
+| `models/` | Released print files |
+| `tests/` | Tests for the tool, the generator and the editor |
+
 ### shogi_piece.scad
 
 The file starts with the Customizer settings. The code after `/* [Hidden] */`

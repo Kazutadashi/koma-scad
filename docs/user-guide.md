@@ -1,6 +1,6 @@
 # User guide: game sets
 
-This guide tells you how to change a bundled set, see the full set, and
+This guide tells you how to print a bundled set, and how to change a set and
 export it. Run all commands from the repository folder. The
 [command reference](cli.md) gives every option.
 
@@ -42,6 +42,27 @@ shows the moves after promotion. See [movement diagrams](move-diagrams.md).
 
 `python3 komascad.py list` shows this table. `python3 komascad.py list shogi`
 shows the pieces in one game.
+
+## Print a set
+
+1. Check the pieces on one page. Open the HTML file that the command shows.
+
+   ```bash
+   python3 komascad.py preview shogi
+   ```
+
+2. Export the full set as one color 3MF, with every piece flat:
+
+   ```bash
+   python3 komascad.py export shogi --per-file all --orientation front-down
+   ```
+
+3. Open the 3MF from `exports/shogi/` in your slicer.
+4. Load filament 1 = wood, 2 = black, 3 = red.
+5. Print one piece first. Then print the set.
+
+The [print guide](printing/print-guide.md) gives the slicer settings that we
+use. The [command reference](cli.md) gives all export options.
 
 ## Change a set
 
