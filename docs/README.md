@@ -5,6 +5,7 @@ The [README](../README.md) describes the project. Start with
 
 | Guide | Use it to |
 | --- | --- |
+| [How to play](how-to-play.md) | Learn the rules of shogi and minishogi, with printable diagrams |
 | [Getting started](getting-started.md) | Install KomaSCAD, then design, export and print a first piece |
 | [User guide](user-guide.md) | Print and change the bundled sets, and add pieces and games |
 | [Design guide](design-guide.md) | Design a piece in OpenSCAD: shape, text, colors and signature |

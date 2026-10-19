@@ -1,6 +1,6 @@
 # Image provenance
 
-The PNG files in this directory are original KomaSCAD preview renders and
+The PNG and SVG files in this directory, including `rules/`, are original KomaSCAD preview renders and
 diagrams created for this repository by KomaSCAD contributors. They are
 licensed under the repository's MIT License.
 
