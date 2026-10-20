@@ -1,6 +1,6 @@
 # Preset files
 
-The [user guide](../docs/user-guide.md) tells you how to use these files. This
+The [user guide](../../docs/user-guide.md) tells you how to use these files. This
 page gives their format.
 
 | Path | Contents | Edit? |
@@ -8,8 +8,8 @@ page gives their format.
 | `pieces/` | One file for each piece, and `_defaults.json` | Yes |
 | `games.json` | The pieces, and how many, in each game | Yes |
 | `games/` | One preset file for each game | No: `build` makes it |
-| `../shogi_piece.json` | All games in one file, for the Customizer | No: `build` makes it |
-| `print-test/` | The [print test page](../docs/print-test-page.md) | No: `build` makes it |
+| `../koma.json` | All games in one file, for the Customizer | No: `build` makes it |
+| `print-test/` | The [print test page](../../docs/print-test-page.md) | No: `build` makes it |
 | `misc/` | Chu shogi learner pieces, and the Taikyoku set (CC BY-SA 4.0) | Yes, by hand |
 
 After you edit a piece or `games.json`, run `python3 komascad.py build`.
@@ -73,4 +73,4 @@ them with `komascad.py`. Two extra keys are optional:
 - `pieceCounts`: how many of each preset a set needs. A preset that is not in
   the list counts once.
 - `layoutRows`: the number of pieces in each row of a layout, from the back of
-  the bed. See [the command reference](../docs/cli.md#one-file-for-each-piece-or-full-sets).
+  the bed. See [the command reference](../../docs/cli.md#one-file-for-each-piece-or-full-sets).

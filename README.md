@@ -6,6 +6,15 @@
 
 KomaSCAD is an open-source parametric generator for shogi pieces, written in OpenSCAD. It produces complete, printable 3D models of pieces from their inscribed characters and a defined set of parameters governing dimensions, edge geometry and lettering.
 
+KomaSCAD is growing into a full shogi set. Each part of the set is a module in its own folder:
+
+| Module | Part | Status |
+| --- | --- | --- |
+| [koma](koma/README.md) (駒) | The pieces | Available |
+| [ban](ban/README.md) (盤) | The board | Planned |
+| [komadai](komadai/README.md) (駒台) | The piece stand for captured pieces | Planned |
+| [komabako](komabako/README.md) (駒箱) | The box for a full set | Planned |
+
 <!-- PICTURE (photo): printed KomaSCAD pieces. Save it as images/printed-set.jpg,
      then replace the render line below with:
 ![Printed KomaSCAD pieces](images/printed-set.jpg)

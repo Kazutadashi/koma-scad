@@ -5,7 +5,7 @@
 // The default settings make the king of the bundled shogi set.
 // Units are mm and degrees, before Model Scale, unless a comment says otherwise.
 // Guides: README.md. Every setting: docs/parameters.md.
-// Keep shogi_piece.json and move_diagrams.scad next to this file.
+// Keep koma.json and move_diagrams.scad next to this file.
 
 /* [01 - Start here] */
 // A label for your own use. It does not change the piece.

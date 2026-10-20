@@ -35,7 +35,9 @@ class PlanTests(unittest.TestCase):
 
     def test_manifest_paths_outside_the_project_keep_only_the_filename(self):
         """A source file elsewhere on disk is recorded without its folders."""
-        self.assertEqual(export.portable_path(GAMES / "shogi.json"), "presets/games/shogi.json")
+        self.assertEqual(
+            export.portable_path(GAMES / "shogi.json"), "koma/presets/games/shogi.json"
+        )
         self.assertEqual(export.portable_path(Path("/elsewhere/private/mine.json")), "mine.json")
 
 
@@ -80,7 +82,7 @@ class ExportCommandTests(unittest.TestCase):
         self.assertEqual(manifest["set_name"], "Chu Shogi")
         # Manifests are shared, so they never record the maker's folders.
         self.assertEqual(manifest["source_parameters"], "piece.json")
-        self.assertEqual(manifest["source_scad"], "shogi_piece.scad")
+        self.assertEqual(manifest["source_scad"], "koma/koma.scad")
         self.assertNotIn(str(self.root), json.dumps(manifest))
         self.assertEqual((manifest["piece_count"], manifest["total_quantity"]), (2, 3))
         self.assertEqual(

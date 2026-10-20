@@ -10,7 +10,7 @@ from unittest import mock
 from komascad_lib import printability
 from komascad_lib.openscad import scad_definitions
 from komascad_lib.presets import load_preset_file
-from komascad_lib.project import GAMES, ROOT
+from komascad_lib.project import GAMES, KOMA
 
 from .support import run
 
@@ -43,7 +43,7 @@ class PrintabilityTests(unittest.TestCase):
             definitions = scad_definitions(name, dict(presets[name], **changes), {})
             return printability.check_printability("openscad", definitions)
 
-        chu = ROOT / "presets" / "misc" / "chu-shogi-learner.json"
+        chu = KOMA / "presets" / "misc" / "chu-shogi-learner.json"
         self.assertEqual(
             printability.printability_problems(measure(GAMES / "shogi.json", "Shogi 09 - Pawn")), []
         )

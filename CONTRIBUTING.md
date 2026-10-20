@@ -17,21 +17,49 @@ slicer and the layer height.
 
 ## How the code is organized
 
+KomaSCAD has one folder for each module: a part of a shogi set. The other
+folders hold what the modules share.
+
 | Path | Contents |
 | --- | --- |
-| `shogi_piece.scad` | The piece generator |
-| `move_diagrams.scad` | The movement diagram solver used by the generator |
+| `koma/` | Koma (駒), the pieces |
+| `koma/koma.scad` | The piece generator |
+| `koma/move_diagrams.scad` | The movement diagram solver used by the generator |
+| `koma/move-editor.html` | The movement diagram editor |
+| `koma/presets/` | Piece definitions, game definitions and generated presets |
+| `ban/` | Ban (盤), the board. Planned. |
+| `komadai/` | Komadai (駒台), the piece stand. Planned. |
+| `komabako/` | Komabako (駒箱), the piece box. Planned. |
+| `lib/` | OpenSCAD code that more than one module uses |
 | `komascad.py` | The command-line tool: build, preview, check and export |
 | `komascad_lib/` | The code of the command-line tool |
-| `move-editor.html` | The movement diagram editor |
-| `presets/` | Piece definitions, game definitions and generated presets |
 | `docs/` | Guides and references |
 | `fonts/` | Redistributable open fonts and their licenses |
 | `data/` | Taikyoku piece data (CC BY-SA 4.0) |
 | `models/` | Released print files |
 | `tests/` | Tests for the tool, the generator and the editor |
 
-### shogi_piece.scad
+### Add a module
+
+Give each module the same layout. For a module named `NAME`:
+
+| Path | Contents |
+| --- | --- |
+| `NAME/README.md` | What the module makes, and its files |
+| `NAME/NAME.scad` | The model |
+| `NAME/NAME.json` | The Customizer presets. OpenSCAD reads the JSON file that has the same name as the model. |
+| `NAME/presets/` | Preset sources and generated presets, if the module needs them |
+
+Rules:
+
+- Use the Japanese name of the part, in romaji, as `NAME`.
+- Start the `.scad` file with the same header as `koma/koma.scad`.
+- Put code that two modules use in `lib/`. Do not include one module's file
+  from another module.
+- Add the module's paths to `komascad_lib/project.py` next to `KOMA`.
+- Add the module to the table above and to [README.md](README.md).
+
+### koma/koma.scad
 
 The file starts with the Customizer settings. The code after `/* [Hidden] */`
 is in ten numbered sections:
@@ -41,7 +69,7 @@ is in ten numbered sections:
 | 1. Face settings | Small functions that read a setting for the front or the back (`f` is true for the front) |
 | 2. Piece body | The plan outline, the face slopes and the body polyhedron |
 | 3. Text layout | Font size, spacing and the position of each character slot |
-| 4. Movement diagrams | The size of each face's diagram. The solver is in `move_diagrams.scad`. |
+| 4. Movement diagrams | The size of each face's diagram. The solver is in `koma/move_diagrams.scad`. |
 | 5. The printed piece | Text relief, the heel signature and the exact one-color piece |
 | 6. Color parts | The parts that `komascad.py` puts in a color 3MF |
 | 7. Fast preview | The F5 display of Model |
@@ -61,8 +89,8 @@ Rules:
 
 ### Movement diagram solver
 
-The solver is in two places: `move_diagrams.scad`, and the
-`<script id="solver">` block of `move-editor.html`. The two have the same
+The solver is in two places: `koma/move_diagrams.scad`, and the
+`<script id="solver">` block of `koma/move-editor.html`. The two have the same
 steps, in the same order: `mv_stop_marks` is `stopMarks`, `mv_tip` is
 `tipOf`, and so on. Change both in the same way. `MoveEditorTests` compares
 them (they need `node` and `openscad`).
@@ -75,7 +103,7 @@ module for each job:
 | Module | Contents |
 | --- | --- |
 | `project.py` | The project paths, the version and `KomaError` |
-| `presets.py` | Builds the game presets from `presets/pieces/`; finds, reads, selects and edits presets |
+| `presets.py` | Builds the game presets from `koma/presets/pieces/`; finds, reads, selects and edits presets |
 | `print_test_page.py` | Every piece of the print test page |
 | `openscad.py` | Turns a preset into `-D` arguments, renders the color parts, reads STL files |
 | `printability.py` | Measures thin strokes and narrow gaps |
@@ -109,16 +137,16 @@ uvx ruff check     # reports style problems and likely bugs
 
 `ruff.toml` holds the settings, and `.editorconfig` sets up most editors.
 
-The JavaScript and CSS of `move-editor.html` follow
+The JavaScript and CSS of `koma/move-editor.html` follow
 [Prettier](https://prettier.io/). Node runs it without an install:
 
 ```bash
-npx prettier --write .     # lays out move-editor.html
+npx prettier --write .     # lays out koma/move-editor.html
 ```
 
 The JavaScript has [JSDoc](https://jsdoc.app/) comments, the counterpart of
 the Python docstrings. Its solver uses the same steps and names as
-`move_diagrams.scad`, so that a change to one is easy to find in the other.
+`koma/move_diagrams.scad`, so that a change to one is easy to find in the other.
 
 Write code that a new contributor can read in one pass:
 
@@ -200,4 +228,4 @@ Do these steps from the repository root:
 7. Read [LICENSES.md](LICENSES.md). Make sure that each file in `models/` has
    its license file.
 8. Set the new version in `VERSION` in `komascad_lib/project.py` and in
-   `version` in `shogi_piece.scad`. A test checks that they are the same.
+   `version` in `koma/koma.scad`. A test checks that they are the same.

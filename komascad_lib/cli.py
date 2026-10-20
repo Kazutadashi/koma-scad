@@ -126,7 +126,7 @@ def cmd_build(args: argparse.Namespace) -> int:
     if args.check:
         return _report_stale_files(outputs)
 
-    # The Customizer saves into shogi_piece.json, so stop before erasing its changes.
+    # The Customizer saves into koma/koma.json, so stop before erasing its changes.
     if not args.force:
         _stop_for_unsaved_edits()
 
@@ -154,7 +154,7 @@ def _report_stale_files(outputs: dict[Path, str]) -> int:
 
 
 def _stop_for_unsaved_edits() -> None:
-    """Stops the build when shogi_piece.json holds changes that the piece files do not.
+    """Stops the build when koma/koma.json holds changes that the piece files do not.
 
     Raises:
         KomaError: There are unsaved Customizer edits. They are printed first.
@@ -163,11 +163,11 @@ def _stop_for_unsaved_edits() -> None:
     if not edits:
         return
 
-    print("shogi_piece.json has Customizer edits that are not in the piece files:\n")
+    print("koma/koma.json has Customizer edits that are not in the piece files:\n")
     for edit in edits:
         print("  " + edit)
     raise KomaError(
-        "Copy the values you want to keep into presets/pieces/, "
+        "Copy the values you want to keep into koma/presets/pieces/, "
         "then rerun (or use --force to discard them)."
     )
 
@@ -177,7 +177,7 @@ def _print_build_summary(games: dict[str, presets.Game]) -> None:
     for key, game in games.items():
         full_set = sum(game.counts.values())
         print(
-            f"presets/games/{key}.json: {len(game.presets)} presets, "
+            f"koma/presets/games/{key}.json: {len(game.presets)} presets, "
             f"{full_set} pieces in a full set"
         )
 
@@ -186,7 +186,7 @@ def _print_build_summary(games: dict[str, presets.Game]) -> None:
 
     for plate in build_test_page():
         print(
-            f"presets/print-test/{plate.filename}: {len(plate.presets)} pieces "
+            f"koma/presets/print-test/{plate.filename}: {len(plate.presets)} pieces "
             f"in rows of {plate.rows}"
         )
 
@@ -460,7 +460,7 @@ examples:
   %(prog)s export shogi --per-file all    the complete set in one color 3MF
   %(prog)s export shogi pawn              just the pawn
   %(prog)s preview minishogi              check a whole set on one page
-  %(prog)s build                          after editing presets/pieces/
+  %(prog)s build                          after editing koma/presets/pieces/
 
 Run '%(prog)s COMMAND --help' for the options of one command.
 """
@@ -471,10 +471,10 @@ EXAMPLES = {
     "list": """\
   %(prog)s            every game and its size
   %(prog)s shogi      the pieces in shogi, with how many a set needs
-  %(prog)s -l presets/misc/taikyoku.json
+  %(prog)s -l koma/presets/misc/taikyoku.json
 """,
     "build": """\
-  %(prog)s            rebuild presets/games/, shogi_piece.json and presets/print-test/
+  %(prog)s            rebuild koma/presets/games/, koma/koma.json and koma/presets/print-test/
   %(prog)s --check    exit 1 if they are out of date; write nothing
 """,
     "preview": """\
@@ -488,14 +488,14 @@ EXAMPLES = {
   %(prog)s shogi pawn king              only the pieces whose names match
   %(prog)s shogi --orientation front-down -o flat
   %(prog)s shogi -n                     show what would be written
-  %(prog)s presets/print-test/print-test-plate-1.json --per-file all -j 8
+  %(prog)s koma/presets/print-test/print-test-plate-1.json --per-file all -j 8
 
 Existing files are skipped, so an interrupted export resumes where it
 stopped; use --force to write them again.
 """,
     "check": """\
   %(prog)s shogi                       every piece in a game
-  %(prog)s presets/misc/chu-shogi-learner.json
+  %(prog)s koma/presets/misc/chu-shogi-learner.json
 
 Each face is measured at Print_Line_Width: the share of strokes thinner than
 one printed line and of gaps narrower than one line. export runs the same
@@ -508,7 +508,7 @@ check and stops when a piece fails.
 
 Names are exact Customizer parameter names with underscores. Quote a value
 that contains brackets, commas or spaces. For the bundled games, edit
-presets/pieces/ and run build instead.
+koma/presets/pieces/ and run build instead.
 """,
 }
 
@@ -591,7 +591,7 @@ def _add_build_command(commands) -> None:
         "-f",
         "--force",
         action="store_true",
-        help="overwrite shogi_piece.json even if it holds unsaved Customizer edits",
+        help="overwrite koma/koma.json even if it holds unsaved Customizer edits",
     )
 
 

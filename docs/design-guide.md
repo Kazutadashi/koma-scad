@@ -6,7 +6,7 @@ full sets, see the [user guide](user-guide.md). The
 
 ## Start
 
-1. Open `shogi_piece.scad` in OpenSCAD 2021.01.
+1. Open `koma/koma.scad` in OpenSCAD 2021.01.
 2. If you cannot see the Customizer, clear **Window → Hide Customizer**.
 3. Turn on **Design → Automatic Preview**. The preview then changes when you
    change a setting. If it is off, press F5.
@@ -178,10 +178,10 @@ the bed. Check its first layers in the slicer.
 3. Export the preset:
 
    ```bash
-   python3 komascad.py export shogi_piece.json "My piece" --orientation front-down
+   python3 komascad.py export koma/koma.json "My piece" --orientation front-down
    ```
 
-4. Open `exports/shogi_piece/My piece.3mf` in your slicer. See the
+4. Open `exports/koma/My piece.3mf` in your slicer. See the
    [print guide](printing/print-guide.md).
 
 The exporter reads saved presets only. Save your changes before you export.
@@ -191,9 +191,9 @@ The exporter reads saved presets only. Save your changes before you export.
 
 ### Share a preset
 
-`komascad.py build` writes `shogi_piece.json` again. The build stops if the
+`komascad.py build` writes `koma/koma.json` again. The build stops if the
 file has presets that are not in the piece files. To keep your own presets
-apart, copy `shogi_piece.json` to a new file and save your presets there.
+apart, copy `koma/koma.json` to a new file and save your presets there.
 
 When you share a preset, also give the KomaSCAD version and the font name.
 Keep `"fileFormatVersion": "1"` in the file.

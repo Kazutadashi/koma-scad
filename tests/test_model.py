@@ -10,9 +10,9 @@ from pathlib import Path
 
 from komascad_lib import presets
 from komascad_lib.openscad import run_openscad
-from komascad_lib.project import ROOT, SCAD, VERSION
+from komascad_lib.project import KOMA, SCAD, VERSION
 
-EDITOR = ROOT / "move-editor.html"
+EDITOR = KOMA / "move-editor.html"
 
 # Move grids that cover every mark and rule of the diagram solver.
 EXAMPLE_GRIDS = [

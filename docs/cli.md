@@ -10,7 +10,7 @@ python3 komascad.py COMMAND [options]
 | Command | Use it to |
 | --- | --- |
 | [`list [GAME]`](#list) | Show the games, or the pieces in one game |
-| [`build`](#build) | Make the game presets after you edit `presets/pieces/` |
+| [`build`](#build) | Make the game presets after you edit `koma/presets/pieces/` |
 | [`preview GAME`](#preview) | Show every piece of a game on one HTML page |
 | [`check GAME [PIECE ...]`](#check) | Check that the lettering will print |
 | [`export GAME [PIECE ...]`](#export) | Write color 3MF files |
@@ -21,8 +21,8 @@ python3 komascad.py COMMAND [options]
 ## Terms
 
 - **GAME** is a game name from `list`, such as `shogi`. It can also be the
-  path of a preset file, such as `shogi_piece.json` or
-  `presets/misc/taikyoku.json`.
+  path of a preset file, such as `koma/koma.json` or
+  `koma/presets/misc/taikyoku.json`.
 - **PIECE** is a preset name, or part of one, in any letter case. `pawn`
   selects `Shogi 09 - Pawn`. `king` selects both kings. Put quotes around
   text with spaces.
@@ -37,7 +37,7 @@ python3 komascad.py COMMAND [options]
 ```bash
 python3 komascad.py list                               # all games
 python3 komascad.py list shogi                         # the pieces in shogi, and how many
-python3 komascad.py list -l presets/misc/taikyoku.json # also show each Category
+python3 komascad.py list -l koma/presets/misc/taikyoku.json # also show each Category
 ```
 
 ## build
@@ -46,9 +46,9 @@ python3 komascad.py list -l presets/misc/taikyoku.json # also show each Category
 python3 komascad.py build
 ```
 
-Makes `presets/games/*.json` and `shogi_piece.json` from `presets/pieces/`
-and `presets/games.json`. Run it after you edit these files. It also writes
-the [print test page](print-test-page.md) files in `presets/print-test/`.
+Makes `koma/presets/games/*.json` and `koma/koma.json` from `koma/presets/pieces/`
+and `koma/presets/games.json`. Run it after you edit these files. It also writes
+the [print test page](print-test-page.md) files in `koma/presets/print-test/`.
 
 `preview`, `check` and `export` do not use a game file that is older than
 its piece files. They tell you to build first.
@@ -56,9 +56,9 @@ its piece files. They tell you to build first.
 | Option | Effect |
 | --- | --- |
 | `--check` | Show the generated files that are old. Write nothing. Exit with 1 if a file is old. |
-| `-f`, `--force` | Write `shogi_piece.json` even if it has Customizer changes |
+| `-f`, `--force` | Write `koma/koma.json` even if it has Customizer changes |
 
-The build stops if `shogi_piece.json` has Customizer changes that are not in
+The build stops if `koma/koma.json` has Customizer changes that are not in
 the piece files. It shows each change. See
 [tune a piece by eye](user-guide.md#tune-a-piece-by-eye-in-openscad).
 
@@ -76,7 +76,7 @@ another folder.
 
 ```bash
 python3 komascad.py check shogi
-python3 komascad.py check presets/misc/chu-shogi-learner.json
+python3 komascad.py check koma/presets/misc/chu-shogi-learner.json
 ```
 
 Measures the lettering of each face at **Print Line Width**. It shows the
@@ -186,10 +186,10 @@ turns the signature on.
 
 ### Your own presets
 
-The Customizer saves your presets in `shogi_piece.json`. Export one by name:
+The Customizer saves your presets in `koma/koma.json`. Export one by name:
 
 ```bash
-python3 komascad.py export shogi_piece.json "My piece"
+python3 komascad.py export koma/koma.json "My piece"
 ```
 
 Any Customizer preset file works the same way. `--openscad PATH` uses a
@@ -202,7 +202,7 @@ python3 komascad.py set my-presets.json Base_Width=30 --category "grid search"
 ```
 
 Sets the same value in a group of presets in a file that you keep by hand,
-such as a file in `presets/misc/`. Give one or more `NAME=VALUE` pairs. Then
+such as a file in `koma/presets/misc/`. Give one or more `NAME=VALUE` pairs. Then
 select the presets:
 
 | Option | Selects |
@@ -223,4 +223,4 @@ the file. A parameter that a preset does not have stops the command: it is
 usually a spelling mistake.
 
 Do not use `set` on the generated game files. The next build overwrites
-them. Edit `presets/pieces/` instead.
+them. Edit `koma/presets/pieces/` instead.

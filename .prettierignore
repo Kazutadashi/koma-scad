@@ -1,3 +1,4 @@
-# Prettier formats move-editor.html. Everything else has its own style or is generated.
+# Prettier formats koma/move-editor.html. Everything else has its own style or is generated.
 *
-!move-editor.html
+!*/
+!koma/move-editor.html

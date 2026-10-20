@@ -9,7 +9,7 @@ same settings, every time. Print it to find:
 - The thinnest line and the narrowest gap that your setup can make, in mm.
 
 This is baseline **version 1**. `komascad.py build` makes the files in
-`presets/print-test/`. Do not edit them. See
+`koma/presets/print-test/`. Do not edit them. See
 [Change the baseline](#change-the-baseline).
 
 ## What is on the page
@@ -141,7 +141,7 @@ Install the two bundled fonts first: Yuji Syuku and LXGW WenKai Mono, from
 
 ```bash
 for plate in 1 2 3; do
-  python3 komascad.py export presets/print-test/print-test-plate-$plate.json --per-file all --jobs 8 --no-print-check --name "KomaSCAD Print Test v1 - Plate $plate" -o exports/print-test/plate-$plate
+  python3 komascad.py export koma/presets/print-test/print-test-plate-$plate.json --per-file all --jobs 8 --no-print-check --name "KomaSCAD Print Test v1 - Plate $plate" -o exports/print-test/plate-$plate
 done
 ```
 
@@ -263,7 +263,7 @@ whether a setup is better or worse overall, and the cells say where.
 ## Change the baseline
 
 `komascad_lib/print_test_page.py` holds every setting of every
-piece. It does not read `presets/pieces/`, so a change to the game sets does
+piece. It does not read `koma/presets/pieces/`, so a change to the game sets does
 not change the reference. The `build` command writes the plate files with the
 game presets:
 
@@ -273,7 +273,7 @@ python3 komascad.py build --check   # report stale files, change nothing
 ```
 
 A change to what prints makes the earlier records useless for comparison.
-This includes a change in that section, or in how `shogi_piece.scad` draws
+This includes a change in that section, or in how `koma/koma.scad` draws
 these presets. If you must make such a change:
 
 1. Increase `TEST_PAGE_VERSION` in `komascad_lib/print_test_page.py`.

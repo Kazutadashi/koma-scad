@@ -10,13 +10,13 @@ Each piece is in one file. A game is a list of pieces. The `build` command
 makes the preset files from these sources:
 
 ```
-presets/pieces/*.json     you edit these: one file for each piece
-presets/games.json        you edit this: the pieces, and how many, in each game
+koma/presets/pieces/*.json   you edit these: one file for each piece
+koma/presets/games.json      you edit this: the pieces, and how many, in each game
         |
         |  python3 komascad.py build
         v
-presets/games/*.json      generated: one preset file for each game
-shogi_piece.json          generated: all games, for the OpenSCAD Customizer
+koma/presets/games/*.json    generated: one preset file for each game
+koma/koma.json               generated: all games, for the OpenSCAD Customizer
 ```
 
 Two rules follow:
@@ -66,7 +66,7 @@ use. The [command reference](cli.md) gives all export options.
 
 ## Change a set
 
-1. Edit a file in `presets/pieces/`.
+1. Edit a file in `koma/presets/pieces/`.
 2. Build the presets:
 
    ```bash
@@ -112,13 +112,13 @@ The more specific place wins: a piece file wins over `_defaults.json`.
 Use the exact parameter names, with underscores: `Front_Font_Size`. Put every
 value in quotes, also numbers: `"28"`, `"[1, 0, 0]"`, `"true"`. The
 [parameter reference](parameters.md) tells you what each setting does. The
-file format is in [presets/README.md](../presets/README.md).
+file format is in [koma/presets/README.md](../koma/presets/README.md).
 
 ## Examples
 
 ### Make the pawn longer
 
-In `presets/pieces/pawn.json`, change:
+In `koma/presets/pieces/pawn.json`, change:
 
 ```json
 "body": {
@@ -129,7 +129,7 @@ Build. The pawn is now 29 mm long in all games.
 
 ### Make all promoted sides red
 
-In `presets/pieces/_defaults.json`, in `common`, set:
+In `koma/presets/pieces/_defaults.json`, in `common`, set:
 
 ```json
 "Back_Filament": "Red",
@@ -152,7 +152,7 @@ toward the point, edit `rook.json`:
 
 ## Tune a piece by eye in OpenSCAD
 
-1. Open `shogi_piece.scad`. Select the preset, for example
+1. Open `koma/koma.scad`. Select the preset, for example
    **Minishogi 07 - Pawn**. If OpenSCAD was open before the build, open the
    file again to load the new presets.
 2. Change the settings until the piece looks correct.
@@ -166,13 +166,13 @@ toward the point, edit `rook.json`:
 5. Copy the values into the piece file.
 6. Run `python3 komascad.py build --force`.
 
-The Customizer saves into `shogi_piece.json`, and the build writes that file
+The Customizer saves into `koma/koma.json`, and the build writes that file
 again. Thus the build stops before it deletes changes that are not in the
 piece files. `--force` tells it that you copied what you want to keep.
 
 ## Add a game
 
-Add an entry to `presets/games.json`:
+Add an entry to `koma/presets/games.json`:
 
 ```json
 "shogi-pawns-only": {
@@ -189,21 +189,21 @@ Add an entry to `presets/games.json`:
 - `pieces` gives the piece files, without `.json`, and how many of each a set
   needs (for both players).
 
-Build. `presets/games/shogi-pawns-only.json` is made.
+Build. `koma/presets/games/shogi-pawns-only.json` is made.
 
 ## Add a piece
 
 1. Copy a piece file of a similar size.
 2. Change `name`, `category`, `body` and the characters. For a piece with a
    blank back, remove the `back` block.
-3. Add the file name and the count to the games in `presets/games.json`.
+3. Add the file name and the count to the games in `koma/presets/games.json`.
 4. Build.
 
 ## Troubleshooting
 
 | Problem | Do this |
 | --- | --- |
-| A set has the wrong number of a piece | Correct the count in `presets/games.json`. Build. Export with `-f`. |
+| A set has the wrong number of a piece | Correct the count in `koma/presets/games.json`. Build. Export with `-f`. |
 | "is older than the piece files" | Run `python3 komascad.py build`. |
 | The build stops with "has Customizer edits" | Copy the values into the piece files. Then build with `--force`. |
 | "uses unknown parameter(s)" | Correct the spelling of the setting name. Names are case-sensitive. |

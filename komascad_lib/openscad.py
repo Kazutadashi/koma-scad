@@ -53,7 +53,7 @@ STL_CORNERS = (slice(3, 6), slice(6, 9), slice(9, 12))
 # OpenSCAD numbers the frames of an animation export with five digits: part00000.stl.
 FRAME_DIGITS = 5
 
-# Patterns in shogi_piece.scad and in OpenSCAD's output.
+# Patterns in koma/koma.scad and in OpenSCAD's output.
 # A setting with its default, such as `Piece_Length = 32;` (name, then value).
 SETTING = re.compile(r"^([A-Za-z_]\w*)\s*=\s*(.+?);", re.M)
 # The name of any variable, such as `Export_Metadata` in `Export_Metadata = false;`.
@@ -111,7 +111,7 @@ def run_openscad(command: list[str]) -> tuple[int, str]:
 
 @functools.cache
 def scad_parameters() -> tuple[dict[str, Any], set[str]]:
-    """Reads the settings that shogi_piece.scad declares.
+    """Reads the settings that koma/koma.scad declares.
 
     Returns:
         The public settings with their default values, and the names of the
@@ -468,7 +468,7 @@ def _read_materials(
     report = MATERIALS_REPORT.search(log)
     if not report:
         raise KomaError(
-            "OpenSCAD did not report the materials of the piece. Is shogi_piece.scad current?"
+            "OpenSCAD did not report the materials of the piece. Is koma/koma.scad current?"
         )
 
     materials = []

@@ -1,6 +1,6 @@
 # Parameter reference
 
-Every setting of `shogi_piece.scad`, in Customizer order. The Customizer shows
+Every setting of `koma/koma.scad`, in Customizer order. The Customizer shows
 underscores as spaces. The defaults below make the king of the bundled shogi
 set. A preset can change them.
 

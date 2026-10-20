@@ -16,7 +16,7 @@ class BuildTests(unittest.TestCase):
     """Games stay in step with the piece files."""
 
     def test_generated_files_are_up_to_date(self):
-        """The committed game files and shogi_piece.json match the piece files."""
+        """The committed game files and koma/koma.json match the piece files."""
         outputs = presets.generated_files(presets.build_games())
         self.assertEqual(presets.stale_files(outputs), [])
         self.assertEqual(run("build", "--check")[0], 0)

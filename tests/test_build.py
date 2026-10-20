@@ -19,7 +19,7 @@ class BuildCommandTests(unittest.TestCase):
         self.addCleanup(folder.cleanup)
         self.root = Path(folder.name)
         self.games = self.root / "games"
-        self.customizer = self.root / "shogi_piece.json"
+        self.customizer = self.root / "koma.json"
 
         # Point the generated files at the temporary folder. The piece files
         # are still read from the project.

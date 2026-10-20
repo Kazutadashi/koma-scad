@@ -5,7 +5,7 @@ KomaSCAD uses more than one license. Do not call the whole repository "MIT".
 | Material | License | When you share it |
 | --- | --- | --- |
 | The code (`.scad`, `.py`, `.html`), the documentation and the images | [MIT](LICENSE) | Keep the MIT notice. |
-| `data/taikyoku_*.csv`, `data/ATTRIBUTION.md` and `presets/misc/taikyoku.json` | [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt) | Keep the attribution and the license link. Share your changes under CC BY-SA 4.0. |
+| `data/taikyoku_*.csv`, `data/ATTRIBUTION.md` and `koma/presets/misc/taikyoku.json` | [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt) | Keep the attribution and the license link. Share your changes under CC BY-SA 4.0. |
 | `fonts/*.ttf` | SIL Open Font License 1.1 | Keep the notice from `fonts/licenses/`. Do not sell a font file alone. |
 | Print files in `models/` | One license file for each print file | See [Print files](#print-files). |
 
@@ -27,13 +27,13 @@ for example `models/king.3mf.license`. For a shogi piece, write:
 
     SPDX-License-Identifier: MIT
     Copyright (c) 2026 KomaSCAD contributors
-    Source preset: presets/games/shogi.json / Shogi 01 - King (Osho)
+    Source preset: koma/presets/games/shogi.json / Shogi 01 - King (Osho)
     Font: Yuji Syuku Regular (SIL OFL 1.1; notice: fonts/licenses/Yuji-OFL-1.1.txt)
 
-For a piece made from `presets/misc/taikyoku.json`, write:
+For a piece made from `koma/presets/misc/taikyoku.json`, write:
 
     SPDX-License-Identifier: CC-BY-SA-4.0
-    Source preset: presets/misc/taikyoku.json / <preset name>
+    Source preset: koma/presets/misc/taikyoku.json / <preset name>
     Attribution: Adapted from the English Wikipedia "Taikyoku shogi" table;
     https://en.wikipedia.org/wiki/Taikyoku_shogi
     History: https://en.wikipedia.org/w/index.php?title=Taikyoku_shogi&action=history

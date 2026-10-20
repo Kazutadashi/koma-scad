@@ -9,7 +9,7 @@ after promotion.
 
 The easiest way is the move editor:
 
-1. Open `move-editor.html` in a browser. It works without a network.
+1. Open `koma/move-editor.html` in a browser. It works without a network.
 2. Type the characters for the front.
 3. Select a mark, then click the squares around the piece.
 4. Select the **Back** tab. Draw the moves after promotion.
@@ -109,7 +109,7 @@ Give every piece of a set the same **Move Stroke**, **Move Gap** and
 Pitch** above 0, **Center Fraction** places the characters, and the diagram
 goes below them. The characters then line up on every piece.
 
-The learner sets use these values (in `presets/pieces/_defaults.json`):
+The learner sets use these values (in `koma/presets/pieces/_defaults.json`):
 
 | Setting | Value |
 | --- | --- |
@@ -148,5 +148,5 @@ and a diagram usually do not.
 
 Fonts are different too. Yuji Syuku cannot print 鷹 at any size. LXGW WenKai
 Mono prints it with Stroke Expansion 0. Thus the chu shogi example in
-`presets/misc/chu-shogi-learner.json` uses LXGW WenKai Mono with no stroke
+`koma/presets/misc/chu-shogi-learner.json` uses LXGW WenKai Mono with no stroke
 expansion, at 1.4 × size.

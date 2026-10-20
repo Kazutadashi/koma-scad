@@ -6,22 +6,26 @@ import json
 from pathlib import Path
 from typing import Any
 
-# The same as `version` in shogi_piece.scad. A test checks that they match.
+# The same as `version` in koma/koma.scad. A test checks that they match.
 VERSION = "3.5"
 
 ROOT = Path(__file__).resolve().parent.parent
-SCAD = ROOT / "shogi_piece.scad"
+
+# Each module has its own folder: koma (pieces), ban (board), komadai (piece
+# stand) and komabako (piece box). The tool works with the pieces only.
+KOMA = ROOT / "koma"
+SCAD = KOMA / "koma.scad"
 
 # Every game in one file, for the OpenSCAD Customizer.
-CUSTOMIZER = ROOT / "shogi_piece.json"
+CUSTOMIZER = KOMA / "koma.json"
 
 # The sources that people edit: one file per piece, and the pieces in each game.
-PIECES = ROOT / "presets" / "pieces"
-RECIPES = ROOT / "presets" / "games.json"
+PIECES = KOMA / "presets" / "pieces"
+RECIPES = KOMA / "presets" / "games.json"
 
 # Files that the build command makes from the sources.
-GAMES = ROOT / "presets" / "games"
-TEST_PAGE = ROOT / "presets" / "print-test"
+GAMES = KOMA / "presets" / "games"
+TEST_PAGE = KOMA / "presets" / "print-test"
 
 
 class KomaError(Exception):

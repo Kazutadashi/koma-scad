@@ -18,13 +18,13 @@ export it and print it.
 2. Install the fonts from `fonts/`.
 3. Restart OpenSCAD.
 
-Keep `shogi_piece.scad`, `move_diagrams.scad` and `shogi_piece.json` in the
-same folder. OpenSCAD reads the presets from the JSON file that has the same
-name as the model.
+Keep `koma.scad`, `move_diagrams.scad` and `koma.json` together in the `koma/`
+folder. OpenSCAD reads the presets from the JSON file that has the same name
+as the model.
 
 ## 1. Design a piece
 
-1. Open `shogi_piece.scad` in OpenSCAD.
+1. Open `koma/koma.scad` in OpenSCAD.
 2. If you cannot see the Customizer, clear **Window → Hide Customizer**.
 3. Select a preset to start from, for example **Shogi 01 - King (Osho)**.
 4. Type your text in **Front Characters** and **Back Characters**.
@@ -43,12 +43,12 @@ does.
 Open a terminal in the repository folder. Export the preset as a color 3MF:
 
 ```bash
-python3 komascad.py export shogi_piece.json "My piece" --orientation front-down
+python3 komascad.py export koma/koma.json "My piece" --orientation front-down
 ```
 
 The tool first measures the lettering. If strokes or gaps are too fine to
 print, it stops and tells you which. When the export is done, the file is
-`exports/shogi_piece/My piece.3mf`.
+`exports/koma/My piece.3mf`.
 
 The exporter reads saved presets only. Save your changes before you export.
 

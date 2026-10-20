@@ -1,14 +1,14 @@
 """Game presets: build them from the piece files, then find, read and select them.
 
 Sources (edit these):
-    presets/pieces/_defaults.json   settings that every piece shares
-    presets/pieces/<piece>.json     one file per piece
-    presets/games.json              which pieces, and how many, make up each game
+    koma/presets/pieces/_defaults.json   settings that every piece shares
+    koma/presets/pieces/<piece>.json     one file per piece
+    koma/presets/games.json              which pieces, and how many, make up each game
 
 Made by the build command (do not edit):
-    presets/games/<game>.json       one Customizer file per game
-    shogi_piece.json                every game, for the Customizer
-    presets/print-test/*.json       the print test page (see print_test_page.py)
+    koma/presets/games/<game>.json       one Customizer file per game
+    koma/koma.json                       every game, for the Customizer
+    koma/presets/print-test/*.json       the print test page (see print_test_page.py)
 """
 
 from __future__ import annotations
@@ -244,9 +244,9 @@ def stale_files(outputs: dict[Path, str]) -> list[Path]:
 
 
 def unsaved_edits() -> list[str]:
-    """Finds Customizer changes in shogi_piece.json that a rebuild would erase.
+    """Finds Customizer changes in koma/koma.json that a rebuild would erase.
 
-    The Customizer saves into shogi_piece.json, and the build writes that file
+    The Customizer saves into koma/koma.json, and the build writes that file
     again. Anything in it that differs from the last build exists nowhere else.
 
     Returns:
@@ -303,7 +303,7 @@ def find_preset_file(text: str) -> Path:
 
     path = path.resolve()
 
-    # Only the game files must match the piece files: shogi_piece.json may hold
+    # Only the game files must match the piece files: koma/koma.json may hold
     # Customizer edits on purpose.
     if path.parent == GAMES:
         fresh_build = generated_files(build_games())
