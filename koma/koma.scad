@@ -5,7 +5,7 @@
 // The default settings make the king of the bundled shogi set.
 // Units are mm and degrees, before Model Scale, unless a comment says otherwise.
 // Guides: README.md. Every setting: docs/parameters.md.
-// Keep koma.json and move_diagrams.scad next to this file.
+// Keep koma.json and move_diagrams.scad next to this file, and ../lib/ next to its folder.
 
 /* [01 - Start here] */
 // A label for your own use. It does not change the piece.
@@ -288,16 +288,8 @@ back_role = 2;
 signature_role = 3;
 function face_role(f) = f ? front_role : back_role;
 
-filament_palette = [
-    ["Wood", [0.76, 0.58, 0.34, 1]],   ["Black", [0.08, 0.06, 0.04, 1]],
-    ["White", [0.95, 0.95, 0.95, 1]],  ["Red", [0.65, 0.05, 0.04, 1]],
-    ["Blue", [0.08, 0.25, 0.8, 1]],    ["Green", [0.08, 0.5, 0.2, 1]],
-    ["Purple", [0.45, 0.15, 0.65, 1]], ["Yellow", [0.95, 0.8, 0.08, 1]],
-    ["Orange", [0.95, 0.35, 0.05, 1]], ["Silver", [0.7, 0.72, 0.75, 1]],
-    ["Gold", [0.8, 0.62, 0.2, 1]],     ["Glitter silver", [0.7, 0.72, 0.75, 1]],
-    ["Glitter gold", [0.8, 0.62, 0.2, 1]],
-    ["Filament 1", [0.5, 0.5, 0.5, 1]], ["Filament 2", [0.15, 0.5, 0.85, 1]], ["Filament 3", [0.85, 0.25, 0.5, 1]]
-];
+// The named filaments, which the other modules share.
+include <../lib/filaments.scad>
 role_names = ["body", "front", "back", "signature"];
 function filament(role) = [Body_Filament, Front_Filament, Back_Filament, Signature_Filament][role];
 // The role whose filament this role uses: "Same as body" and "Same as front" point to another role.
@@ -309,9 +301,8 @@ function material_name(role) =
     let(src = material_source(role))
     filament(src) == "Custom" ? str("Custom ", role_names[src]) : filament(src);
 function material_rgb(role) =
-    let(src = material_source(role), name = filament(src), found = [for (p = filament_palette) if (p[0] == name) p[1]])
-    name == "Custom" ? [Body_Color, Front_Inscription_Color, Back_Inscription_Color, Signature_Color][src]
-    : assert(len(found) == 1, str("Unknown filament: ", name)) found[0];
+    let(src = material_source(role))
+    filament_rgba(filament(src), [Body_Color, Front_Inscription_Color, Back_Inscription_Color, Signature_Color][src]);
 
 
 // ===== 2. Piece body ==========================================================

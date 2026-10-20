@@ -1,11 +1,13 @@
 # Ban (盤): the board
 
-Status: planned. This folder has no model yet.
+The ban is the playing board. This folder holds the board model and its
+presets.
 
-The ban is the playing board. A shogi board has 9 × 9 squares, and a
-minishogi board has 5 × 5 squares. The squares are a little longer than they
-are wide, so that the pieces fit them.
+| Path | Contents |
+| --- | --- |
+| `ban.scad` | The board model. Open it in OpenSCAD. |
+| `ban.json` | The Customizer presets of the bundled boards. `komascad.py ban` exports them. |
 
-The model goes in `ban.scad`, with its Customizer presets in `ban.json`.
-[CONTRIBUTING.md](../CONTRIBUTING.md#add-a-module) gives the layout of a
-module folder.
+The [board guide](../docs/ban.md) tells you how to make, export, print and
+put together a board. The [design notes](../docs/ban-design-notes.md) tell
+why the joints have their shape.

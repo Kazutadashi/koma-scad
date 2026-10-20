@@ -13,12 +13,12 @@ import os
 import sys
 from pathlib import Path
 
-from . import export, presets, preview
+from . import ban, export, presets, preview
 from .export import ExportOptions
 from .presets import JSON_INDENT, find_preset_file, load_preset_file, select_presets
 from .print_test_page import build_test_page
 from .printability import GAP_LIMIT, THIN_LIMIT, measure_presets, printability_problems
-from .project import CUSTOMIZER, VERSION, KomaError, read_json, shown
+from .project import BAN_PRESETS, CUSTOMIZER, VERSION, KomaError, read_json, shown
 
 # --orientation choices, and the Print_Orientation value that each selects.
 ORIENTATIONS = {
@@ -412,6 +412,84 @@ def cmd_set(args: argparse.Namespace) -> int:
     return EXIT_OK
 
 
+# --- ban ----------------------------------------------------------------------------
+
+
+def cmd_ban(args: argparse.Namespace) -> int:
+    """Shows the board presets, or exports one board as color 3MF files."""
+    preset_file = presets.load_preset_file(args.presets.resolve())
+    if args.board is None:
+        print_boards(preset_file)
+        return EXIT_OK
+
+    name = choose_board(list(preset_file.presets), args.board)
+    values = preset_file.presets[name]
+    default_folder = Path("exports") / "ban" / export.safe_name(name)
+    destination = (args.output or default_folder).resolve()
+
+    if args.dry_run:
+        board = ban.read_preset(args.openscad, name, values)
+        print(str(destination) + os.sep)
+        for planned in ban.plan_files(board):
+            print(f"{DRY_RUN_INDENT}{planned.filename}  ({len(planned.panels)} panel(s))")
+        return EXIT_OK
+
+    written, skipped = ban.export_board(
+        args.openscad,
+        preset_file.path,
+        name,
+        values,
+        destination,
+        args.force,
+        args.plain,
+        report=progress,
+    )
+    print(f"Saved {written} new 3MF file(s); skipped {skipped} existing in {destination}")
+    print("Manifest: " + str(destination / "manifest.json"))
+    return EXIT_OK
+
+
+def print_boards(preset_file: presets.PresetFile) -> None:
+    """Prints each board preset with its squares and panels.
+
+    Args:
+        preset_file: The board preset file.
+    """
+    for name, values in preset_file.presets.items():
+        settings = ban.resolved_settings(values)
+        squares = f"{settings['Playing_Columns']} x {settings['Playing_Rows']} squares"
+        panels = f"{settings['Panel_Columns']} x {settings['Panel_Rows']} panels"
+        print(f"{name}  ({squares}, {panels})")
+
+
+def choose_board(names: list[str], text: str) -> str:
+    """Picks one board preset by its exact name, or by a part of the name in any letter case.
+
+    Args:
+        names: All preset names, in file order.
+        text: The name, or a part of it.
+
+    Returns:
+        The preset name.
+
+    Raises:
+        KomaError: No preset matches, or more than one does.
+    """
+    if text in names:
+        return text
+
+    matches = []
+    for name in names:
+        if text.casefold() in name.casefold():
+            matches.append(name)
+
+    if not matches:
+        raise KomaError(f"No board matches {text!r}. Run 'ban' without a board to see the names.")
+    if len(matches) > 1:
+        raise KomaError(f"{text!r} matches more than one board: {', '.join(matches)}")
+    return matches[0]
+
+
 # --- Option types -------------------------------------------------------------------
 
 
@@ -461,6 +539,7 @@ examples:
   %(prog)s export shogi pawn              just the pawn
   %(prog)s preview minishogi              check a whole set on one page
   %(prog)s build                          after editing koma/presets/pieces/
+  %(prog)s ban "Minishogi - 2 x 2"        a board, one color 3MF per panel
 
 Run '%(prog)s COMMAND --help' for the options of one command.
 """
@@ -501,6 +580,15 @@ Each face is measured at Print_Line_Width: the share of strokes thinner than
 one printed line and of gaps narrower than one line. export runs the same
 check and stops when a piece fails.
 """,
+    "ban": """\
+  %(prog)s                              the boards in ban/ban.json
+  %(prog)s "Shogi - one piece"          one board, as color 3MF files
+  %(prog)s "Minishogi - 2 x 2" -n       show what would be written
+  %(prog)s "My board" -p my-boards.json
+
+Save the board in the OpenSCAD Customizer first: the export reads saved
+presets only. Existing files are skipped; use --force to write them again.
+""",
     "set": """\
   %(prog)s my.json Base_Width=30 --category 'grid search'
   %(prog)s my.json Front_Relief_Depth=0.30 Back_Relief_Depth=0.30 --all
@@ -520,7 +608,7 @@ def build_parser() -> argparse.ArgumentParser:
         The parser. Each command sets args.run to its cmd_* function.
     """
     parser = argparse.ArgumentParser(
-        description="Build, preview and export 3D-printable shogi pieces.",
+        description="Build, preview and export 3D-printable shogi pieces and boards.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=MAIN_HELP,
     )
@@ -532,6 +620,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_export_command(commands)
     _add_check_command(commands)
     _add_set_command(commands)
+    _add_ban_command(commands)
     return parser
 
 
@@ -744,6 +833,52 @@ def _add_set_command(commands) -> None:
     parser.add_argument(
         "-n", "--dry-run", action="store_true", help="show the changes without writing the file"
     )
+
+
+def _add_ban_command(commands) -> None:
+    """Adds the ban command and its options."""
+    parser = _command(
+        commands, "ban", cmd_ban, "show the board presets, or export one board as color 3MF files"
+    )
+    parser.add_argument(
+        "board",
+        nargs="?",
+        metavar="BOARD",
+        help="board preset name, or a part of it (default: list the boards)",
+    )
+    parser.add_argument(
+        "-p",
+        "--presets",
+        type=Path,
+        default=BAN_PRESETS,
+        metavar="FILE",
+        help="board preset file (default: ban/ban.json)",
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=Path,
+        metavar="DIR",
+        help="folder receiving the 3MF files (default: exports/ban/BOARD)",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="overwrite existing 3MF files instead of skipping them",
+    )
+    parser.add_argument(
+        "--plain",
+        action="store_true",
+        help="leave out the per-part filament slots (see export --plain)",
+    )
+    parser.add_argument(
+        "-n",
+        "--dry-run",
+        action="store_true",
+        help="show the files that would be written; reads the board but renders nothing",
+    )
+    _add_openscad_option(parser)
 
 
 def main(argv: list[str] | None = None) -> int:

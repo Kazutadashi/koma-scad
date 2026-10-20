@@ -1,4 +1,4 @@
-"""KomaSCAD: build, check, preview and export 3D-printable shogi pieces.
+"""KomaSCAD: build, check, preview and export 3D-printable shogi pieces and boards.
 
 Run the tool with ``python3 komascad.py``. The modules are:
 
@@ -10,6 +10,7 @@ Run the tool with ``python3 komascad.py``. The modules are:
     threemf           writing multipart color 3MF files
     export            planning and writing an export
     preview           the HTML preview page
+    ban               the board: its panels, 3MF files and manifest
     cli               the commands and their options
 """
 

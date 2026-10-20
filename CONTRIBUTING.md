@@ -27,10 +27,10 @@ folders hold what the modules share.
 | `koma/move_diagrams.scad` | The movement diagram solver used by the generator |
 | `koma/move-editor.html` | The movement diagram editor |
 | `koma/presets/` | Piece definitions, game definitions and generated presets |
-| `ban/` | Ban (盤), the board. Planned. |
-| `komadai/` | Komadai (駒台), the piece stand. Planned. |
-| `komabako/` | Komabako (駒箱), the piece box. Planned. |
-| `lib/` | OpenSCAD code that more than one module uses |
+| `ban/` | Ban (盤), the board: `ban.scad` and its presets in `ban.json` |
+| `komadai/` | Komadai (駒台), the piece stand: `komadai.scad` |
+| `komabako/` | Komabako (駒箱), the piece box: `komabako.scad` |
+| `lib/` | OpenSCAD code that more than one module uses: the filaments and rounded shapes |
 | `komascad.py` | The command-line tool: build, preview, check and export |
 | `komascad_lib/` | The code of the command-line tool |
 | `docs/` | Guides and references |
@@ -49,15 +49,49 @@ Give each module the same layout. For a module named `NAME`:
 | `NAME/NAME.scad` | The model |
 | `NAME/NAME.json` | The Customizer presets. OpenSCAD reads the JSON file that has the same name as the model. |
 | `NAME/presets/` | Preset sources and generated presets, if the module needs them |
+| `docs/NAME.md` | The guide, with every setting at the end |
 
 Rules:
 
 - Use the Japanese name of the part, in romaji, as `NAME`.
-- Start the `.scad` file with the same header as `koma/koma.scad`.
+- Start the `.scad` file with the same header as `koma/koma.scad`. Number
+  the Customizer groups (`/* [01 - Start here] */`), put `Output_Mode` in the
+  first group, and put `version` after `/* [Hidden] */`.
+- Number the sections of the code after `/* [Hidden] */`, as in
+  `koma/koma.scad`: sizes or plan first, then the shapes, the checks, and
+  the output last.
 - Put code that two modules use in `lib/`. Do not include one module's file
   from another module.
-- Add the module's paths to `komascad_lib/project.py` next to `KOMA`.
+- Use the filament names of `lib/filaments.scad` for colors, with a Custom
+  choice and a color setting for it.
+- Add the module's paths to `komascad_lib/project.py` next to `KOMA`, and the
+  model to `MODELS`. The tests then check its version and its Output Modes.
+- Add its guide to `REFERENCES` in `tests/test_docs.py`. A test then makes
+  sure that the guide lists every setting.
 - Add the module to the table above and to [README.md](README.md).
+
+### ban/ban.scad
+
+The sections after `/* [Hidden] */` are:
+
+| Section | Contents |
+| --- | --- |
+| 1. Board plan | The board size, where each seam goes, which panel owns each line and camp dot |
+| 2. Joint plan | Tab and socket sizes, and how many tabs each seam gets |
+| 3. Joints | The dovetail and T-hook tabs and sockets, and the seam bevels |
+| 4. Panels | One printable panel: outline, joints, grid grooves and signature |
+| 5. Color parts | The markings part that `komascad.py ban` puts in a color 3MF |
+| 6. Layouts | The assembled board, and the panels as they sit on the bed |
+| 7. Checks | Messages that stop a board that cannot print or assemble |
+| 8. Output | Selects what to draw from Output Mode |
+
+With `Export_Metadata`, the model draws nothing. It prints the panels
+(`KOMASCAD_BAN`), the materials (`KOMASCAD_EXPORT`) and the fonts
+(`KOMASCAD_FONTS`). `komascad_lib/ban.py` reads these lines, so Python does
+not repeat the model's sums. Change both together.
+
+The joint rules are in the [design notes](docs/ban-design-notes.md#the-rules-for-a-joint).
+Read them before you change a joint.
 
 ### koma/koma.scad
 
@@ -110,6 +144,7 @@ module for each job:
 | `threemf.py` | Writes the 3MF: parts, colors, bed layout and filament slots |
 | `export.py` | Plans an export, writes its files and the manifest |
 | `preview.py` | The HTML preview page |
+| `ban.py` | Reads a board preset, renders its panels, and writes the board 3MF files and manifest |
 | `cli.py` | The commands, their options and their help text |
 
 Rules:
@@ -211,10 +246,12 @@ Do these steps from the repository root:
    python3 komascad.py build --check
    ```
 
-4. Export a full set. This renders every piece and checks each mesh:
+4. Export a full set and a tiled board. This renders every piece and panel,
+   and checks each mesh:
 
    ```bash
    python3 komascad.py export shogi --per-file all -o /tmp/komascad-release
+   python3 komascad.py ban "Shogi - 3 x 3 panels" -o /tmp/komascad-release/ban
    ```
 
 5. Make a preview, and look at every face:
@@ -228,4 +265,6 @@ Do these steps from the repository root:
 7. Read [LICENSES.md](LICENSES.md). Make sure that each file in `models/` has
    its license file.
 8. Set the new version in `VERSION` in `komascad_lib/project.py` and in
-   `version` in `koma/koma.scad`. A test checks that they are the same.
+   `version` in each model: `koma/koma.scad`, `ban/ban.scad`,
+   `komadai/komadai.scad` and `komabako/komabako.scad`. A test checks that
+   they are the same.

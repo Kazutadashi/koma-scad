@@ -1,7 +1,7 @@
 # Command reference
 
 `komascad.py` is the command-line tool. It needs Python 3.10 or later.
-`preview`, `check` and `export` also need the `openscad` command on your PATH.
+`preview`, `check`, `export` and `ban` also need the `openscad` command on your PATH.
 
 ```bash
 python3 komascad.py COMMAND [options]
@@ -15,6 +15,7 @@ python3 komascad.py COMMAND [options]
 | [`check GAME [PIECE ...]`](#check) | Check that the lettering will print |
 | [`export GAME [PIECE ...]`](#export) | Write color 3MF files |
 | [`set FILE NAME=VALUE ...`](#set) | Change a setting in many presets of a hand-kept file |
+| [`ban [BOARD]`](#ban) | Show the board presets, or write the color 3MF files of one board |
 
 `python3 komascad.py COMMAND --help` shows the options of one command.
 
@@ -224,3 +225,39 @@ usually a spelling mistake.
 
 Do not use `set` on the generated game files. The next build overwrites
 them. Edit `koma/presets/pieces/` instead.
+
+## ban
+
+```bash
+python3 komascad.py ban                                # the boards in ban/ban.json
+python3 komascad.py ban "Shogi - 3 x 3 panels"         # one board
+python3 komascad.py ban "Minishogi - 2 x 2" -n         # show the files; render nothing
+python3 komascad.py ban "My board" -p my-boards.json   # a board from another preset file
+```
+
+Without **BOARD**, the command shows each board preset with its squares and
+panels. **BOARD** is a preset name, or part of one, in any letter case. It
+must select one board.
+
+The command reads the saved preset. Save your changes in the Customizer
+before you export. The files go to `exports/ban/BOARD/`:
+
+- A one-piece board is one file, `BOARD.3mf`.
+- A board in panels has one file for each panel, `BOARD - Panel CC-RR.3mf`,
+  and `BOARD - All panels.3mf` with every panel on one bed. `CC-RR` is the
+  column and row of the panel, from 0 at the front left.
+- `manifest.json` gives the assembly order, and the size, offset and
+  neighbors of each panel. It also lists the files and every setting.
+
+| Option | Effect |
+| --- | --- |
+| `-p`, `--presets FILE` | Read the boards from FILE instead of `ban/ban.json` |
+| `-o`, `--output DIR` | Write the files to DIR |
+| `-f`, `--force` | Write files that exist again |
+| `--plain` | Leave out the filament slots (see [Filament slots](#filament-slots)) |
+| `-n`, `--dry-run` | Show the files. Read the board, but render nothing |
+| `--openscad PATH` | Use a specific OpenSCAD program |
+
+Each panel has two parts: **Body** on filament 1, and **Markings** on
+filament 2. Existing files are skipped, as with `export`. The
+[board guide](ban.md#export-a-color-3mf) tells you how to print them.

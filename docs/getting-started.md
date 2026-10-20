@@ -19,8 +19,8 @@ export it and print it.
 3. Restart OpenSCAD.
 
 Keep `koma.scad`, `move_diagrams.scad` and `koma.json` together in the `koma/`
-folder. OpenSCAD reads the presets from the JSON file that has the same name
-as the model.
+folder, and keep `lib/` next to it. OpenSCAD reads the presets from the JSON
+file that has the same name as the model.
 
 ## 1. Design a piece
 

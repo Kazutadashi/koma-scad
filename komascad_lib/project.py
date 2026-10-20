@@ -12,7 +12,7 @@ VERSION = "3.5"
 ROOT = Path(__file__).resolve().parent.parent
 
 # Each module has its own folder: koma (pieces), ban (board), komadai (piece
-# stand) and komabako (piece box). The tool works with the pieces only.
+# stand) and komabako (piece box).
 KOMA = ROOT / "koma"
 SCAD = KOMA / "koma.scad"
 
@@ -26,6 +26,18 @@ RECIPES = KOMA / "presets" / "games.json"
 # Files that the build command makes from the sources.
 GAMES = KOMA / "presets" / "games"
 TEST_PAGE = KOMA / "presets" / "print-test"
+
+# The board, and its Customizer presets. The ban command exports them.
+BAN = ROOT / "ban"
+BAN_SCAD = BAN / "ban.scad"
+BAN_PRESETS = BAN / "ban.json"
+
+# The piece stand and the piece box print in one color, so the tool does not export them.
+KOMADAI_SCAD = ROOT / "komadai" / "komadai.scad"
+KOMABAKO_SCAD = ROOT / "komabako" / "komabako.scad"
+
+# Every model, for the tests.
+MODELS = [SCAD, BAN_SCAD, KOMADAI_SCAD, KOMABAKO_SCAD]
 
 
 class KomaError(Exception):

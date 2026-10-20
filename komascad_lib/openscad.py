@@ -1,7 +1,8 @@
 """Running OpenSCAD: turn presets into -D arguments, render color parts, read STL files.
 
 OpenSCAD is the geometry engine. This module checks and reads what it makes,
-but never changes the geometry.
+but never changes the geometry. The functions work with any module's model;
+by default, with the pieces (koma/koma.scad).
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .project import SCAD, KomaError
+from .project import SCAD, KomaError, shown
 
 # Settings that older versions of the model had. Saved presets can still hold
 # them; they are ignored.
@@ -53,7 +54,7 @@ STL_CORNERS = (slice(3, 6), slice(6, 9), slice(9, 12))
 # OpenSCAD numbers the frames of an animation export with five digits: part00000.stl.
 FRAME_DIGITS = 5
 
-# Patterns in koma/koma.scad and in OpenSCAD's output.
+# Patterns in the models and in OpenSCAD's output.
 # A setting with its default, such as `Piece_Length = 32;` (name, then value).
 SETTING = re.compile(r"^([A-Za-z_]\w*)\s*=\s*(.+?);", re.M)
 # The name of any variable, such as `Export_Metadata` in `Export_Metadata = false;`.
@@ -110,14 +111,17 @@ def run_openscad(command: list[str]) -> tuple[int, str]:
 
 
 @functools.cache
-def scad_parameters() -> tuple[dict[str, Any], set[str]]:
-    """Reads the settings that koma/koma.scad declares.
+def scad_parameters(scad: Path = SCAD) -> tuple[dict[str, Any], set[str]]:
+    """Reads the settings that a model declares.
+
+    Args:
+        scad: The model, such as koma/koma.scad.
 
     Returns:
         The public settings with their default values, and the names of the
         hidden variables (those after the "[Hidden]" marker).
     """
-    source = SCAD.read_text(encoding="utf-8")
+    source = scad.read_text(encoding="utf-8")
     public_source, marker, hidden_source = source.partition("/* [Hidden] */")
     if not marker:
         hidden_source = ""
@@ -130,7 +134,9 @@ def scad_parameters() -> tuple[dict[str, Any], set[str]]:
     return defaults, hidden
 
 
-def scad_definitions(preset: str, values: dict[str, Any], overrides: dict[str, Any]) -> list[str]:
+def scad_definitions(
+    preset: str, values: dict[str, Any], overrides: dict[str, Any], scad: Path = SCAD
+) -> list[str]:
     """Turns one saved preset, plus overrides, into OpenSCAD -D arguments.
 
     OpenSCAD 2021.01 lets -p preset values win over -D, so the values are read
@@ -141,6 +147,7 @@ def scad_definitions(preset: str, values: dict[str, Any], overrides: dict[str, A
         preset: The preset name, for error messages.
         values: The saved settings of the preset.
         overrides: Settings that replace the saved ones.
+        scad: The model that the preset is for.
 
     Returns:
         The arguments, such as ["-D", "Piece_Length=32", "-D", 'Font_Name="Yuji Syuku"'].
@@ -148,7 +155,7 @@ def scad_definitions(preset: str, values: dict[str, Any], overrides: dict[str, A
     Raises:
         KomaError: The preset has a setting that the model does not have.
     """
-    defaults, hidden = scad_parameters()
+    defaults, hidden = scad_parameters(scad)
 
     typed = {}
     for name, value in values.items():
@@ -429,31 +436,33 @@ def read_stl(path: Path) -> tuple[list[Vertex], list[Triangle]]:
     return vertices, faces
 
 
-# --- Rendering a piece ------------------------------------------------------------
+# --- Rendering color parts -------------------------------------------------------
 
 
-def _read_materials(
-    executable: str, definitions: list[str], folder: Path
-) -> list[tuple[str, str, list[float]]]:
-    """Asks OpenSCAD which parts the piece has.
+def read_metadata(
+    executable: str, definitions: list[str], folder: Path, subject: str, scad: Path = SCAD
+) -> str:
+    """Runs the model with Export_Metadata, and checks its fonts.
 
-    With Export_Metadata the model draws nothing; it only prints its fonts and
-    materials, so this run is fast.
+    With Export_Metadata the model draws nothing; it only prints what the tool
+    needs, such as its fonts and materials, so this run is fast.
 
     Args:
         executable: The OpenSCAD program.
-        definitions: The -D arguments of the piece.
+        definitions: The -D arguments of the model.
         folder: A temporary folder for OpenSCAD's output.
+        subject: What the model makes, such as "piece", for error messages.
+        scad: The model.
 
     Returns:
-        (role, material, rgba) for each part, in body, front, back, signature order.
+        Everything that OpenSCAD printed.
 
     Raises:
         KomaError: OpenSCAD reports a problem, or a font is missing.
     """
-    echo = folder / "materials.echo"
+    echo = folder / "metadata.echo"
     command = [executable, "--hardwarnings", "-o", str(echo)] + definitions
-    command += ["-D", "Export_Metadata=true", str(SCAD)]
+    command += ["-D", "Export_Metadata=true", str(scad)]
 
     status, log = run_openscad(command)
     if echo.exists():
@@ -461,14 +470,32 @@ def _read_materials(
 
     failed = status != 0 or "ERROR:" in log or "WARNING:" in log
     if failed:
-        raise KomaError("OpenSCAD could not read the piece:\n" + log[-LOG_TAIL:])
+        raise KomaError(f"OpenSCAD could not read the {subject}:\n" + log[-LOG_TAIL:])
 
     check_fonts(log)
+    return log
 
+
+def parse_materials(
+    log: str, subject: str, scad: Path = SCAD
+) -> list[tuple[str, str, list[float]]]:
+    """Reads the parts that a model reports in its Export_Metadata run.
+
+    Args:
+        log: The output of read_metadata().
+        subject: What the model makes, such as "piece", for error messages.
+        scad: The model, for error messages.
+
+    Returns:
+        (role, material, rgba) for each part that the model makes, in the model's order.
+
+    Raises:
+        KomaError: The model did not report its parts.
+    """
     report = MATERIALS_REPORT.search(log)
     if not report:
         raise KomaError(
-            "OpenSCAD did not report the materials of the piece. Is koma/koma.scad current?"
+            f"OpenSCAD did not report the materials of the {subject}. Is {shown(scad)} current?"
         )
 
     materials = []
@@ -478,37 +505,45 @@ def _read_materials(
     return materials
 
 
-def _render_meshes(
-    executable: str, definitions: list[str], folder: Path, roles: list[str]
+def render_frames(
+    executable: str,
+    definitions: list[str],
+    folder: Path,
+    frames: dict[str, list[Any]],
+    scad: Path = SCAD,
 ) -> list[Path]:
-    """Renders the mesh of each role into its own STL file.
+    """Renders several variants of one model into STL files, in one OpenSCAD run.
 
-    One OpenSCAD run makes all of them: each animation frame selects the next
-    Output_Mode. The frames share OpenSCAD's geometry cache, so the piece is
-    built only once for its body, front, back and signature.
+    Each animation frame sets the settings in frames to their next value, for
+    example the next Output_Mode. The frames share OpenSCAD's geometry cache,
+    so shared geometry is built only once.
 
     Args:
         executable: The OpenSCAD program.
-        definitions: The -D arguments of the piece.
+        definitions: The -D arguments of the model.
         folder: A temporary folder for the STL files.
-        roles: The roles to render, such as ["body", "front", "back"].
+        frames: Setting name -> its value in each frame. Every list has one
+            value for each frame, such as {"Output_Mode": ["Color body", "Color front"]}.
+        scad: The model.
 
     Returns:
-        One STL file for each role, in the same order.
+        One STL file for each frame, in order.
 
     Raises:
         KomaError: OpenSCAD reports an error, or a warning other than touching shells.
     """
-    frame_count = len(roles)
-    modes = json.dumps(["Color " + role for role in roles], ensure_ascii=False)
-    # $t runs from 0 to 1 over the animation, so frame i gets modes[i].
-    mode_of_frame = f"{modes}[min(floor($t*{frame_count}),{frame_count - 1})]"
+    frame_count = len(next(iter(frames.values())))
+    # $t runs from 0 to 1 over the animation, so frame i gets values[i].
+    frame_index = f"min(floor($t*{frame_count}),{frame_count - 1})"
 
     output = folder / "part.stl"
     command = [executable, "--animate", str(frame_count)]
     command += ["-o", str(output), "--export-format", "binstl"]
     command += definitions
-    command += ["-D", "Output_Mode=" + mode_of_frame, "-D", "Export_Metadata=false", str(SCAD)]
+    for name, values in frames.items():
+        value_list = json.dumps(values, ensure_ascii=False)
+        command += ["-D", f"{name}={value_list}[{frame_index}]"]
+    command += ["-D", "Export_Metadata=false", str(scad)]
 
     status, log = run_openscad(command)
     warnings = [line for line in log.splitlines() if "WARNING:" in line]
@@ -549,9 +584,10 @@ def render_parts(executable: str, definitions: list[str]) -> list[Part]:
     """
     with tempfile.TemporaryDirectory(prefix="komascad-") as temporary:
         folder = Path(temporary)
-        materials = _read_materials(executable, definitions, folder)
-        roles = [role for role, _, _ in materials]
-        files = _render_meshes(executable, definitions, folder, roles)
+        log = read_metadata(executable, definitions, folder, "piece")
+        materials = parse_materials(log, "piece")
+        modes = ["Color " + role for role, _, _ in materials]
+        files = render_frames(executable, definitions, folder, {"Output_Mode": modes})
 
         parts = []
         for (role, material, rgba), file in zip(materials, files, strict=True):

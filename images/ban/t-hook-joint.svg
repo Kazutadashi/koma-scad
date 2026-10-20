@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="580" viewBox="0 0 1100 580">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6" fill="none" stroke="#344054"/></marker>
+    <style>
+      text { font-family: sans-serif; fill: #182230; font-size: 17px; }
+      .title { font-size: 25px; font-weight: bold; }
+      .sub { font-size: 20px; font-weight: bold; }
+      .small { font-size: 15px; }
+      .line { stroke: #344054; stroke-width: 1.5; fill: none; }
+      .leader { stroke: #344054; stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1100" height="580" fill="#fafbfc"/>
+  <text x="32" y="42" class="title">T-hook joint</text>
+  <text x="32" y="70">The hook holds the panels together; the table sets their height.</text>
+  <text x="32" y="116" class="sub">Plan section through the hook</text>
+  <rect x="40" y="145" width="200" height="210" fill="#71b9df" stroke="#277299"/>
+  <rect x="240" y="145" width="240" height="210" fill="#ecd3a2" stroke="#aa8244"/>
+  <!-- Plan dimensions at 12 px/mm: neck 10, head 14, reach 4. -->
+  <!-- Socket is 0.30 mm larger on each mating face. -->
+  <path d="M240,181.4 H260.4 V157.4 H291.6 V332.6 H260.4 V308.6 H240 Z" fill="#fafbfc" stroke="#aa8244"/>
+  <path d="M240,185 H264 V161 H288 V329 H264 V305 H240 Z" fill="#71b9df" stroke="#277299"/>
+  <path d="M240,145 V177 M240,313 V355" stroke="#344054" stroke-dasharray="4 4"/>
+  <text x="63" y="246">Panel A</text>
+  <text x="348" y="246">Panel B</text>
+  <text x="35" y="392">Square shoulders stop separation.</text>
+  <path d="M244,372 L261,320" class="leader"/>
+  <text x="35" y="423">White space is clearance, not a press fit.</text>
+  <text x="35" y="453" class="small">Second socket: extra room along the seam</text>
+  <text x="35" y="474" class="small">to accommodate connector spacing differences.</text>
+
+  <text x="565" y="116" class="sub">Side section through the neck</text>
+  <!-- 14 px/mm; table at 355, top at 187 (12 mm). -->
+  <rect x="570" y="187" width="180" height="168" fill="#71b9df" stroke="#277299"/>
+  <rect x="750" y="187" width="290" height="168" fill="#ecd3a2" stroke="#aa8244"/>
+  <!-- Flat socket roof, 1 mm above the tab at its highest root. -->
+  <path d="M750,355 V208 H810.2 V355 Z" fill="#fafbfc" stroke="#aa8244"/>
+  <!-- Tab: floor gap 1, roof z=9.5-x, reach 4. -->
+  <path d="M750,222 L806,278 V341 H750 Z" fill="#71b9df" stroke="#277299"/>
+  <path d="M555,357 H1055" stroke="#344054" stroke-width="4"/>
+  <text x="885" y="384" class="small">Flat table</text>
+  <text x="605" y="170" class="small">Coplanar playing surfaces</text>
+  <text x="829" y="231" class="small">1 mm gap to flat roof</text>
+  <path d="M824,235 L765,216" class="leader"/>
+  <text x="838" y="319" class="small">1 mm floor gap</text>
+  <path d="M843,324 L787,348" class="leader"/>
+  <text x="565" y="423">Lower panel B over the hooks to join.</text>
+  <text x="565" y="453">Lift it to release; no spring to flex.</text>
+  <text x="565" y="483" class="small">Tab slope is for printing; the flat roof cannot wedge a tile upward.</text>
+  <text x="32" y="541" class="small">Nominal geometry. Print a 2 x 2 board to check flatness, fit and hold.</text>
+</svg>
