@@ -35,12 +35,13 @@ default board prints as 2 x 2 panels for a 256 mm bed.
 | Shogi - 2 x 2 panels | 9 x 9 | 2 x 2 | 333.6 x 363.3 | A 256 mm bed, with connectors |
 | Shogi - 2 x 2 panels, T-hook | 9 x 9 | 2 x 2 | 333.6 x 363.3 | Tabs printed on the panels: the joint that has been printed and tuned |
 | Shogi - 3 x 3 panels, 180 mm bed | 9 x 9 | 3 x 3 | 333.6 x 363.3 | A 180 mm bed |
+| Shogi - 3 x 3 modules | 9 x 9 | 3 x 3 modules of 3 x 3 squares | 333.6 x 363.3 | Modules that also fit the chu shogi board |
 | Shogi - one piece, large printer | 9 x 9 | 1 | 333.6 x 363.3 | A bed of 334 x 364 mm or more |
 | Shogi - 2 x 2 panels, keys | 9 x 9 | 2 x 2 | 333.6 x 363.3 | Butterfly keys, assembled face down |
 | Shogi - raised lines | 9 x 9 | 2 x 2 | 333.6 x 363.3 | Display: lines stand above the surface |
 | Minishogi - one piece | 5 x 5 | 1 | 192 x 208.5 | A 256 mm bed |
 | Minishogi - 2 x 2 panels | 5 x 5 | 2 x 2 | 192 x 208.5 | A small bed |
-| Chu shogi - 3 x 3 panels | 12 x 12 | 3 x 3 | 439.8 x 479.4 | A 256 mm bed |
+| Chu shogi - 4 x 4 modules | 12 x 12 | 4 x 4 modules of 3 x 3 squares | 439.8 x 479.4 | Modules that also fit the shogi board |
 | Taikyoku shogi - 9 x 9 panels | 36 x 36 | 9 x 9 | 1289.4 x 1408.2 | A 256 mm bed |
 | Custom - 5 x 7 squares | 5 x 7 | 1 x 2 | 201 x 294.9 | A 256 mm bed |
 | Custom - 2 x 3 squares | 2 x 3 | 1 | 90.8 x 136.1 | Any bed |
@@ -91,22 +92,58 @@ traditional board.
 
 ## Squares and panels
 
-**Playing Columns** and **Playing Rows** count the squares.
-**Panel Columns** and **Panel Rows** count the printed panels. 1 x 1 is a
-one-piece board.
+**Playing Columns** and **Playing Rows** count the squares. **Panel Layout**
+decides how the board is cut into printed panels:
+
+| Panel Layout | Panels | Use it for |
+| --- | --- | --- |
+| Split board (default) | **Panel Columns** x **Panel Rows** panels. 1 x 1 is a one-piece board. | The fewest seams for your bed |
+| Modules | Panels of **Module Columns** x **Module Rows** squares | Panels that also fit other boards |
 
 - Each seam is on a grid line, so each panel holds whole squares.
-- When the squares do not divide evenly, two panels differ by one row or
-  column at most.
-- A seam runs along the edge of a grid line, not through it. The seam gap
-  then merges into the black line.
-- A camp dot is never cut. The panel that owns the dot keeps it on a small
-  round plug. The neighbor panel has a notch for the plug.
+- In a split board, when the squares do not divide evenly, two panels differ
+  by one row or column at most.
 - Use as few panels as your bed allows. With 2 x 2 panels, no camp dot is on
-  a seam. With 3 x 3 panels, each camp dot is where two seams cross.
+  a seam.
 
 Panels are counted from 0 at the front left. **Panel X** counts columns
 from the left. **Panel Y** counts rows from the front.
+
+### Modules
+
+With **Panel Layout** set to **Modules**, every panel has the same number of
+squares. **Playing Columns** must be a multiple of **Module Columns**, and
+**Playing Rows** of **Module Rows**.
+
+A module is the same on every board with the same squares, so you can reuse
+modules. With 3 x 3 modules:
+
+| Board | Modules | Center | Edge | Corner |
+| --- | --- | --- | --- | --- |
+| Shogi, 9 x 9 | 3 x 3 | 1 | 4 | 4 |
+| Chu shogi, 12 x 12 | 4 x 4 | 4 | 8 | 4 |
+| Taikyoku shogi, 36 x 36 | 12 x 12 | 100 | 40 | 4 |
+
+The four corner modules and the edge modules carry the border. A center
+module fits any center place, and any board of the same squares. An edge
+module fits any edge place on the same side. A shogi set's modules start a
+chu shogi board: print 3 center and 4 edge modules more.
+
+The camp dots depend on the board: on a 9 x 9 board they fall on module
+corners, on a 12 x 12 board inside the modules. For modules that you want to
+use on more than one board, set **Camp Dots** off.
+
+### Seam lines
+
+**Seam Lines** decides which panel carries the grid line on a seam:
+
+| Seam Lines | The line on a seam | Camp dot on a seam |
+| --- | --- | --- |
+| Split (default) | Half on each panel: 0.45 mm each side of a 0.9 mm line. Every seam edge is the same. | Cut with the line: each panel carries its part |
+| One side | All on one panel. The seam runs along the edge of the line. | Kept whole on a plug, with a notch in the neighbor |
+
+Either way, the seam gap merges into the black line. Split lines make every
+panel edge the same, which modules need.
 
 ## Joints
 
@@ -353,8 +390,11 @@ underscores as spaces.
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Panel_Columns` | `2` | Panels from left to right. 1 x 1 is a one-piece board. Seams follow grid lines, so each panel holds whole squares. |
-| `Panel_Rows` | `2` | Panels from front to back. |
+| `Panel_Layout` | `"Split board"` | Split board: cut the board into Panel Columns x Panel Rows panels. Modules: cut it into panels of Module Columns x Module Rows squares, which also fit other boards with the same squares. Choices: Split board, Modules. |
+| `Panel_Columns` | `2` | Split board: panels from left to right. 1 x 1 is a one-piece board. Seams follow grid lines, so each panel holds whole squares. |
+| `Panel_Rows` | `2` | Split board: panels from front to back. |
+| `Module_Columns` | `3` | Modules: squares from left to right in each module. Playing Columns must be a multiple of it. |
+| `Module_Rows` | `3` | Modules: squares from front to back in each module. Playing Rows must be a multiple of it. |
 | `Print_Bed_Width` | `256` | mm. Width of your print bed. The model stops if a panel and its tabs do not fit. |
 | `Print_Bed_Depth` | `256` | mm. Depth of your print bed. |
 | `Print_Layout_Gap` | `10` | mm. Space between the panels in All panels. |
@@ -363,6 +403,7 @@ underscores as spaces.
 
 | Parameter | Default | Description |
 | --- | --- | --- |
+| `Seam_Lines` | `"Split"` | Split: each panel carries half of the grid line on a seam, so every seam edge is the same and panels fit anywhere. One side: one panel carries the whole line. Choices: Split, One side. |
 | `Line_Style` | `"Flush inlay"` | Flush inlay: the lines are level with the playing surface. Raised: they stand above it, like lacquer lines, and the board prints face up. Choices: Flush inlay, Raised. |
 | `Grid_Groove_Width` | `0.9` | mm. Width of the grid lines. Use a whole number of printed line widths: 0.9 is two lines of a 0.4 mm nozzle. |
 | `Grid_Groove_Depth` | `0.45` | mm. Depth of the grid grooves. |

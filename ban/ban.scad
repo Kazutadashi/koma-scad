@@ -42,10 +42,16 @@ Piece_Length = 32; // [10:0.1:100]
 Base_Width = 28.5; // [10:0.1:100]
 
 /* [04 - Printed panels] */
-// Panels from left to right. 1 x 1 is a one-piece board. Seams follow grid lines, so each panel holds whole squares.
+// Split board: cut the board into Panel Columns x Panel Rows panels. Modules: cut it into panels of Module Columns x Module Rows squares, which also fit other boards with the same squares.
+Panel_Layout = "Split board"; // [Split board,Modules]
+// Split board: panels from left to right. 1 x 1 is a one-piece board. Seams follow grid lines, so each panel holds whole squares.
 Panel_Columns = 2; // [1:1:100]
-// Panels from front to back.
+// Split board: panels from front to back.
 Panel_Rows = 2; // [1:1:100]
+// Modules: squares from left to right in each module. Playing Columns must be a multiple of it.
+Module_Columns = 3; // [1:1:36]
+// Modules: squares from front to back in each module. Playing Rows must be a multiple of it.
+Module_Rows = 3; // [1:1:36]
 // mm. Width of your print bed. The model stops if a panel and its tabs do not fit.
 Print_Bed_Width = 256; // [100:1:1000]
 // mm. Depth of your print bed.
@@ -54,6 +60,8 @@ Print_Bed_Depth = 256; // [100:1:1000]
 Print_Layout_Gap = 10; // [2:1:30]
 
 /* [05 - Markings] */
+// Split: each panel carries half of the grid line on a seam, so every seam edge is the same and panels fit anywhere. One side: one panel carries the whole line.
+Seam_Lines = "Split"; // [Split,One side]
 // Flush inlay: the lines are level with the playing surface. Raised: they stand above it, like lacquer lines, and the board prints face up.
 Line_Style = "Flush inlay"; // [Flush inlay,Raised]
 // mm. Width of the grid lines. Use a whole number of printed line widths: 0.9 is two lines of a 0.4 mm nozzle.
@@ -185,11 +193,15 @@ include <../lib/shapes.scad>
 
 columns = Playing_Columns;
 rows = Playing_Rows;
+modules = Panel_Layout == "Modules";
+panel_columns = modules ? columns/Module_Columns : Panel_Columns;
+panel_rows = modules ? rows/Module_Rows : Panel_Rows;
+split_lines = Seam_Lines == "Split";
 play_width = columns*Cell_Width;
 play_depth = rows*Cell_Depth;
 board_width = play_width + 2*Board_Margin;
 board_depth = play_depth + 2*Board_Margin;
-panel_count = Panel_Columns*Panel_Rows;
+panel_count = panel_columns*panel_rows;
 seams_exist = panel_count > 1;
 raised_lines = Line_Style == "Raised";
 // The top of the line color, from the underside.
@@ -208,35 +220,44 @@ loose_name = keys ? "Keys" : "Connectors";
 joints_used = seams_exist || joint_test;
 
 // Panel boundaries in whole squares, spread as evenly as possible.
-function first_column(tx) = round(tx*columns/Panel_Columns);
-function last_column(tx) = round((tx + 1)*columns/Panel_Columns);
-function first_row(ty) = round(ty*rows/Panel_Rows);
-function last_row(ty) = round((ty + 1)*rows/Panel_Rows);
+function first_column(tx) = round(tx*columns/panel_columns);
+function last_column(tx) = round((tx + 1)*columns/panel_columns);
+function first_row(ty) = round(ty*rows/panel_rows);
+function last_row(ty) = round((ty + 1)*rows/panel_rows);
 
-// A seam runs along the right or back edge of a grid line, never through its
-// middle. The whole line stays in one panel, and the seam gap merges into it.
-function column_seam_x(column) = column*Cell_Width + Grid_Groove_Width/2;
-function row_seam_y(row) = row*Cell_Depth + Grid_Groove_Width/2;
+// Split lines: a seam runs down the middle of a grid line, and each panel
+// carries half of it. One side: the seam runs along the right or back edge of
+// the line, and the whole line stays in one panel. Either way the seam gap
+// merges into the black line.
+seam_offset = split_lines ? 0 : Grid_Groove_Width/2;
+function column_seam_x(column) = column*Cell_Width + seam_offset;
+function row_seam_y(row) = row*Cell_Depth + seam_offset;
 function tile_x_min(tx) = tx == 0 ? -Board_Margin : column_seam_x(first_column(tx));
-function tile_x_max(tx) = tx == Panel_Columns - 1 ? play_width + Board_Margin : column_seam_x(last_column(tx));
+function tile_x_max(tx) = tx == panel_columns - 1 ? play_width + Board_Margin : column_seam_x(last_column(tx));
 function tile_y_min(ty) = ty == 0 ? -Board_Margin : row_seam_y(first_row(ty));
-function tile_y_max(ty) = ty == Panel_Rows - 1 ? play_depth + Board_Margin : row_seam_y(last_row(ty));
+function tile_y_max(ty) = ty == panel_rows - 1 ? play_depth + Board_Margin : row_seam_y(last_row(ty));
 function tile_width(tx) = tile_x_max(tx) - tile_x_min(tx);
 function tile_depth(ty) = tile_y_max(ty) - tile_y_min(ty);
 
-// A panel owns the grid lines inside it and the line on its right or back seam.
-function owns_column(tx, column) = column <= last_column(tx) && (tx == 0 || column > first_column(tx));
-function owns_row(ty, row) = row <= last_row(ty) && (ty == 0 || row > first_row(ty));
+// A panel draws the grid lines inside it and on its edges. With split lines it
+// draws half of each seam line (the panel outline cuts the other half off);
+// with One side, only the line on its right or back seam.
+function owns_column(tx, column) = column <= last_column(tx)
+    && (tx == 0 || column > first_column(tx) || (split_lines && column == first_column(tx)));
+function owns_row(ty, row) = row <= last_row(ty)
+    && (ty == 0 || row > first_row(ty) || (split_lines && row == first_row(ty)));
 
-// A camp dot is wider than a line, so a seam beside the line would cut it.
-// The panel that owns the dot keeps all of it on a round plug, and its
+// With split lines, a camp dot on a seam is cut with the line: each panel
+// carries its part. With One side, a seam beside the line would cut the dot,
+// so the panel that owns the dot keeps all of it on a round plug, and its
 // neighbors get a matching notch: the seam goes around the dot.
 camp_dots_on = Camp_Dots && columns >= 3 && rows >= 3;
 camp_dots = camp_dots_on
     ? [for (x = [floor(columns/3), columns - floor(columns/3)], y = [floor(rows/3), rows - floor(rows/3)]) [x, y]]
     : [];
 function owns_dot(tx, ty, dot) = owns_column(tx, dot[0]) && owns_row(ty, dot[1]);
-dot_plug_clearance = seams_exist ? Camp_Dot_Plug_Clearance : 0;
+dot_plugs = seams_exist && !split_lines;
+dot_plug_clearance = dot_plugs ? Camp_Dot_Plug_Clearance : 0;
 seam_bevel = seams_exist ? Seam_Bevel : 0;
 
 // The two printed parts. The color 3MF has one part for each role.
@@ -301,8 +322,8 @@ function joint_count(span) = max(2, floor((span - 2*joint_margin(span))/Joint_Sp
 function joint_position(index, count, span) = joint_margin(span) + index*(span - 2*joint_margin(span))/(count - 1);
 // The shortest seam on the board. It must still hold two tabs.
 shortest_seam = min(concat(
-    Panel_Columns > 1 ? [for (ty = [0:Panel_Rows - 1]) tile_depth(ty)] : [],
-    Panel_Rows > 1 ? [for (tx = [0:Panel_Columns - 1]) tile_width(tx)] : [],
+    panel_columns > 1 ? [for (ty = [0:panel_rows - 1]) tile_depth(ty)] : [],
+    panel_rows > 1 ? [for (tx = [0:panel_columns - 1]) tile_width(tx)] : [],
     [1e9]));
 
 
@@ -476,11 +497,32 @@ module edge_key_pockets(span, at, vertical) {
     }
 }
 
+// Connector sockets go at standard places (spec v1): the middle of each
+// square along a seam, except where the socket would meet the sockets of
+// the crossing seam at an inner corner, or run off the board at its edge.
+// The places depend only on the grid, so any two panels with the same
+// squares meet socket to socket.
+corner_clear = connector_half_width + connector_extent;   // from an inner corner
+end_clear = connector_half_width + 2;                     // from the outer edge of the board
+function keep_places(places, span, start_inner, end_inner) =
+    [for (at = places) if (at >= (start_inner ? corner_clear : end_clear)
+                         && at <= span - (end_inner ? corner_clear : end_clear)) at];
+// Along the seams on a panel's left and right edges (row of panels ty).
+function socket_places_y(ty) = keep_places(
+    [for (r = [first_row(ty):last_row(ty) - 1]) (r + 0.5)*Cell_Depth - tile_y_min(ty)],
+    tile_depth(ty), ty > 0, ty < panel_rows - 1);
+// Along the seams on a panel's front and back edges (column of panels tx).
+function socket_places_x(tx) = keep_places(
+    [for (c = [first_column(tx):last_column(tx) - 1]) (c + 0.5)*Cell_Width - tile_x_min(tx)],
+    tile_width(tx), tx > 0, tx < panel_columns - 1);
+
 // The joints that a board needs: one on each joint position of every seam.
+function seam_joints_y(ty) = connectors ? len(socket_places_y(ty)) : joint_count(tile_depth(ty));
+function seam_joints_x(tx) = connectors ? len(socket_places_x(tx)) : joint_count(tile_width(tx));
 joint_total =
-    (Panel_Columns > 1 ? (Panel_Columns - 1)*sum_counts([for (ty = [0:Panel_Rows - 1]) tile_depth(ty)]) : 0)
-    + (Panel_Rows > 1 ? (Panel_Rows - 1)*sum_counts([for (tx = [0:Panel_Columns - 1]) tile_width(tx)]) : 0);
-function sum_counts(spans, i=0) = i >= len(spans) ? 0 : joint_count(spans[i]) + sum_counts(spans, i + 1);
+    (panel_columns > 1 ? (panel_columns - 1)*sum_list([for (ty = [0:panel_rows - 1]) seam_joints_y(ty)]) : 0)
+    + (panel_rows > 1 ? (panel_rows - 1)*sum_list([for (tx = [0:panel_columns - 1]) seam_joints_x(tx)]) : 0);
+function sum_list(values, i=0) = i >= len(values) ? 0 : values[i] + sum_list(values, i + 1);
 key_count = keys ? joint_total : 0;
 // The loose parts to print, spares included, for a board in panels.
 loose_count = !loose_parts || !seams_exist ? 0 : joint_total + (keys ? Key_Spares : Connector_Spares);
@@ -520,12 +562,12 @@ module connector_2d() {
 }
 module connector() { linear_extrude(connector_height) connector_2d(); }
 
-// The sockets along one seam edge. A vertical edge runs along y at x = at, the others along x at y = at.
-module edge_connector_sockets(span, at, vertical) {
-    count = joint_count(span);
-    for (i = [0:count - 1]) {
-        if (vertical) translate([at, joint_position(i, count, span), 0]) connector_socket();
-        else translate([joint_position(i, count, span), at, 0]) rotate([0, 0, 90]) connector_socket();
+// The sockets along one seam edge, at the given places. A vertical edge runs
+// along y at x = at, the others along x at y = at.
+module edge_connector_sockets(places, at, vertical) {
+    for (place = places) {
+        if (vertical) translate([at, place, 0]) connector_socket();
+        else translate([place, at, 0]) rotate([0, 0, 90]) connector_socket();
     }
 }
 
@@ -550,13 +592,18 @@ module seam_bevel_cut(length, bevel=seam_bevel, top=Board_Thickness) {
         polygon([[-epsilon, top - bevel - epsilon], [-epsilon, top + 1], [bevel + 1 + epsilon, top + 1]]);
 }
 
-// The reveal: the same bevel on the panel's own right and back seam edges,
-// where the grid line is. It cuts the body and the line color alike.
-module reveal_cuts(tx, ty) {
+// The seam bevels of a panel. The left and front seam edges always get one.
+// The right and back seam edges get one too with Seam Reveal, or with split
+// lines, where both edges carry half a line. They cut the body and the line
+// color alike.
+module seam_bevels(tx, ty) {
     width = tile_width(tx);
     depth = tile_depth(ty);
-    if (Seam_Reveal && tx < Panel_Columns - 1) translate([width, depth/2, 0]) rotate([0, 0, 180]) seam_bevel_cut(depth + 2);
-    if (Seam_Reveal && ty < Panel_Rows - 1) translate([width/2, depth, 0]) rotate([0, 0, -90]) seam_bevel_cut(width + 2);
+    both = Seam_Reveal || split_lines;
+    if (tx > 0) translate([0, depth/2, 0]) seam_bevel_cut(depth + 2);
+    if (ty > 0) translate([width/2, 0, 0]) rotate([0, 0, 90]) seam_bevel_cut(width + 2);
+    if (both && tx < panel_columns - 1) translate([width, depth/2, 0]) rotate([0, 0, 180]) seam_bevel_cut(depth + 2);
+    if (both && ty < panel_rows - 1) translate([width/2, depth, 0]) rotate([0, 0, -90]) seam_bevel_cut(width + 2);
 }
 
 // A bevel along the bottom of a panel edge, on the panel's +x side. It leaves
@@ -590,7 +637,7 @@ module tile_footprint(tx, ty, z0, height) {
     difference() {
         union() {
             translate([0, 0, z0]) cube([tile_width(tx), tile_depth(ty), height]);
-            for (dot = camp_dots) if (owns_dot(tx, ty, dot))
+            if (dot_plugs) for (dot = camp_dots) if (owns_dot(tx, ty, dot))
                 at_dot(dot, tile_x_min(tx), tile_y_min(ty), z0) cylinder(d=Camp_Dot_Diameter, h=height);
         }
         foreign_dot_notches(tx, ty, z0, height);
@@ -598,7 +645,7 @@ module tile_footprint(tx, ty, z0, height) {
 }
 
 module foreign_dot_notches(tx, ty, z0=0, height=Board_Thickness) {
-    for (dot = camp_dots) if (!owns_dot(tx, ty, dot))
+    if (dot_plugs) for (dot = camp_dots) if (!owns_dot(tx, ty, dot))
         at_dot(dot, tile_x_min(tx), tile_y_min(ty), z0 - epsilon)
             cylinder(d=Camp_Dot_Diameter + 2*dot_plug_clearance, h=height + 2*epsilon);
 }
@@ -611,12 +658,12 @@ module grid_cuts(tx, ty, above=epsilon) {
     y_min = tile_y_min(ty);
     z = Board_Thickness - Grid_Groove_Depth;
     for (column = [0:columns]) if (owns_column(tx, column)) {
-        on_seam = tx < Panel_Columns - 1 && column == last_column(tx);
+        on_seam = tx < panel_columns - 1 && column == last_column(tx);
         translate([column*Cell_Width - x_min - Grid_Groove_Width/2, -y_min, z])
             cube([Grid_Groove_Width + (on_seam ? epsilon : 0), play_depth, Grid_Groove_Depth + above]);
     }
     for (row = [0:rows]) if (owns_row(ty, row)) {
-        on_seam = ty < Panel_Rows - 1 && row == last_row(ty);
+        on_seam = ty < panel_rows - 1 && row == last_row(ty);
         translate([-x_min, row*Cell_Depth - y_min - Grid_Groove_Width/2, z])
             cube([play_width, Grid_Groove_Width + (on_seam ? epsilon : 0), Grid_Groove_Depth + above]);
     }
@@ -651,32 +698,25 @@ module panel_body_geometry(tx, ty) {
             }
             // Tabs on the right and back edges. A panel only presses down over
             // the tabs of neighbors that are already in place.
-            if (tabs && tx < Panel_Columns - 1) edge_joints(depth, width, true, false);
-            if (tabs && ty < Panel_Rows - 1) edge_joints(width, depth, false, false);
+            if (tabs && tx < panel_columns - 1) edge_joints(depth, width, true, false);
+            if (tabs && ty < panel_rows - 1) edge_joints(width, depth, false, false);
         }
-        // Sockets and bevels on the left and front edges. The neighbor owns the
-        // grid line on that seam; the reveal bevels this panel's own seam edges.
-        if (tx > 0) {
-            if (tabs) edge_joints(depth, 0, true, true);
-            translate([0, depth/2, 0]) seam_bevel_cut(depth + 2);
-        }
-        if (ty > 0) {
-            if (tabs) edge_joints(width, 0, false, true);
-            translate([width/2, 0, 0]) rotate([0, 0, 90]) seam_bevel_cut(width + 2);
-        }
-        reveal_cuts(tx, ty);
+        // Sockets on the left and front edges, and the seam bevels.
+        if (tabs && tx > 0) edge_joints(depth, 0, true, true);
+        if (tabs && ty > 0) edge_joints(width, 0, false, true);
+        seam_bevels(tx, ty);
         // Keys and connectors: half of each pocket or socket on every seam edge.
         if (keys) {
             if (tx > 0) edge_key_pockets(depth, 0, true);
-            if (tx < Panel_Columns - 1) edge_key_pockets(depth, width, true);
+            if (tx < panel_columns - 1) edge_key_pockets(depth, width, true);
             if (ty > 0) edge_key_pockets(width, 0, false);
-            if (ty < Panel_Rows - 1) edge_key_pockets(width, depth, false);
+            if (ty < panel_rows - 1) edge_key_pockets(width, depth, false);
         }
         if (connectors) {
-            if (tx > 0) edge_connector_sockets(depth, 0, true);
-            if (tx < Panel_Columns - 1) edge_connector_sockets(depth, width, true);
-            if (ty > 0) edge_connector_sockets(width, 0, false);
-            if (ty < Panel_Rows - 1) edge_connector_sockets(width, depth, false);
+            if (tx > 0) edge_connector_sockets(socket_places_y(ty), 0, true);
+            if (tx < panel_columns - 1) edge_connector_sockets(socket_places_y(ty), width, true);
+            if (ty > 0) edge_connector_sockets(socket_places_x(tx), 0, false);
+            if (ty < panel_rows - 1) edge_connector_sockets(socket_places_x(tx), depth, false);
         }
         underside_relief(tx, ty);
         // T-hook panels get a bevel on all four underside edges. The center of
@@ -708,7 +748,7 @@ module panel_markings(tx, ty) {
             grid_cuts(tx, ty, raised_lines ? Line_Raise + epsilon : epsilon);
             tile_footprint(tx, ty, Board_Thickness - Grid_Groove_Depth, line_height);
         }
-        reveal_cuts(tx, ty);
+        seam_bevels(tx, ty);
     }
 }
 
@@ -731,7 +771,7 @@ module on_bed(depth) {
 }
 
 module assembled_board() {
-    for (ty = [0:Panel_Rows - 1], tx = [0:Panel_Columns - 1])
+    for (ty = [0:panel_rows - 1], tx = [0:panel_columns - 1])
         translate([tile_x_min(tx), tile_y_min(ty), 0]) children_of(tx, ty);
 }
 
@@ -739,9 +779,9 @@ module assembled_board() {
 module children_of(tx, ty) { if ($preview) panel_preview(tx, ty); else panel_body(tx, ty); }
 
 module all_panels() {
-    pitch_x = max([for (tx = [0:Panel_Columns - 1]) tile_width(tx)]) + tab_reach + Print_Layout_Gap;
-    pitch_y = max([for (ty = [0:Panel_Rows - 1]) tile_depth(ty)]) + tab_reach + Print_Layout_Gap;
-    for (ty = [0:Panel_Rows - 1], tx = [0:Panel_Columns - 1])
+    pitch_x = max([for (tx = [0:panel_columns - 1]) tile_width(tx)]) + tab_reach + Print_Layout_Gap;
+    pitch_y = max([for (ty = [0:panel_rows - 1]) tile_depth(ty)]) + tab_reach + Print_Layout_Gap;
+    for (ty = [0:panel_rows - 1], tx = [0:panel_columns - 1])
         translate([tx*pitch_x, ty*pitch_y, 0]) on_bed(tile_depth(ty)) children_of(tx, ty);
 }
 
@@ -768,12 +808,13 @@ module test_tab_block() {
             cube([test_tab_block, test_length, Board_Thickness]);
             if (tabs) translate([test_tab_block, test_length/2, 0]) joint(false);
         }
-        // The grid line on the seam belongs to the tab block, as on a board.
-        translate([test_tab_block - Grid_Groove_Width, -epsilon, Board_Thickness - Grid_Groove_Depth])
-            cube([Grid_Groove_Width + epsilon, test_length + 2*epsilon, Grid_Groove_Depth + epsilon]);
+        // The grid line on the seam: half on each block with split lines, all on this block with One side.
+        translate([test_tab_block - Grid_Groove_Width + seam_offset, -epsilon, Board_Thickness - Grid_Groove_Depth])
+            cube([Grid_Groove_Width - seam_offset + epsilon, test_length + 2*epsilon, Grid_Groove_Depth + epsilon]);
         if (keys) translate([test_tab_block, test_length/2, 0]) key_pocket();
         if (connectors) translate([test_tab_block, test_length/2, 0]) connector_socket();
-        if (Seam_Reveal) translate([test_tab_block, test_length/2, 0]) rotate([0, 0, 180]) seam_bevel_cut(test_length + 2, Seam_Bevel);
+        if (Seam_Reveal || split_lines)
+            translate([test_tab_block, test_length/2, 0]) rotate([0, 0, 180]) seam_bevel_cut(test_length + 2, Seam_Bevel);
         test_bevels(test_tab_block);
     }
 }
@@ -784,6 +825,9 @@ module test_socket_block() {
         if (tabs) translate([0, test_length/2, 0]) joint(true, 0);
         if (keys) translate([0, test_length/2, 0]) key_pocket();
         if (connectors) translate([0, test_length/2, 0]) connector_socket();
+        if (split_lines)
+            translate([-epsilon, -epsilon, Board_Thickness - Grid_Groove_Depth])
+                cube([Grid_Groove_Width/2 + epsilon, test_length + 2*epsilon, Grid_Groove_Depth + epsilon]);
         translate([0, test_length/2, 0]) seam_bevel_cut(test_length + 2, Seam_Bevel);
         test_bevels(test_socket_block);
     }
@@ -805,7 +849,10 @@ module joint_test() {
 assert(Cell_Width > Base_Width && Cell_Depth > Piece_Length,
     str("A square (", Cell_Width, " x ", Cell_Depth, " mm) must be larger than the largest piece (",
         Base_Width, " x ", Piece_Length, " mm)."));
-assert(Panel_Columns <= columns && Panel_Rows <= rows,
+assert(!modules || (columns % Module_Columns == 0 && rows % Module_Rows == 0),
+    str("Modules need Playing Columns to be a multiple of Module Columns, and Playing Rows of Module Rows (",
+        columns, " x ", rows, " squares, ", Module_Columns, " x ", Module_Rows, " modules)."));
+assert(panel_columns <= columns && panel_rows <= rows,
     "Each panel must hold at least one square. Reduce Panel Columns or Panel Rows.");
 assert(Grid_Groove_Width < min(Cell_Width, Cell_Depth)/3, "Grid Groove Width is too wide for the squares.");
 assert(Grid_Groove_Depth < Board_Thickness, "Grid Groove Depth must be less than Board Thickness.");
@@ -820,10 +867,10 @@ assert(Signature_Text == ""
 assert(!raised_lines || !face_down,
     "Raised lines stand above the playing surface, so the board must print face up. Set Print Orientation to Playing face up.");
 // The largest panel footprint on the bed, with the tabs on its right and back edges.
-function bed_width(tx) = tile_width(tx) + (tx < Panel_Columns - 1 ? tab_reach : 0);
-function bed_depth(ty) = tile_depth(ty) + (ty < Panel_Rows - 1 ? tab_reach : 0);
+function bed_width(tx) = tile_width(tx) + (tx < panel_columns - 1 ? tab_reach : 0);
+function bed_depth(ty) = tile_depth(ty) + (ty < panel_rows - 1 ? tab_reach : 0);
 function fits_bed(w, d) = (w <= Print_Bed_Width && d <= Print_Bed_Depth) || (w <= Print_Bed_Depth && d <= Print_Bed_Width);
-too_large = [for (ty = [0:Panel_Rows - 1], tx = [0:Panel_Columns - 1])
+too_large = [for (ty = [0:panel_rows - 1], tx = [0:panel_columns - 1])
     if (!fits_bed(bed_width(tx), bed_depth(ty))) [tx, ty, bed_width(tx), bed_depth(ty)]];
 assert(len(too_large) == 0, len(too_large) == 0 ? ""
     : str("Panel ", too_large[0][0], ", ", too_large[0][1], " is ", too_large[0][2], " x ", too_large[0][3],
@@ -844,11 +891,11 @@ if (joints_used) {
         "The T-hook head must hold at least 1 mm past the socket neck. Raise T Head Overhang.");
     assert(Joint_Style != "T-hook" || t_tip_corner_clip < min(Joint_Depth - T_Shoulder_Length, T_Head_Overhang),
         "The clipped T-hook corners would remove the head. Make the board thicker, or reduce Joint Depth or Joint Bottom Chamfer.");
-    assert(joint_margin(shortest_seam) >= connector_half_width + connector_extent,
+    assert(connectors || joint_margin(shortest_seam) >= connector_half_width + connector_extent,
         str("A joint must be at least ", connector_half_width + connector_extent, " mm from a panel corner, ",
             "so that the joints on two seams do not meet. Raise Joint Edge Margin, use fewer, larger panels, ",
             "or use smaller keys."));
-    assert(shortest_seam - 2*joint_margin(shortest_seam) >= 2*connector_half_width + 2,
+    assert(connectors || shortest_seam - 2*joint_margin(shortest_seam) >= 2*connector_half_width + 2,
         str("The shortest seam (", shortest_seam, " mm) is too short for two tabs. ",
             "Use fewer, larger panels, or reduce Joint Width."));
     assert(!tabs || Seam_Bevel < Board_Thickness - socket_roof_height, "Seam Bevel is so deep that it reaches the sockets.");
@@ -859,21 +906,27 @@ if (joints_used) {
         "The keys do not fit: Key Waist must be less than Key Width, and the pockets must stay 1 mm below the grid grooves.");
     assert(!Seam_Reveal || Seam_Bevel < Grid_Groove_Width,
         "With Seam Reveal, Seam Bevel must be less than Grid Groove Width, or the bevel cuts past the grid line.");
+    assert(!split_lines || Seam_Bevel < Grid_Groove_Width/2,
+        "With split lines, Seam Bevel must be less than half of Grid Groove Width, so the bevel stays inside the line.");
+    assert(!connectors || min(concat([for (ty = [0:panel_rows - 1]) if (panel_columns > 1) seam_joints_y(ty)],
+                                     [for (tx = [0:panel_columns - 1]) if (panel_rows > 1) seam_joints_x(tx)], [9])) >= 1,
+        str("A seam is too short for a connector: each needs a square whose middle is ", corner_clear,
+            " mm from an inner corner. Use larger panels or modules."));
 }
-assert(Underside_Relief == 0 || 2*Support_Band < min(min([for (tx = [0:Panel_Columns - 1]) tile_width(tx)]),
-                                                         min([for (ty = [0:Panel_Rows - 1]) tile_depth(ty)])),
+assert(Underside_Relief == 0 || 2*Support_Band < min(min([for (tx = [0:panel_columns - 1]) tile_width(tx)]),
+                                                         min([for (ty = [0:panel_rows - 1]) tile_depth(ty)])),
     "The support band is wider than half a panel. Reduce Support Band, or set Underside Relief to 0.");
 assert(Underside_Relief == 0 || !tabs || !seams_exist || Support_Band >= connector_extent + 2,
     "The support band must cover the sockets. Raise Support Band.");
 assert(Output_Mode != "Loose parts" || loose_parts,
     "Loose parts shows the connectors or keys of a board. Set Joint Style to Connectors or Keys.");
 assert(Output_Mode == "Assembled board" || Output_Mode == "All panels" || joint_test || Output_Mode == "Loose parts"
-    || (Panel_X < Panel_Columns && Panel_Y < Panel_Rows),
-    str("Panel X must be 0 to ", Panel_Columns - 1, " and Panel Y 0 to ", Panel_Rows - 1, "."));
+    || (Panel_X < panel_columns && Panel_Y < panel_rows),
+    str("Panel X must be 0 to ", panel_columns - 1, " and Panel Y 0 to ", panel_rows - 1, "."));
 
 // Information in the Console.
 echo(str("KomaSCAD ban ", version, ". Board: ", board_width, " x ", board_depth, " x ", Board_Thickness,
-         " mm. Panels: ", Panel_Columns, " x ", Panel_Rows, "."));
+         " mm. Panels: ", panel_columns, " x ", panel_rows, "."));
 if (seams_exist && tabs)
     echo(str(Joint_Style, " joints. Tab thickness at the seam / at the tip: ", tab_thickness, " / ", tab_tip_height,
              " mm. A pulled seam opens ", seam_play, " mm."));
@@ -889,8 +942,8 @@ if (seams_exist && connectors)
 if (Export_Metadata) {
     echo("KOMASCAD_FONTS", Signature_Text == "" ? [] : [Signature_Font]);
     echo("KOMASCAD_EXPORT", [for (role = [0:1]) [role_names[role], material_name(role), material_rgb(role), true]]);
-    echo("KOMASCAD_BAN", [board_width, board_depth, Board_Thickness], [Panel_Columns, Panel_Rows],
-         [for (ty = [0:Panel_Rows - 1], tx = [0:Panel_Columns - 1])
+    echo("KOMASCAD_BAN", [board_width, board_depth, Board_Thickness], [panel_columns, panel_rows],
+         [for (ty = [0:panel_rows - 1], tx = [0:panel_columns - 1])
              [tx, ty, tile_width(tx), tile_depth(ty), tile_x_min(tx) + Board_Margin, tile_y_min(ty) + Board_Margin]],
          loose_count, loose_name);
 }

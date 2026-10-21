@@ -119,12 +119,16 @@ This breaks rule 1 above (no loose parts) on purpose: repair and modularity
 are worth more. Connectors are model values, not yet printed; the T-hook
 preset stays for comparison.
 
-Next steps for modularity:
-- **Genderless panels:** half of each seam line on each panel, and quarter
-  camp dots.
-- **Standard modules:** N x N squares, for example 3 x 3, with socket
-  positions fixed to the grid.
-- **Border strips** that use the same connectors.
+For modularity, **Seam Lines = Split** puts half of each seam line on each
+panel, so every panel edge is the same. **Panel Layout = Modules** cuts the
+board into N x N-square modules, and connector sockets sit at the middles of
+squares. Thus a center module is the same, to the vertex, on a 9 x 9 and a
+12 x 12 board; a test checks this.
+
+Border strips were not made. The traditional border is 7.5 mm wide, but a
+connector socket needs about 18 mm of panel on each side of its seam, so a
+separate strip cannot hold one. The edge and corner modules carry the border
+instead.
 
 ## Open work
 

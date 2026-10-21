@@ -139,6 +139,22 @@ def resolved_settings(values: dict[str, Any]) -> dict[str, Any]:
     return settings
 
 
+def panel_grid(settings: dict[str, Any]) -> tuple[int, int]:
+    """Counts the panels of a board, as ban/ban.scad does.
+
+    Args:
+        settings: Every setting of a preset, from resolved_settings().
+
+    Returns:
+        Panels from left to right, and from front to back.
+    """
+    if settings["Panel_Layout"] != "Modules":
+        return settings["Panel_Columns"], settings["Panel_Rows"]
+    columns = settings["Playing_Columns"] // settings["Module_Columns"]
+    rows = settings["Playing_Rows"] // settings["Module_Rows"]
+    return columns, rows
+
+
 def parse_board(name: str, log: str) -> Board:
     """Reads the board that the model reports in its Export_Metadata run.
 

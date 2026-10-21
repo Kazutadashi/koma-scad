@@ -68,14 +68,21 @@ spares. You can make a connector of any material that fits this envelope.
 
 ## Where the sockets go
 
-On every seam, at the positions of **Joint Spacing** and
-**Joint Edge Margin**: at least two on each seam, kept away from the corners.
-Version 1 fixes the socket shape and the hardware. It does not yet fix the
-socket positions: two boards fit together only if their seams have the same
-length and the same settings.
+A socket goes at the middle of each square along a seam. Two places are
+skipped:
+
+- **Near an inner corner**, where four panels meet: a socket whose middle is
+  closer than 23.5 mm to the corner would meet the socket of the crossing
+  seam.
+- **Near the outer edge of the board**: a socket closer than 7.7 mm to the
+  edge would run off the board.
+
+The places depend only on the squares (**Cell Width** and **Cell Depth**),
+so any two panels with the same squares meet socket to socket. This is what
+lets modules move between boards.
 
 ## Versions
 
 | Version | Change |
 | --- | --- |
-| 1 | First version: socket for M4 or #8-32 screw and nut, and the printed double-T connector. |
+| 1 | First version: socket for M4 or #8-32 screw and nut, the printed double-T connector, and socket places at square middles. |

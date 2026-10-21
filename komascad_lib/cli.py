@@ -458,7 +458,8 @@ def print_boards(preset_file: presets.PresetFile) -> None:
     for name, values in preset_file.presets.items():
         settings = ban.resolved_settings(values)
         squares = f"{settings['Playing_Columns']} x {settings['Playing_Rows']} squares"
-        panels = f"{settings['Panel_Columns']} x {settings['Panel_Rows']} panels"
+        columns, rows = ban.panel_grid(settings)
+        panels = f"{columns} x {rows} panels"
         print(f"{name}  ({squares}, {panels})")
 
 

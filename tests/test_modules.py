@@ -173,6 +173,40 @@ class ModelTests(unittest.TestCase):
                     _, log = openscad.run_openscad(command)
                     self.assertIn(message, log)
 
+    def test_a_module_is_the_same_on_every_board(self):
+        # A center module of a 9 x 9 board and of a 12 x 12 board, both of
+        # 3 x 3 squares. Camp dots depend on the board, so they are off.
+        module = [
+            "-D",
+            'Panel_Layout="Modules"',
+            "-D",
+            "Camp_Dots=false",
+            "-D",
+            "Panel_X=1",
+            "-D",
+            "Panel_Y=1",
+        ]
+        meshes = []
+        with tempfile.TemporaryDirectory() as folder:
+            for size in (9, 12):
+                for mode in ("Color body", "Color markings"):
+                    mesh = Path(folder) / f"{size}-{mode}.stl"
+                    settings = module + [
+                        "-D",
+                        f"Playing_Columns={size}",
+                        "-D",
+                        f"Playing_Rows={size}",
+                    ]
+                    settings += ["-D", f'Output_Mode="{mode}"', "--export-format", "binstl"]
+                    self.render(BAN_SCAD, mesh, settings)
+                    vertices, faces = openscad.read_stl(mesh)
+                    corners = sorted(
+                        tuple(round(c, 3) for c in vertices[i]) for face in faces for i in face
+                    )
+                    meshes.append(corners)
+        self.assertEqual(meshes[0], meshes[2])
+        self.assertEqual(meshes[1], meshes[3])
+
     def test_closed_box_is_preview_only(self):
         with tempfile.TemporaryDirectory() as folder:
             command = [

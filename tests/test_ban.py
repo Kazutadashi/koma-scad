@@ -179,8 +179,8 @@ class BoardExportTests(unittest.TestCase):
         for name, values in names.items():
             with self.subTest(board=name):
                 board = ban.read_preset("openscad", name, values)
-                expected = int(values["Panel_Columns"]) * int(values["Panel_Rows"])
-                self.assertEqual(len(board.panels), expected)
+                columns, rows = ban.panel_grid(ban.resolved_settings(values))
+                self.assertEqual(len(board.panels), columns * rows)
 
 
 if __name__ == "__main__":
