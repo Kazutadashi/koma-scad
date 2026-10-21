@@ -19,14 +19,17 @@ ECHO: "KOMASCAD_EXPORT", [["body", "Wood", [0.76, 0.58, 0.34, 1], true], \
 ["markings", "Black", [0.08, 0.06, 0.04, 1], true]]
 ECHO: "KOMASCAD_BAN", [192, 208.5, 12], [2, 2], [[0, 0, 113.975, 123.875, 0, 0], \
 [1, 0, 78.025, 123.875, 113.975, 0], [0, 1, 113.975, 84.625, 0, 123.875], \
-[1, 1, 78.025, 84.625, 113.975, 123.875]]
+[1, 1, 78.025, 84.625, 113.975, 123.875]], 0, "Connectors"
 """
 
 ONE_PIECE_LOG = """\
 ECHO: "KOMASCAD_EXPORT", [["body", "Wood", [0.76, 0.58, 0.34, 1], true], \
 ["markings", "Black", [0.08, 0.06, 0.04, 1], true]]
-ECHO: "KOMASCAD_BAN", [192, 208.5, 12], [1, 1], [[0, 0, 192, 208.5, 0, 0]]
+ECHO: "KOMASCAD_BAN", [192, 208.5, 12], [1, 1], [[0, 0, 192, 208.5, 0, 0]], 0, "Connectors"
 """
+
+# The same 2 x 2 board with 10 connectors and 2 spares.
+CONNECTORS_LOG = TWO_BY_TWO_LOG.replace("]], 0,", "]], 12,")
 
 
 class BoardReportTests(unittest.TestCase):
@@ -59,6 +62,11 @@ class BoardReportTests(unittest.TestCase):
         self.assertEqual(
             [planned.filename for planned in ban.plan_files(board)], ["Mini - one - piece.3mf"]
         )
+
+    def test_board_with_connectors_has_a_file_of_connectors(self):
+        board = ban.parse_board("Mini", CONNECTORS_LOG)
+        self.assertEqual((board.loose, board.loose_name), (12, "Connectors"))
+        self.assertEqual(ban.plan_files(board)[-1].filename, "Mini - Connectors.3mf")
 
     def test_each_panel_goes_in_after_its_left_and_front_neighbors(self):
         order = [panel.address for panel in ban.assembly_order(self.board)]
@@ -96,7 +104,8 @@ class BanCommandTests(unittest.TestCase):
 
     def render(self, executable, definitions, board):
         self.rendered.append(board.name)
-        return [[part("body"), part("markings", "Black")] for _ in board.panels]
+        panels = [[part("body"), part("markings", "Black")] for _ in board.panels]
+        return panels, None
 
     def test_without_a_board_the_presets_are_listed(self):
         status, out, _ = run("ban")
@@ -113,7 +122,7 @@ class BanCommandTests(unittest.TestCase):
         self.assertEqual(manifest["source_parameters"], "ban/ban.json")
         self.assertEqual(manifest["assembly_order"], ["00-00", "01-00", "00-01", "01-01"])
         self.assertEqual(len(manifest["files"]), 5)
-        self.assertEqual(manifest["settings"]["Joint_Style"], "T-hook")
+        self.assertEqual(manifest["settings"]["Joint_Style"], "Connectors")
 
         with zipfile.ZipFile(self.out / "Minishogi - 2 x 2 panels - All panels.3mf") as archive:
             settings = archive.read("Metadata/model_settings.config").decode("utf-8")
@@ -162,7 +171,7 @@ class BoardExportTests(unittest.TestCase):
         parts = summary["pieces"][0]["parts"]
         self.assertEqual(
             [(entry["part"], entry["material"]) for entry in parts],
-            [("body", "Wood"), ("markings", "Black")],
+            [("body", "Kaya"), ("markings", "Black")],
         )
 
     def test_every_bundled_board_can_be_read(self):

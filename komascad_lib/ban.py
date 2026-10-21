@@ -22,11 +22,15 @@ from .project import BAN_SCAD, KomaError
 from .threemf import create_3mf
 
 # The line in which the model reports the board, such as
-# ECHO: "KOMASCAD_BAN", [192, 208.5, 12], [1, 1], [[0, 0, 192, 208.5, 0, 0]]
+# ECHO: "KOMASCAD_BAN", [192, 208.5, 12], [1, 1], [[0, 0, 192, 208.5, 0, 0]], 0, "Connectors"
+# The last two are how many loose parts (connectors or keys) to print, and their kind.
 BOARD_REPORT = re.compile(r'^ECHO: "KOMASCAD_BAN", (.+)$', re.M)
 
 # The color parts of each panel, as the model's Output_Mode names them.
 COLOR_MODES = ["Color body", "Color markings"]
+
+# The Output_Mode that draws every connector or key.
+LOOSE_MODE = "Loose parts"
 
 # manifest.json is indented by this many spaces, for people who read it.
 MANIFEST_INDENT = 2
@@ -79,6 +83,9 @@ class Board:
         rows: Panels from front to back.
         panels: Every panel, row by row from the front left.
         materials: (role, material, rgba) of each color part, body first.
+        loose: How many connectors or keys to print, spares included. 0 for
+            a board without them.
+        loose_name: "Connectors" or "Keys".
     """
 
     name: str
@@ -87,6 +94,8 @@ class Board:
     rows: int
     panels: list[Panel]
     materials: list[tuple[str, str, list[float]]]
+    loose: int = 0
+    loose_name: str = ""
 
     @property
     def one_piece(self) -> bool:
@@ -100,7 +109,7 @@ class BoardFile:
 
     Attributes:
         filename: The name of the .3mf file.
-        panels: The panels that it holds.
+        panels: The panels that it holds. Empty for the file of loose parts.
     """
 
     filename: str
@@ -147,13 +156,13 @@ def parse_board(name: str, log: str) -> Board:
     if not report:
         raise KomaError("OpenSCAD did not report the panels of the board. Is ban/ban.scad current?")
 
-    size, grid, panel_rows = json.loads("[" + report.group(1) + "]")
+    size, grid, panel_rows, loose, loose_name = json.loads("[" + report.group(1) + "]")
     panels = []
     for column, row, width, depth, x, y in panel_rows:
         panels.append(Panel(column, row, width, depth, x, y))
 
     materials = openscad.parse_materials(log, "board", BAN_SCAD)
-    return Board(name, size, grid[0], grid[1], panels, materials)
+    return Board(name, size, grid[0], grid[1], panels, materials, loose, loose_name)
 
 
 def read_board(executable: str, name: str, definitions: list[str]) -> Board:
@@ -193,8 +202,10 @@ def read_preset(executable: str, name: str, values: dict[str, Any]) -> Board:
     return read_board(executable, name, definitions)
 
 
-def render_panels(executable: str, definitions: list[str], board: Board) -> list[list[Part]]:
-    """Renders the body and markings of every panel, in one OpenSCAD run.
+def render_panels(
+    executable: str, definitions: list[str], board: Board
+) -> tuple[list[list[Part]], Part | None]:
+    """Renders the body and markings of every panel, and the loose parts, in one OpenSCAD run.
 
     Args:
         executable: The OpenSCAD program.
@@ -202,7 +213,8 @@ def render_panels(executable: str, definitions: list[str], board: Board) -> list
         board: The board, from read_board().
 
     Returns:
-        The parts of each panel, in the order of board.panels.
+        The parts of each panel, in the order of board.panels, and the loose
+        parts as one part in the body material, or None for a board without them.
 
     Raises:
         KomaError: OpenSCAD cannot render a panel, or a part is not a closed mesh.
@@ -216,22 +228,34 @@ def render_panels(executable: str, definitions: list[str], board: Board) -> list
             modes.append(mode)
             columns.append(panel.column)
             rows.append(panel.row)
+    # One more frame for the loose parts, after the panels.
+    if board.loose:
+        modes.append(LOOSE_MODE)
+        columns.append(0)
+        rows.append(0)
     frames = {"Output_Mode": modes, "Panel_X": columns, "Panel_Y": rows}
 
     with tempfile.TemporaryDirectory(prefix="komascad-ban-") as temporary:
         folder = Path(temporary)
         files = openscad.render_frames(executable, definitions, folder, frames, BAN_SCAD)
 
+        panel_frames = len(board.panels) * len(COLOR_MODES)
         parts = []
-        for frame, file in enumerate(files):
+        for frame, file in enumerate(files[:panel_frames]):
             role, material, rgba = board.materials[frame % len(COLOR_MODES)]
             vertices, faces = openscad.read_stl(file)
             parts.append(Part(role, material, tuple(rgba), vertices, faces))
 
+        loose = None
+        if board.loose:
+            _, material, rgba = board.materials[0]
+            vertices, faces = openscad.read_stl(files[panel_frames])
+            loose = Part(board.loose_name.lower(), material, tuple(rgba), vertices, faces)
+
     panel_parts = []
     for first in range(0, len(parts), len(COLOR_MODES)):
         panel_parts.append(parts[first : first + len(COLOR_MODES)])
-    return panel_parts
+    return panel_parts, loose
 
 
 # --- Planning the files ---------------------------------------------------------
@@ -241,7 +265,8 @@ def plan_files(board: Board) -> list[BoardFile]:
     """Decides which panels go into which file.
 
     A one-piece board is one file. Otherwise each panel gets its own file, and
-    one more file holds every panel on one bed.
+    one more file holds every panel on one bed. A board with connectors or keys
+    has one more file with all of them.
 
     Args:
         board: The board.
@@ -257,6 +282,8 @@ def plan_files(board: Board) -> list[BoardFile]:
     for panel in board.panels:
         files.append(BoardFile(f"{base} - Panel {panel.address}.3mf", [panel]))
     files.append(BoardFile(base + " - All panels.3mf", board.panels))
+    if board.loose:
+        files.append(BoardFile(f"{base} - {board.loose_name}.3mf", []))
     return files
 
 
@@ -361,14 +388,18 @@ def export_board(
 
     if pending:
         report(f"Rendering {len(board.panels)} panel(s) of {name} ...")
-        panel_parts = render_panels(executable, definitions, board)
+        panel_parts, loose = render_panels(executable, definitions, board)
         parts_of = {}
         for panel, parts in zip(board.panels, panel_parts, strict=True):
             parts_of[panel.address] = parts
 
         destination.mkdir(parents=True, exist_ok=True)
         for planned in pending:
-            _write_file(destination / planned.filename, planned, board, parts_of, plain)
+            output = destination / planned.filename
+            if planned.panels:
+                _write_file(output, planned, board, parts_of, plain)
+            else:
+                _write_loose(output, loose, board.loose_name, plain)
             report("Saved " + planned.filename)
 
     write_manifest(destination, board, plan, preset_path, resolved_settings(values))
@@ -403,6 +434,24 @@ def _write_file(
     partial = output.with_name("." + output.name + ".partial")
     try:
         create_3mf(partial, pieces, output.stem, rows, slicer_settings=not plain)
+        os.replace(partial, output)
+    finally:
+        if partial.exists():
+            partial.unlink()
+
+
+def _write_loose(output: Path, loose: Part | None, name: str, plain: bool) -> None:
+    """Writes the 3MF of the loose parts, so that it gets its final name only when it is complete.
+
+    Args:
+        output: Where to write it.
+        loose: The connectors or keys, as one part.
+        name: "Connectors" or "Keys", the object name in the slicer.
+        plain: Leave out the slicer filament slots.
+    """
+    partial = output.with_name("." + output.name + ".partial")
+    try:
+        create_3mf(partial, [(name, [loose])], output.stem, slicer_settings=not plain)
         os.replace(partial, output)
     finally:
         if partial.exists():
@@ -467,6 +516,8 @@ def write_manifest(
         "source_scad": portable_path(BAN_SCAD),
         "board_mm": board.size,
         "panel_grid": [board.columns, board.rows],
+        "joint": settings["Joint_Style"],
+        "loose_parts": {"kind": board.loose_name, "count": board.loose},
         "print_orientation": settings["Print_Orientation"],
         "coordinates": COORDINATES,
         "assembly": _assembly_text(board),
@@ -483,6 +534,17 @@ def _assembly_text(board: Board) -> str:
     """Tells, in one sentence, how to put the panels together."""
     if board.one_piece:
         return "One-piece board. No assembly."
+    if board.loose_name == "Connectors":
+        return (
+            "On a flat table, lay the panels face down, edges together. Drop a connector "
+            "(or an M4 x 20 or #8-32 x 3/4 inch screw with its nut) into each socket "
+            "across the seams, then turn the board over. Lift any panel straight up to free it."
+        )
+    if board.loose_name == "Keys":
+        return (
+            "On a flat table, lay the panels face down, edges together. Press a key "
+            "into each pocket across the seams, then turn the board over."
+        )
     return (
         "On a flat table, put the panels down face up in assembly_order. Hold each "
         "panel against its neighbors, then lower it straight down. Lift them off in reverse."

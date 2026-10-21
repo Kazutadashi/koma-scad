@@ -230,7 +230,7 @@ them. Edit `koma/presets/pieces/` instead.
 
 ```bash
 python3 komascad.py ban                                # the boards in ban/ban.json
-python3 komascad.py ban "Shogi - 3 x 3 panels"         # one board
+python3 komascad.py ban "Shogi - 2 x 2 panels"         # one board
 python3 komascad.py ban "Minishogi - 2 x 2" -n         # show the files; render nothing
 python3 komascad.py ban "My board" -p my-boards.json   # a board from another preset file
 ```
@@ -246,6 +246,9 @@ before you export. The files go to `exports/ban/BOARD/`:
 - A board in panels has one file for each panel, `BOARD - Panel CC-RR.3mf`,
   and `BOARD - All panels.3mf` with every panel on one bed. `CC-RR` is the
   column and row of the panel, from 0 at the front left.
+- A board with **Joint Style** Connectors or Keys also has
+  `BOARD - Connectors.3mf` or `BOARD - Keys.3mf`, with all of them and the
+  spares.
 - `manifest.json` gives the assembly order, and the size, offset and
   neighbors of each panel. It also lists the files and every setting.
 

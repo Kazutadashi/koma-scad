@@ -14,7 +14,11 @@ filament_palette = [
     ["Orange", [0.95, 0.35, 0.05, 1]], ["Silver", [0.7, 0.72, 0.75, 1]],
     ["Gold", [0.8, 0.62, 0.2, 1]],     ["Glitter silver", [0.7, 0.72, 0.75, 1]],
     ["Glitter gold", [0.8, 0.62, 0.2, 1]],
-    ["Filament 1", [0.5, 0.5, 0.5, 1]], ["Filament 2", [0.15, 0.5, 0.85, 1]], ["Filament 3", [0.85, 0.25, 0.5, 1]]
+    ["Filament 1", [0.5, 0.5, 0.5, 1]], ["Filament 2", [0.15, 0.5, 0.85, 1]], ["Filament 3", [0.85, 0.25, 0.5, 1]],
+    // The colors of the traditional woods: kaya (榧) for boards and komadai, island
+    // mulberry (桑) and black persimmon (黒柿) for boxes. Colors only: no grain.
+    ["Kaya", [0.86, 0.72, 0.47, 1]],   ["Kuwa", [0.66, 0.45, 0.23, 1]],
+    ["Kurogaki", [0.23, 0.18, 0.14, 1]]
 ];
 
 // The color of a named filament. Custom gives custom_rgba.

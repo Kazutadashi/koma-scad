@@ -12,6 +12,7 @@ The [README](../README.md) describes the project. Start with
 | [Movement diagrams](move-diagrams.md) | Draw the move diagrams of learner pieces |
 | [Board guide](ban.md) | Make, export, print and put together a board |
 | [Board design notes](ban-design-notes.md) | Learn why the board joints have their shape, and what is not done |
+| [Board connector spec](ban-connector-spec.md) | Replace or make a board connector: socket sizes and screw-and-nut hardware |
 | [Komadai guide](komadai.md) | Make a stand for captured pieces |
 | [Komabako guide](komabako.md) | Make a box for a set of pieces |
 | [Command reference](cli.md) | Use every `komascad.py` command and option |

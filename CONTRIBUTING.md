@@ -251,7 +251,7 @@ Do these steps from the repository root:
 
    ```bash
    python3 komascad.py export shogi --per-file all -o /tmp/komascad-release
-   python3 komascad.py ban "Shogi - 3 x 3 panels" -o /tmp/komascad-release/ban
+   python3 komascad.py ban "Shogi - 2 x 2 panels" -o /tmp/komascad-release/ban
    ```
 
 5. Make a preview, and look at every face:

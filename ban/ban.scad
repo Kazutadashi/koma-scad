@@ -2,7 +2,7 @@
 // Copyright (c) 2026 KomaSCAD contributors. https://github.com/Kazutadashi/koma-scad
 //
 // KomaSCAD ban: a parametric shogi board. Tested with OpenSCAD 2021.01.
-// The default settings make a one-piece 9 x 9 board with Japan Shogi Association squares.
+// The default settings make a traditional-size 9 x 9 board in 2 x 2 panels for a 256 mm print bed.
 // Units are mm and degrees unless a comment says otherwise.
 // Guide and every setting: docs/ban.md.
 // Keep ban.json next to this file, and ../lib/ next to its folder.
@@ -10,13 +10,13 @@
 /* [01 - Start here] */
 // A label for your own use. It does not change the board.
 Category = "Shogi";
-// Assembled board shows every panel in place. One panel and All panels show the parts to print. Use komascad.py ban for a color 3MF.
-Output_Mode = "Assembled board"; // [Assembled board,One panel,All panels]
+// Assembled board shows every panel in place. One panel and All panels show the parts to print. Joint test is two small blocks, to check the fit first. Loose parts is the connectors or keys of the board. Use komascad.py ban for a color 3MF.
+Output_Mode = "Assembled board"; // [Assembled board,One panel,All panels,Joint test,Loose parts]
 // The column of the panel that One panel shows, counted from 0 at the left.
 Panel_X = 0; // [0:1:100]
 // The row of the panel that One panel shows, counted from 0 at the front.
 Panel_Y = 0; // [0:1:100]
-// How the panels sit on the print bed. Face down gives the smoothest playing surface.
+// How the panels sit on the print bed. Face down gives the smoothest playing surface. Raised lines need Playing face up.
 Print_Orientation = "Playing face down"; // [Playing face down,Playing face up]
 
 /* [02 - Board] */
@@ -28,8 +28,8 @@ Playing_Rows = 9; // [1:1:100]
 Cell_Width = 35.4; // [20:0.1:100]
 // mm. Depth of one square, front to back. 38.7 is the Japan Shogi Association board.
 Cell_Depth = 38.7; // [20:0.1:120]
-// mm. Border around the grid on each edge.
-Board_Margin = 15; // [0:0.5:50]
+// mm. Border around the grid on each edge. 7.5 with the default squares gives the traditional 1尺1寸 x 1尺2寸 board (333 x 364 mm).
+Board_Margin = 7.5; // [0:0.5:50]
 // mm. From the underside to the playing surface.
 Board_Thickness = 12; // [2:0.5:40]
 // mm. Radius of the four outer corners.
@@ -43,19 +43,27 @@ Base_Width = 28.5; // [10:0.1:100]
 
 /* [04 - Printed panels] */
 // Panels from left to right. 1 x 1 is a one-piece board. Seams follow grid lines, so each panel holds whole squares.
-Panel_Columns = 1; // [1:1:100]
+Panel_Columns = 2; // [1:1:100]
 // Panels from front to back.
-Panel_Rows = 1; // [1:1:100]
+Panel_Rows = 2; // [1:1:100]
+// mm. Width of your print bed. The model stops if a panel and its tabs do not fit.
+Print_Bed_Width = 256; // [100:1:1000]
+// mm. Depth of your print bed.
+Print_Bed_Depth = 256; // [100:1:1000]
 // mm. Space between the panels in All panels.
 Print_Layout_Gap = 10; // [2:1:30]
 
 /* [05 - Markings] */
-// mm. Width of the grid lines.
-Grid_Groove_Width = 0.55; // [0.2:0.05:2]
+// Flush inlay: the lines are level with the playing surface. Raised: they stand above it, like lacquer lines, and the board prints face up.
+Line_Style = "Flush inlay"; // [Flush inlay,Raised]
+// mm. Width of the grid lines. Use a whole number of printed line widths: 0.9 is two lines of a 0.4 mm nozzle.
+Grid_Groove_Width = 0.9; // [0.2:0.05:2]
 // mm. Depth of the grid grooves.
 Grid_Groove_Depth = 0.45; // [0.1:0.05:2]
-// mm. How far the top of the line color sits below the playing surface.
-Line_Recess = 0.08; // [0:0.02:0.3]
+// mm. Flush inlay only: how far the top of the line color sits below the playing surface. 0 = level.
+Line_Recess = 0; // [0:0.02:0.3]
+// mm. Raised only: how far the lines stand above the playing surface. Use whole layers, such as 0.12 or 0.16.
+Line_Raise = 0.12; // [0.04:0.02:0.4]
 // Four dots where the lines one third in from each side cross.
 Camp_Dots = true;
 // mm. Diameter of each camp dot.
@@ -63,23 +71,29 @@ Camp_Dot_Diameter = 2.4; // [1:0.1:6]
 
 /* [06 - Filament colors] */
 // Board color. It becomes a named material in the color 3MF. Custom uses Board Color.
-Board_Filament = "Wood"; // [Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
+Board_Filament = "Kaya"; // [Kaya,Kuwa,Kurogaki,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 // Color of the grid lines and camp dots. Custom uses Line Color.
-Line_Filament = "Black"; // [Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
+Line_Filament = "Black"; // [Kaya,Kuwa,Kurogaki,Wood,Black,White,Red,Blue,Green,Purple,Yellow,Orange,Silver,Gold,Glitter silver,Glitter gold,Filament 1,Filament 2,Filament 3,Custom]
 // [red, green, blue, opacity], 0 to 1. Used when Board Filament is Custom.
 Board_Color = [0.82, 0.63, 0.34, 1];
 // [red, green, blue, opacity], 0 to 1. Used when Line Filament is Custom.
 Line_Color = [0.01, 0.01, 0.01, 1];
 
 /* [07 - Joint fit] */
-// The joint only keeps panels together and in line. The table sets their height. T-hook is for boards on a flat table.
-Joint_Style = "Dovetail"; // [Dovetail,T-hook]
+// Connectors: every panel has the same sockets on every seam edge, joined by small separate connectors, which you can print or replace with an M4 or #8-32 screw and nut. A broken connector costs one connector, and panels fit anywhere. T-hook: tabs printed on the panels; drop each panel in. Dovetail: the same, with angled sides. Keys: butterfly keys (契り) pressed into the underside.
+Joint_Style = "Connectors"; // [Connectors,T-hook,Dovetail,Keys]
+// Connectors only: Slip drops in and lifts out freely. Snug has less play, for flatter seams.
+Connector_Fit = "Slip"; // [Slip,Snug]
+// Connectors only: extra connectors to print, in case one is lost or breaks.
+Connector_Spares = 2; // [0:1:20]
 // mm. Space between each tab side and its socket. Each panel must drop into place under its own weight. Raise this if one does not.
-Joint_Clearance = 0.3; // [0.1:0.05:1]
+Joint_Clearance = 0.4; // [0.1:0.05:1]
 // mm. Gap above each tab at the seam. The T-hook socket roof is flat, so sideways play cannot close this gap.
 Joint_Roof_Clearance = 1; // [0.5:0.1:3]
 // mm. 45 degree bevel on the top edge of each seam. It takes up first-layer squish, so the seam closes at the playing surface.
 Seam_Bevel = 0.3; // [0:0.05:1]
+// Bevel both edges of each seam, not only the neighbor's. The small V hides a slight step, and a sliding piece does not catch on it.
+Seam_Reveal = true;
 // mm. Space around a camp dot where a seam goes around it.
 Camp_Dot_Plug_Clearance = 0.2; // [0:0.05:0.6]
 
@@ -87,19 +101,19 @@ Camp_Dot_Plug_Clearance = 0.2; // [0:0.05:0.6]
 // mm. Width of the tab neck at the seam. The T-hook head is wider by T Head Overhang on each side.
 Joint_Width = 12; // [4:0.5:30]
 // mm. How far a tab reaches past the seam.
-Joint_Depth = 5; // [2:0.5:15]
+Joint_Depth = 6; // [2:0.5:15]
 // mm. Gap between each tab and the table. The socket is open below the tab, so nothing pushes a tab up or down.
 Joint_Floor_Gap = 1; // [0.5:0.1:4]
 // mm. Tab thickness at the seam. 0 = as thick as the board allows. The top falls at 45 degrees to the tip, so the tab prints without supports.
 Joint_Thickness = 0; // [0:0.5:30]
 // mm. Chamfer around the underside of each tab. On T-hook panels, also the bevel on every underside edge and on the socket mouth.
-Joint_Bottom_Chamfer = 1; // [0:0.1:3]
+Joint_Bottom_Chamfer = 0.8; // [0:0.1:3]
 // Degrees. Dovetail only: angle of each tab side from straight across the seam. More = a pulled seam opens less.
 Joint_Flank_Angle = 45; // [15:1:45]
 // mm. Approximate distance between tabs on a long seam. Each seam has at least two tabs.
 Joint_Spacing = 60; // [25:5:150]
-// mm. Preferred distance from a tab to a panel corner.
-Joint_Edge_Margin = 20; // [5:1:50]
+// mm. Preferred distance from a joint to a panel corner.
+Joint_Edge_Margin = 25; // [5:1:50]
 // mm. T-hook only: how far the head extends on each side of the neck.
 T_Head_Overhang = 2.5; // [1:0.5:5]
 // mm. T-hook only: distance from the seam to the retaining shoulders.
@@ -107,9 +121,29 @@ T_Shoulder_Length = 2; // [1:0.5:5]
 // mm. T-hook only: extra clearance along the seam at each socket after the first on an edge.
 T_Spacing_Relief = 0.4; // [0:0.05:1]
 // mm. T-hook only: extra clearance on each side of the socket neck. The head keeps Joint Clearance.
-T_Neck_Relief = 0.3; // [0:0.05:0.8]
+T_Neck_Relief = 0.35; // [0:0.05:0.8]
 
-/* [09 - Maker signature on underside] */
+/* [09 - Keys] */
+// mm. Keys only: length of each butterfly key across the seam.
+Key_Length = 22; // [12:0.5:60]
+// mm. Keys only: width of each key at its ends.
+Key_Width = 14; // [6:0.5:40]
+// mm. Keys only: width of each key at its waist, on the seam.
+Key_Waist = 7; // [3:0.5:30]
+// mm. Keys only: thickness of each key, and the depth of its pocket in the underside.
+Key_Thickness = 4; // [2:0.2:8]
+// mm. Keys only: space on each side between a key and its pocket. A small value gives a press fit.
+Key_Clearance = 0.15; // [0:0.05:0.5]
+// Keys only: extra keys to print, in case one is lost.
+Key_Spares = 2; // [0:1:10]
+
+/* [10 - Underside] */
+// mm. Recess the middle of each panel's underside, so that the panel stands on a band near its edges. Both sides of a seam then stand on the same part of the table. 0 = flat underside.
+Underside_Relief = 0.3; // [0:0.05:1]
+// mm. Width of the band that the panel stands on. It covers the sockets.
+Support_Band = 25; // [8:1:40]
+
+/* [11 - Maker signature on underside] */
 // The mark, cut into the underside of panel 0, 0. Empty = no mark.
 Signature_Text = "";
 // An installed font. Find its exact name in Help > Font List.
@@ -124,6 +158,20 @@ Signature_Depth = 0.4; // [0.2:0.1:1]
 Export_Metadata = false;
 
 version = "3.5";   // the same as VERSION in komascad.py; a test checks this
+
+// The connector socket, spec v1 (docs/ban-connector-spec.md). Do not change
+// these values: printed connectors from any board, and the hardware that
+// replaces them, must fit every board. The socket takes a printed connector,
+// or an M4 x 18 to 22 socket head cap screw (ISO 4762) with an M4 hex nut
+// (ISO 4032), or a #8-32 x 3/4 to 7/8 inch socket cap screw with a #8-32 nut,
+// lying flat with the head in one panel and the nut in the other.
+spec_neck_width = 4.8;      // mm. The screw shank slot: #8-32 is 4.17, M4 is 4.0.
+spec_end_width = 10.6;      // mm. The head or nut pocket: a #8-32 nut is 10.1 across corners.
+spec_end_length = 4.8;      // mm. A cap screw head is 4.0 to 4.2 long; a nut is 3.2.
+spec_shoulder = 7;          // mm from the seam to each head or nut pocket: the panel material that holds the connector.
+spec_tail = 6;              // mm. Room past each pocket for the screw's tip.
+spec_height = 9.3;          // mm from the underside. A #8-32 nut lying on a flat is 8.73 tall.
+spec_lead_in = 0.4;         // mm chamfer round the socket mouth, so a connector finds its socket.
 $fn = 36;
 epsilon = 0.02;   // overlap that keeps boolean operations clean
 
@@ -143,8 +191,21 @@ board_width = play_width + 2*Board_Margin;
 board_depth = play_depth + 2*Board_Margin;
 panel_count = Panel_Columns*Panel_Rows;
 seams_exist = panel_count > 1;
-line_height = Grid_Groove_Depth - Line_Recess;
+raised_lines = Line_Style == "Raised";
+// The top of the line color, from the underside.
+line_top = raised_lines ? Board_Thickness + Line_Raise : Board_Thickness - Line_Recess;
+line_height = line_top - (Board_Thickness - Grid_Groove_Depth);
 face_down = Print_Orientation == "Playing face down";
+joint_test = Output_Mode == "Joint test";
+keys = Joint_Style == "Keys";
+connectors = Joint_Style == "Connectors";
+// Tabs printed on the panels: the T-hook and the Dovetail.
+tabs = !keys && !connectors;
+// Loose parts to print: keys or connectors.
+loose_parts = keys || connectors;
+loose_name = keys ? "Keys" : "Connectors";
+// The joint checks apply to a board in panels, and to the joint test.
+joints_used = seams_exist || joint_test;
 
 // Panel boundaries in whole squares, spread as evenly as possible.
 function first_column(tx) = round(tx*columns/Panel_Columns);
@@ -207,6 +268,8 @@ socket_roof_height = tab_seam_height + Joint_Roof_Clearance;
 tip_clearance = 0.4;   // mm beyond each tab tip, so the seam faces always meet first
 socket_reach = Joint_Depth + tip_clearance;
 socket_lead_in = 0.6;   // mm chamfer around a dovetail socket mouth, so a tab finds its socket
+key_lead_in = 0.4;      // mm chamfer around a key pocket mouth, so a key finds its pocket
+key_recess = 0.2;       // mm a seated key sits below the underside, so the panel stands on the panel
 t_mouth_bevel = max(0.5, Joint_Bottom_Chamfer + 0.2);   // so the mouth slope is not on the underside bevel
 function dovetail_half_width(x) = Joint_Width/2 + x*tan(Joint_Flank_Angle);
 // How far a socket reaches along and across its seam. A tab must stay this far
@@ -218,7 +281,21 @@ socket_extent = Joint_Style == "Dovetail"
     ? socket_reach + Joint_Clearance + socket_lead_in
     : Joint_Depth + Joint_Clearance + t_mouth_bevel;
 // How far a seam opens when the panels are pulled apart.
-seam_play = Joint_Style == "Dovetail" ? Joint_Clearance/sin(Joint_Flank_Angle) : Joint_Clearance;
+// A printed connector's space in its socket. Across the seam, each end has
+// connector_fit of space, so a pulled seam opens twice that: 0.4 mm for Slip,
+// the same as the tested T-hook. Along the seam, the space is looser; it does
+// not open the seam.
+connector_fit = Connector_Fit == "Snug" ? 0.1 : 0.2;
+connector_side_fit = 0.3;
+seam_play = Joint_Style == "Dovetail" ? Joint_Clearance/sin(Joint_Flank_Angle)
+    : keys ? Key_Clearance : connectors ? 2*connector_fit : Joint_Clearance;
+// The space that one joint (a socket, or a key pocket) takes along and across its seam.
+connector_half_width = keys ? Key_Width/2 + Key_Clearance + key_lead_in
+    : connectors ? spec_end_width/2 + spec_lead_in : socket_half_width;
+connector_extent = keys ? Key_Length/2 + Key_Clearance + key_lead_in
+    : connectors ? spec_shoulder + spec_end_length + spec_tail + spec_lead_in : socket_extent;
+// How far a tab reaches past each panel's right and back edges.
+tab_reach = tabs ? Joint_Depth : 0;
 function joint_margin(span) = min(Joint_Edge_Margin, span/3);
 function joint_count(span) = max(2, floor((span - 2*joint_margin(span))/Joint_Spacing) + 1);
 function joint_position(index, count, span) = joint_margin(span) + index*(span - 2*joint_margin(span))/(count - 1);
@@ -370,11 +447,116 @@ module edge_joints(span, at, vertical, socket) {
     }
 }
 
+// The butterfly key (契り), centered on the origin, its length across the seam along x.
+module key_2d(clearance=0) {
+    offset(delta=clearance) polygon([
+        [-Key_Length/2, -Key_Width/2], [0, -Key_Waist/2], [Key_Length/2, -Key_Width/2],
+        [Key_Length/2, Key_Width/2], [0, Key_Waist/2], [-Key_Length/2, Key_Width/2]]);
+}
+
+module key() { linear_extrude(Key_Thickness) key_2d(); }
+
+// The pocket for a key, open through the underside, with a chamfered mouth.
+// Its floor is a top surface when the panel prints face down.
+module key_pocket() {
+    depth = Key_Thickness + key_recess;
+    translate([0, 0, -epsilon]) linear_extrude(depth + epsilon) key_2d(Key_Clearance);
+    hull() {
+        translate([0, 0, -epsilon]) linear_extrude(epsilon) key_2d(Key_Clearance + key_lead_in);
+        translate([0, 0, key_lead_in]) linear_extrude(epsilon) key_2d(Key_Clearance);
+    }
+}
+
+// Half of each key pocket on each side of a seam. The seam is on the y axis.
+module edge_key_pockets(span, at, vertical) {
+    count = joint_count(span);
+    for (i = [0:count - 1]) {
+        if (vertical) translate([at, joint_position(i, count, span), 0]) key_pocket();
+        else translate([joint_position(i, count, span), at, 0]) rotate([0, 0, 90]) key_pocket();
+    }
+}
+
+// The joints that a board needs: one on each joint position of every seam.
+joint_total =
+    (Panel_Columns > 1 ? (Panel_Columns - 1)*sum_counts([for (ty = [0:Panel_Rows - 1]) tile_depth(ty)]) : 0)
+    + (Panel_Rows > 1 ? (Panel_Rows - 1)*sum_counts([for (tx = [0:Panel_Columns - 1]) tile_width(tx)]) : 0);
+function sum_counts(spans, i=0) = i >= len(spans) ? 0 : joint_count(spans[i]) + sum_counts(spans, i + 1);
+key_count = keys ? joint_total : 0;
+// The loose parts to print, spares included, for a board in panels.
+loose_count = !loose_parts || !seams_exist ? 0 : joint_total + (keys ? Key_Spares : Connector_Spares);
+
+// The connector socket (spec v1), centered on the seam (the y axis): a slot
+// for the neck across the seam, a pocket for the head or nut on each side,
+// and room for a screw tip beyond. Open through the underside, with a flat
+// roof. Every panel edge has the same half, so any panel joins any other.
+module connector_socket_2d(grow=0) {
+    reach = spec_shoulder + spec_end_length + spec_tail;
+    offset(delta=grow) {
+        square([2*reach, spec_neck_width], center=true);
+        for (side = [-1, 1]) translate([side*(spec_shoulder + spec_end_length/2), 0])
+            square([spec_end_length, spec_end_width], center=true);
+    }
+}
+
+module connector_socket() {
+    translate([0, 0, -epsilon]) linear_extrude(spec_height + epsilon) connector_socket_2d();
+    hull() {
+        translate([0, 0, -epsilon]) linear_extrude(epsilon) connector_socket_2d(spec_lead_in);
+        translate([0, 0, spec_lead_in]) linear_extrude(epsilon) connector_socket_2d();
+    }
+}
+
+// The printed connector: a flat double-T. Its ends sit in the head and nut
+// pockets with connector_fit of space across the seam. It rests on the table, 1.3 mm
+// below the socket roofs, so it never sets a panel's height. It is the
+// intended breaking point: much thinner than the panel shoulders it bears on.
+connector_height = spec_height - 1.3;
+module connector_2d() {
+    end_inner = spec_shoulder + connector_fit;
+    end_outer = spec_shoulder + spec_end_length - connector_fit;
+    square([2*end_inner + 1, spec_neck_width - 2*connector_side_fit], center=true);
+    for (side = [-1, 1]) translate([side*(end_inner + end_outer)/2, 0])
+        square([end_outer - end_inner, spec_end_width - 2*connector_side_fit], center=true);
+}
+module connector() { linear_extrude(connector_height) connector_2d(); }
+
+// The sockets along one seam edge. A vertical edge runs along y at x = at, the others along x at y = at.
+module edge_connector_sockets(span, at, vertical) {
+    count = joint_count(span);
+    for (i = [0:count - 1]) {
+        if (vertical) translate([at, joint_position(i, count, span), 0]) connector_socket();
+        else translate([joint_position(i, count, span), at, 0]) rotate([0, 0, 90]) connector_socket();
+    }
+}
+
+// Every key or connector, and the spares, in rows for one print.
+module loose_layout() {
+    size = keys ? [Key_Length, Key_Width]
+        : [2*(spec_shoulder + spec_end_length), spec_end_width];
+    total = max(1, loose_count);
+    per_row = max(1, floor(sqrt(total)));
+    pitch = size + [5, 5];
+    for (k = [0:total - 1])
+        translate([(k % per_row + 0.5)*pitch[0], (floor(k/per_row) + 0.5)*pitch[1], 0]) {
+            if (keys) key(); else connector();
+        }
+}
+
 // A 45 degree bevel along the top of a seam: seam on the y axis, panel at
-// x > 0, length mm long and centered on the origin.
+// x > 0, length mm long and centered on the origin. The cut continues above
+// the playing surface, so that it also bevels raised lines.
 module seam_bevel_cut(length, bevel=seam_bevel, top=Board_Thickness) {
     if (bevel > 0) rotate([90, 0, 0]) linear_extrude(length, center=true)
-        polygon([[-epsilon, top - bevel - epsilon], [-epsilon, top + epsilon], [bevel + epsilon, top + epsilon]]);
+        polygon([[-epsilon, top - bevel - epsilon], [-epsilon, top + 1], [bevel + 1 + epsilon, top + 1]]);
+}
+
+// The reveal: the same bevel on the panel's own right and back seam edges,
+// where the grid line is. It cuts the body and the line color alike.
+module reveal_cuts(tx, ty) {
+    width = tile_width(tx);
+    depth = tile_depth(ty);
+    if (Seam_Reveal && tx < Panel_Columns - 1) translate([width, depth/2, 0]) rotate([0, 0, 180]) seam_bevel_cut(depth + 2);
+    if (Seam_Reveal && ty < Panel_Rows - 1) translate([width/2, depth, 0]) rotate([0, 0, -90]) seam_bevel_cut(width + 2);
 }
 
 // A bevel along the bottom of a panel edge, on the panel's +x side. It leaves
@@ -393,7 +575,7 @@ module underside_bevel_cut(length, bevel=Joint_Bottom_Chamfer) {
 // correctly when you turn the board over.
 module signature_cut(tx, ty) {
     if (tx == 0 && ty == 0 && Signature_Text != "")
-        translate([tile_width(tx)/2, tile_depth(ty)/2, -epsilon]) linear_extrude(Signature_Depth + epsilon)
+        translate([tile_width(tx)/2, tile_depth(ty)/2, Underside_Relief - epsilon]) linear_extrude(Signature_Depth + epsilon)
             mirror([0, 1, 0]) text(Signature_Text, size=Signature_Font_Size, font=Signature_Font,
                                    halign="center", valign="center");
 }
@@ -423,22 +605,30 @@ module foreign_dot_notches(tx, ty, z0=0, height=Board_Thickness) {
 
 // The grid grooves and camp dots that a panel owns. A line on the panel's
 // right or back seam runs epsilon past the edge, so no very thin wall is left there.
-module grid_cuts(tx, ty) {
+// above is how far the shapes reach above the playing surface.
+module grid_cuts(tx, ty, above=epsilon) {
     x_min = tile_x_min(tx);
     y_min = tile_y_min(ty);
     z = Board_Thickness - Grid_Groove_Depth;
     for (column = [0:columns]) if (owns_column(tx, column)) {
         on_seam = tx < Panel_Columns - 1 && column == last_column(tx);
         translate([column*Cell_Width - x_min - Grid_Groove_Width/2, -y_min, z])
-            cube([Grid_Groove_Width + (on_seam ? epsilon : 0), play_depth, Grid_Groove_Depth + epsilon]);
+            cube([Grid_Groove_Width + (on_seam ? epsilon : 0), play_depth, Grid_Groove_Depth + above]);
     }
     for (row = [0:rows]) if (owns_row(ty, row)) {
         on_seam = ty < Panel_Rows - 1 && row == last_row(ty);
         translate([-x_min, row*Cell_Depth - y_min - Grid_Groove_Width/2, z])
-            cube([play_width, Grid_Groove_Width + (on_seam ? epsilon : 0), Grid_Groove_Depth + epsilon]);
+            cube([play_width, Grid_Groove_Width + (on_seam ? epsilon : 0), Grid_Groove_Depth + above]);
     }
     for (dot = camp_dots) if (owns_dot(tx, ty, dot))
-        at_dot(dot, x_min, y_min, z) cylinder(d=Camp_Dot_Diameter + 2*epsilon, h=Grid_Groove_Depth + epsilon);
+        at_dot(dot, x_min, y_min, z) cylinder(d=Camp_Dot_Diameter + 2*epsilon, h=Grid_Groove_Depth + above);
+}
+
+// The underside relief: a shallow pocket in the middle of the underside.
+module underside_relief(tx, ty) {
+    if (Underside_Relief > 0)
+        translate([Support_Band, Support_Band, -epsilon])
+            cube([tile_width(tx) - 2*Support_Band, tile_depth(ty) - 2*Support_Band, Underside_Relief + epsilon]);
 }
 
 // One printable panel, with its grid grooves cut but not filled.
@@ -461,19 +651,34 @@ module panel_body_geometry(tx, ty) {
             }
             // Tabs on the right and back edges. A panel only presses down over
             // the tabs of neighbors that are already in place.
-            if (tx < Panel_Columns - 1) edge_joints(depth, width, true, false);
-            if (ty < Panel_Rows - 1) edge_joints(width, depth, false, false);
+            if (tabs && tx < Panel_Columns - 1) edge_joints(depth, width, true, false);
+            if (tabs && ty < Panel_Rows - 1) edge_joints(width, depth, false, false);
         }
         // Sockets and bevels on the left and front edges. The neighbor owns the
-        // grid line on that seam, so only this panel's edge gets the bevel.
+        // grid line on that seam; the reveal bevels this panel's own seam edges.
         if (tx > 0) {
-            edge_joints(depth, 0, true, true);
+            if (tabs) edge_joints(depth, 0, true, true);
             translate([0, depth/2, 0]) seam_bevel_cut(depth + 2);
         }
         if (ty > 0) {
-            edge_joints(width, 0, false, true);
+            if (tabs) edge_joints(width, 0, false, true);
             translate([width/2, 0, 0]) rotate([0, 0, 90]) seam_bevel_cut(width + 2);
         }
+        reveal_cuts(tx, ty);
+        // Keys and connectors: half of each pocket or socket on every seam edge.
+        if (keys) {
+            if (tx > 0) edge_key_pockets(depth, 0, true);
+            if (tx < Panel_Columns - 1) edge_key_pockets(depth, width, true);
+            if (ty > 0) edge_key_pockets(width, 0, false);
+            if (ty < Panel_Rows - 1) edge_key_pockets(width, depth, false);
+        }
+        if (connectors) {
+            if (tx > 0) edge_connector_sockets(depth, 0, true);
+            if (tx < Panel_Columns - 1) edge_connector_sockets(depth, width, true);
+            if (ty > 0) edge_connector_sockets(width, 0, false);
+            if (ty < Panel_Rows - 1) edge_connector_sockets(width, depth, false);
+        }
+        underside_relief(tx, ty);
         // T-hook panels get a bevel on all four underside edges. The center of
         // the underside still sits on the table.
         if (seams_exist && Joint_Style == "T-hook") {
@@ -494,18 +699,25 @@ module panel_body_geometry(tx, ty) {
 // komascad.py renders each panel with Output_Mode "Color body" and "Color
 // markings", and puts the two in one 3MF. The parts touch, but do not overlap.
 
-// The line color: the grooves, filled to Line Recess below the playing
-// surface and cut to the panel, so that each camp dot stays in its owner.
+// The line color: the grooves, filled up to line_top and cut to the panel,
+// so that each camp dot stays in its owner. Raised lines stand above the
+// playing surface on the same outline as their grooves.
 module panel_markings(tx, ty) {
-    intersection() {
-        grid_cuts(tx, ty);
-        tile_footprint(tx, ty, Board_Thickness - Grid_Groove_Depth, line_height);
+    difference() {
+        intersection() {
+            grid_cuts(tx, ty, raised_lines ? Line_Raise + epsilon : epsilon);
+            tile_footprint(tx, ty, Board_Thickness - Grid_Groove_Depth, line_height);
+        }
+        reveal_cuts(tx, ty);
     }
 }
 
 module panel_preview(tx, ty) {
     color(material_rgb(0)) panel_body(tx, ty);
-    color(material_rgb(1)) panel_markings(tx, ty);
+    // Flush lines are level with the playing surface, which the F5 preview
+    // draws as flicker. Lift them a hair in the preview only.
+    preview_lift = 0.01;
+    color(material_rgb(1)) translate([0, 0, preview_lift]) panel_markings(tx, ty);
 }
 
 
@@ -527,10 +739,64 @@ module assembled_board() {
 module children_of(tx, ty) { if ($preview) panel_preview(tx, ty); else panel_body(tx, ty); }
 
 module all_panels() {
-    pitch_x = max([for (tx = [0:Panel_Columns - 1]) tile_width(tx)]) + Joint_Depth + Print_Layout_Gap;
-    pitch_y = max([for (ty = [0:Panel_Rows - 1]) tile_depth(ty)]) + Joint_Depth + Print_Layout_Gap;
+    pitch_x = max([for (tx = [0:Panel_Columns - 1]) tile_width(tx)]) + tab_reach + Print_Layout_Gap;
+    pitch_y = max([for (ty = [0:Panel_Rows - 1]) tile_depth(ty)]) + tab_reach + Print_Layout_Gap;
     for (ty = [0:Panel_Rows - 1], tx = [0:Panel_Columns - 1])
         translate([tx*pitch_x, ty*pitch_y, 0]) on_bed(tile_depth(ty)) children_of(tx, ty);
+}
+
+
+// Two small blocks with one joint and one grid line at the seam, to check the
+// fit and the seam before printing whole panels. The left block has the tab,
+// or half of the key pocket; a Keys test also prints one key.
+test_length = 2*connector_half_width + 16;                // mm along the seam: one connector and its walls
+test_tab_block = loose_parts ? connector_extent + 15 : 30;   // mm across the seam, left block
+test_socket_block = connector_extent + 15;                // mm across the seam, right block
+
+module test_bevels(width) {
+    if (Joint_Style == "T-hook") {
+        translate([0, test_length/2, 0]) underside_bevel_cut(test_length + 2);
+        translate([width, test_length/2, 0]) rotate([0, 0, 180]) underside_bevel_cut(test_length + 2);
+        translate([width/2, 0, 0]) rotate([0, 0, 90]) underside_bevel_cut(width + 2);
+        translate([width/2, test_length, 0]) rotate([0, 0, -90]) underside_bevel_cut(width + 2);
+    }
+}
+
+module test_tab_block() {
+    difference() {
+        union() {
+            cube([test_tab_block, test_length, Board_Thickness]);
+            if (tabs) translate([test_tab_block, test_length/2, 0]) joint(false);
+        }
+        // The grid line on the seam belongs to the tab block, as on a board.
+        translate([test_tab_block - Grid_Groove_Width, -epsilon, Board_Thickness - Grid_Groove_Depth])
+            cube([Grid_Groove_Width + epsilon, test_length + 2*epsilon, Grid_Groove_Depth + epsilon]);
+        if (keys) translate([test_tab_block, test_length/2, 0]) key_pocket();
+        if (connectors) translate([test_tab_block, test_length/2, 0]) connector_socket();
+        if (Seam_Reveal) translate([test_tab_block, test_length/2, 0]) rotate([0, 0, 180]) seam_bevel_cut(test_length + 2, Seam_Bevel);
+        test_bevels(test_tab_block);
+    }
+}
+
+module test_socket_block() {
+    difference() {
+        cube([test_socket_block, test_length, Board_Thickness]);
+        if (tabs) translate([0, test_length/2, 0]) joint(true, 0);
+        if (keys) translate([0, test_length/2, 0]) key_pocket();
+        if (connectors) translate([0, test_length/2, 0]) connector_socket();
+        translate([0, test_length/2, 0]) seam_bevel_cut(test_length + 2, Seam_Bevel);
+        test_bevels(test_socket_block);
+    }
+}
+
+module joint_test() {
+    color(material_rgb(0)) render(convexity=12) {
+        on_bed(test_length) test_tab_block();
+        translate([test_tab_block + tab_reach + Print_Layout_Gap, 0, 0]) on_bed(test_length) test_socket_block();
+        loose_x = test_tab_block + test_socket_block + 2*Print_Layout_Gap;
+        if (keys) translate([loose_x + Key_Length/2, test_length/2, 0]) key();
+        if (connectors) translate([loose_x + spec_shoulder + spec_end_length, test_length/2, 0]) connector();
+    }
 }
 
 
@@ -547,17 +813,29 @@ assert(line_height > 0, "Line Recess must be less than Grid Groove Depth.");
 assert(!camp_dots_on || (Camp_Dot_Diameter > Grid_Groove_Width && Camp_Dot_Diameter < min(Cell_Width, Cell_Depth)/2),
     "Camp Dot Diameter must be wider than a grid line and less than half a square.");
 assert(Signature_Text == ""
-    || (Signature_Depth < Board_Thickness - Grid_Groove_Depth - 1
-        && len(Signature_Text)*Signature_Font_Size < tile_width(0) - 2*(Board_Margin + socket_extent)
-        && 2*Signature_Font_Size < tile_depth(0) - 2*(Board_Margin + socket_extent)),
+    || (Signature_Depth + Underside_Relief < Board_Thickness - Grid_Groove_Depth - 1
+        && len(Signature_Text)*Signature_Font_Size < tile_width(0) - 2*(Board_Margin + connector_extent)
+        && 2*Signature_Font_Size < tile_depth(0) - 2*(Board_Margin + connector_extent)),
     "The signature does not fit under panel 0, 0. Shorten the text, or reduce its size or depth.");
-if (seams_exist) {
+assert(!raised_lines || !face_down,
+    "Raised lines stand above the playing surface, so the board must print face up. Set Print Orientation to Playing face up.");
+// The largest panel footprint on the bed, with the tabs on its right and back edges.
+function bed_width(tx) = tile_width(tx) + (tx < Panel_Columns - 1 ? tab_reach : 0);
+function bed_depth(ty) = tile_depth(ty) + (ty < Panel_Rows - 1 ? tab_reach : 0);
+function fits_bed(w, d) = (w <= Print_Bed_Width && d <= Print_Bed_Depth) || (w <= Print_Bed_Depth && d <= Print_Bed_Width);
+too_large = [for (ty = [0:Panel_Rows - 1], tx = [0:Panel_Columns - 1])
+    if (!fits_bed(bed_width(tx), bed_depth(ty))) [tx, ty, bed_width(tx), bed_depth(ty)]];
+assert(len(too_large) == 0, len(too_large) == 0 ? ""
+    : str("Panel ", too_large[0][0], ", ", too_large[0][1], " is ", too_large[0][2], " x ", too_large[0][3],
+          " mm with its tabs, which is larger than the ", Print_Bed_Width, " x ", Print_Bed_Depth,
+          " mm print bed. Use more panels, a smaller Board Margin, or a larger Print Bed."));
+if (joints_used) {
     assert(!camp_dots_on || Camp_Dot_Plug_Clearance < Grid_Groove_Width,
         "Camp Dot Plug Clearance must be less than Grid Groove Width, or the seam shows around the dot.");
-    assert(socket_roof_height <= Board_Thickness - Grid_Groove_Depth - socket_skin + 0.001,
+    assert(!tabs || socket_roof_height <= Board_Thickness - Grid_Groove_Depth - socket_skin + 0.001,
         str("The sockets reach ", socket_roof_height, " mm, which leaves less than ", socket_skin,
             " mm under a grid groove. Reduce Joint Thickness, or set it to 0 for automatic."));
-    assert(tab_tip_height >= 1.5,
+    assert(!tabs || tab_tip_height >= 1.5,
         str("The tabs are only ", tab_tip_height, " mm tall at the tip. Make the board thicker, ",
             "or reduce Joint Depth or Joint Bottom Chamfer."));
     assert(Joint_Style != "T-hook" || T_Shoulder_Length < Joint_Depth,
@@ -566,32 +844,55 @@ if (seams_exist) {
         "The T-hook head must hold at least 1 mm past the socket neck. Raise T Head Overhang.");
     assert(Joint_Style != "T-hook" || t_tip_corner_clip < min(Joint_Depth - T_Shoulder_Length, T_Head_Overhang),
         "The clipped T-hook corners would remove the head. Make the board thicker, or reduce Joint Depth or Joint Bottom Chamfer.");
-    assert(joint_margin(shortest_seam) >= socket_half_width + socket_extent,
-        str("A tab must be at least ", socket_half_width + socket_extent, " mm from a panel corner, ",
-            "so that sockets on two seams do not meet. Raise Joint Edge Margin, or use fewer, larger panels."));
-    assert(shortest_seam - 2*joint_margin(shortest_seam) >= 2*socket_half_width + 2,
+    assert(joint_margin(shortest_seam) >= connector_half_width + connector_extent,
+        str("A joint must be at least ", connector_half_width + connector_extent, " mm from a panel corner, ",
+            "so that the joints on two seams do not meet. Raise Joint Edge Margin, use fewer, larger panels, ",
+            "or use smaller keys."));
+    assert(shortest_seam - 2*joint_margin(shortest_seam) >= 2*connector_half_width + 2,
         str("The shortest seam (", shortest_seam, " mm) is too short for two tabs. ",
             "Use fewer, larger panels, or reduce Joint Width."));
-    assert(Seam_Bevel < Board_Thickness - socket_roof_height, "Seam Bevel is so deep that it reaches the sockets.");
+    assert(!tabs || Seam_Bevel < Board_Thickness - socket_roof_height, "Seam Bevel is so deep that it reaches the sockets.");
+    assert(!connectors || spec_height <= Board_Thickness - Grid_Groove_Depth - 1,
+        str("The connector sockets are ", spec_height, " mm deep, which leaves less than 1 mm under a grid groove. ",
+            "Connectors need a board at least ", spec_height + Grid_Groove_Depth + 1, " mm thick."));
+    assert(!keys || (Key_Waist < Key_Width && Key_Thickness + key_recess < Board_Thickness - Grid_Groove_Depth - 1),
+        "The keys do not fit: Key Waist must be less than Key Width, and the pockets must stay 1 mm below the grid grooves.");
+    assert(!Seam_Reveal || Seam_Bevel < Grid_Groove_Width,
+        "With Seam Reveal, Seam Bevel must be less than Grid Groove Width, or the bevel cuts past the grid line.");
 }
-assert(Output_Mode == "Assembled board" || Output_Mode == "All panels"
+assert(Underside_Relief == 0 || 2*Support_Band < min(min([for (tx = [0:Panel_Columns - 1]) tile_width(tx)]),
+                                                         min([for (ty = [0:Panel_Rows - 1]) tile_depth(ty)])),
+    "The support band is wider than half a panel. Reduce Support Band, or set Underside Relief to 0.");
+assert(Underside_Relief == 0 || !tabs || !seams_exist || Support_Band >= connector_extent + 2,
+    "The support band must cover the sockets. Raise Support Band.");
+assert(Output_Mode != "Loose parts" || loose_parts,
+    "Loose parts shows the connectors or keys of a board. Set Joint Style to Connectors or Keys.");
+assert(Output_Mode == "Assembled board" || Output_Mode == "All panels" || joint_test || Output_Mode == "Loose parts"
     || (Panel_X < Panel_Columns && Panel_Y < Panel_Rows),
     str("Panel X must be 0 to ", Panel_Columns - 1, " and Panel Y 0 to ", Panel_Rows - 1, "."));
 
 // Information in the Console.
 echo(str("KomaSCAD ban ", version, ". Board: ", board_width, " x ", board_depth, " x ", Board_Thickness,
          " mm. Panels: ", Panel_Columns, " x ", Panel_Rows, "."));
-if (seams_exist)
+if (seams_exist && tabs)
     echo(str(Joint_Style, " joints. Tab thickness at the seam / at the tip: ", tab_thickness, " / ", tab_tip_height,
              " mm. A pulled seam opens ", seam_play, " mm."));
-// komascad.py reads these lines: the fonts, the parts, and each panel's
-// column, row, width, depth and offset from the front-left corner of the board.
+if (seams_exist && keys)
+    echo(str("Keys: ", key_count, " butterfly keys, and ", Key_Spares, " spares. ",
+             "Lay the panels face down, press the keys in, and turn the board over."));
+if (seams_exist && connectors)
+    echo(str("Connectors: ", joint_total, ", and ", Connector_Spares, " spares. Each can be an M4 x 20 socket head ",
+             "screw with an M4 nut, or a #8-32 x 3/4 inch screw and nut. A pulled seam opens ", seam_play, " mm."));
+// komascad.py reads these lines: the fonts, the parts, each panel's column,
+// row, width, depth and offset from the front-left corner of the board, and
+// the number and kind of loose parts to print (0 for a board without them).
 if (Export_Metadata) {
     echo("KOMASCAD_FONTS", Signature_Text == "" ? [] : [Signature_Font]);
     echo("KOMASCAD_EXPORT", [for (role = [0:1]) [role_names[role], material_name(role), material_rgb(role), true]]);
     echo("KOMASCAD_BAN", [board_width, board_depth, Board_Thickness], [Panel_Columns, Panel_Rows],
          [for (ty = [0:Panel_Rows - 1], tx = [0:Panel_Columns - 1])
-             [tx, ty, tile_width(tx), tile_depth(ty), tile_x_min(tx) + Board_Margin, tile_y_min(ty) + Board_Margin]]);
+             [tx, ty, tile_width(tx), tile_depth(ty), tile_x_min(tx) + Board_Margin, tile_y_min(ty) + Board_Margin]],
+         loose_count, loose_name);
 }
 
 
@@ -600,6 +901,8 @@ if (Export_Metadata) {
 if (!Export_Metadata) {
     if (Output_Mode == "One panel") on_bed(tile_depth(Panel_Y)) children_of(Panel_X, Panel_Y);
     else if (Output_Mode == "All panels") all_panels();
+    else if (joint_test) joint_test();
+    else if (Output_Mode == "Loose parts") color(material_rgb(0)) loose_layout();
     else if (Output_Mode == "Color body") on_bed(tile_depth(Panel_Y)) color(material_rgb(0)) panel_body(Panel_X, Panel_Y);
     else if (Output_Mode == "Color markings") on_bed(tile_depth(Panel_Y)) color(material_rgb(1)) panel_markings(Panel_X, Panel_Y);
     else assembled_board();

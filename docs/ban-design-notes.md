@@ -79,16 +79,72 @@ If a joined panel sits high but lies flat alone, the joint fails. Do not
 push harder. Look for contact at the sides, and check the gaps above and
 below the tab.
 
+## Flatness options added after the joint research
+
+Research into flush joints for printed parts (see the project's research
+notes) led to three options. They are model values, not yet printed:
+
+- **Seam Reveal** (default on): a 45 degree bevel on both edges of each seam,
+  so that a small step does not catch a piece.
+- **Underside Relief** (default 0.3 mm): each panel stands on a band near its
+  edges, so that both sides of a seam take their height from nearly the same
+  part of the table.
+- **Keys**: face-down assembly with butterfly keys (契り). The table sets the
+  playing faces in one plane before the keys grip, so panel thickness does
+  not matter. The keys are loose parts, which breaks rule 1 above, so the
+  T-hook stays the default until a Keys board is printed and measured.
+
+Not added: tapered sliding rails (the last panel of a closed grid would have
+to slide along two seams at once), zipper joints (made for 2 mm tiles), and
+leaf springs in the T-hook socket (its 2 mm shoulders leave no room for a
+printable leaf).
+
+## Connectors: repair and modularity
+
+Integral tabs have two problems. A tab snapped off ruins a whole panel. And
+each panel has a fixed role, so panels cannot be rearranged. Thus the default
+joint is now **Connectors**:
+
+- Panels have sockets only. The separate double-T connector is the weak link,
+  so a hard pull breaks a connector, not a panel.
+- The socket takes an M4 or #8-32 screw and nut, so a lost connector can be
+  bought anywhere. See the [connector spec](ban-connector-spec.md).
+- Every seam edge has the same socket half, and the connector rests on the
+  table, so the table still sets every panel's height. Lifting a panel
+  straight up always frees it.
+- The panel shoulders that hold a connector are 7 mm thick. The T-hook's are
+  2 mm.
+
+This breaks rule 1 above (no loose parts) on purpose: repair and modularity
+are worth more. Connectors are model values, not yet printed; the T-hook
+preset stays for comparison.
+
+Next steps for modularity:
+- **Genderless panels:** half of each seam line on each panel, and quarter
+  camp dots.
+- **Standard modules:** N x N squares, for example 3 x 3, with socket
+  positions fixed to the grid.
+- **Border strips** that use the same connectors.
+
 ## Open work
 
-- **Bed size.** The model does not measure each panel with its tabs against a
-  print bed. A check should name the panel that is too large and what to
-  change.
 - **One panel only.** `komascad.py ban` renders every panel. It cannot yet
   render only one panel again.
 - **Board sizing.** Offer "fit my pieces" next to "exact square size".
-- **Surface.** Test the face-down print of the recessed markings, and test a
-  painted-groove board.
+- **Legged board.** Thin playing panels in a printed hollow base (盤台) with a
+  rim that holds them, octagonal クチナシ legs and an 音受け hollow. The rim
+  would also stop the seams from opening. The legged komadai styles are
+  ready for it.
+- **Legged komadai taller than the printer.** Beside a full legged board, a
+  yagura komadai is about 275 mm tall. Separate legs printed lying down need
+  a tenon that prints without supports.
+- **Line width of a real board.** Measure the lacquer lines of a fine board,
+  and set **Grid Groove Width** from it.
+- **Surface.** Test the face-down print of the flush markings on smooth and
+  textured plates, a raised-line board printed face up, and a painted-groove
+  board.
+- **Sound.** Print coupons with different solid layers and infill, put the
+  same piece on each, and choose the slicer settings by ear.
 - **Seams.** Measure how well a seam hides next to its grid line after
   assembly, and test camp dots at a seam.
 - **Slicers.** Write down the tested slicer steps, as the print guide does

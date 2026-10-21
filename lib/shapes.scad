@@ -20,6 +20,22 @@ module rounded_slab(size, radius) {
     linear_extrude(size[2]) rounded_rectangle_2d([size[0], size[1]], radius);
 }
 
+// A rounded slab with a 45 degree chamfer (面取り) round its bottom and top
+// edges. A chamfer prints without supports on the bed side of a part.
+module chamfered_slab(size, radius, bottom=0, top=0) {
+    assert(bottom + top < size[2], "The chamfers are taller than the slab.");
+    module layer(z, inset, height) {
+        translate([inset, inset, z])
+            rounded_slab([size[0] - 2*inset, size[1] - 2*inset, height], max(0, radius - inset));
+    }
+    thin = 0.01;
+    hull() {
+        layer(0, bottom, thin);
+        layer(bottom, 0, size[2] - bottom - top);
+        layer(size[2] - thin, top, thin);
+    }
+}
+
 // The band between a rounded rectangle and the same shape wall mm smaller on each side.
 module rounded_ring_2d(size, wall, radius) {
     assert(wall > 0 && 2*wall < min(size), "The ring wall does not fit inside the ring.");

@@ -582,7 +582,7 @@ check and stops when a piece fails.
 """,
     "ban": """\
   %(prog)s                              the boards in ban/ban.json
-  %(prog)s "Shogi - one piece"          one board, as color 3MF files
+  %(prog)s "Shogi - 2 x 2 panels"       one board, as color 3MF files
   %(prog)s "Minishogi - 2 x 2" -n       show what would be written
   %(prog)s "My board" -p my-boards.json
 
