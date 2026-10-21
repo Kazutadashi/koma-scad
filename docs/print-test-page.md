@@ -246,6 +246,45 @@ The first complete record from the project's reference printer is the
 baseline. Later prints are compared with it cell by cell: the total says
 whether a setup is better or worse overall, and the cells say where.
 
+## Bed consistency test
+
+The bed consistency test checks that the whole print surface makes the same
+lettering. It prints the same pieces in the four corners and the middle of
+the bed, then you compare them.
+
+The file is `koma/presets/misc/bed-consistency-test.json`. It holds 10 pawns,
+in 5 pairs:
+
+| Place on the bed | Left piece | Right piece |
+| --- | --- | --- |
+| Back left, back right, middle, front left, front right | 1 character: 歩 | 2 characters: 歩兵 |
+
+- **The pawn** is the hardest standard piece to print. It has the most thin
+  strokes of all standard pieces, both with 1 and 2 characters (1.1% and
+  1.4%, measured with `komascad.py check`), and the smallest body.
+- **Face down:** the front lies on the bed, so the first layer makes the
+  lettering, and the bed surface shows directly in it.
+- **The layout** is for a 256 x 256 mm bed (such as a Bambu Lab A1). The outer
+  pieces are 12 mm from the bed edges.
+
+Export it:
+
+```bash
+python3 komascad.py export koma/presets/misc/bed-consistency-test.json --per-file all --name "Bed Consistency Test" -o exports/bed-consistency-test
+```
+
+Open the 3MF and keep the layout: do not let the slicer arrange the plate.
+Load wood, black and red filament in slots 1, 2 and 3, as for the sets.
+
+After printing, compare the five 1-character pawns with each other, then the
+five 2-character pawns: stroke edges, filled gaps, and the black first layer.
+A difference that follows the place on the bed, not the piece, comes from the
+bed: its level, its surface, or its temperature.
+
+For another bed size, change the positions in `layoutPositions`. Keep each
+pair 30.5 mm apart (center to center), and keep the outer edges about 12 mm
+from the bed edges.
+
 ## What the page does not cover
 
 - **Every character in every font.** Yuji Syuku has no glyph for 䳇, 䳲, 歬 or

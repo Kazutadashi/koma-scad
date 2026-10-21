@@ -360,6 +360,39 @@ def load_layout_rows(path: Path, pieces: int) -> list[int] | None:
     return rows
 
 
+def load_layout_positions(path: Path, pieces: int) -> list[tuple[float, float]] | None:
+    """Reads the optional positions of a preset file.
+
+    Positions place each piece at a fixed spot on the bed, such as the corners
+    of a bed test. Each is the [x, y] of the middle of a piece's footprint, in
+    mm from the middle of the bed, in the order in which the pieces are placed:
+    each preset in file order, repeated as pieceCounts gives.
+
+    Args:
+        path: The preset file.
+        pieces: The number of pieces placed from the file, counting copies.
+
+    Returns:
+        The position of each piece, or None when the file has no positions.
+
+    Raises:
+        KomaError: The file has a different number of positions than pieces.
+    """
+    positions = read_json(path).get("layoutPositions")
+    if not positions:
+        return None
+    if len(positions) != pieces:
+        placed = len(positions)
+        raise KomaError(
+            f"layoutPositions in {shown(path)} places {placed} pieces but the file has {pieces}"
+        )
+
+    points = []
+    for x, y in positions:
+        points.append((float(x), float(y)))
+    return points
+
+
 def select_presets(names: list[str], filters: list[str]) -> list[str]:
     """Picks presets by their exact name, or by a part of the name in any letter case.
 

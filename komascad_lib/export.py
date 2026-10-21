@@ -53,6 +53,8 @@ class ExportOptions:
         force: Write files that already exist again.
         plain: Leave out the slicer filament slots.
         rows: Optional row plan for a layout that holds every piece.
+        positions: Optional fixed positions for a layout that holds every
+            piece. They replace the row plan.
     """
 
     executable: str
@@ -60,6 +62,7 @@ class ExportOptions:
     force: bool
     plain: bool
     rows: list[int] | None
+    positions: list[tuple[float, float]] | None = None
 
 
 def unique_in_order(items: list[str]) -> list[str]:
@@ -292,7 +295,14 @@ def _write_whole(output: Path, pieces: list, title: str, options: ExportOptions)
     """
     partial = output.with_name("." + output.name + ".partial")
     try:
-        create_3mf(partial, pieces, title, options.rows, slicer_settings=not options.plain)
+        create_3mf(
+            partial,
+            pieces,
+            title,
+            options.rows,
+            slicer_settings=not options.plain,
+            positions=options.positions,
+        )
         os.replace(partial, output)
     finally:
         if partial.exists():

@@ -7,5 +7,6 @@ with `include <../lib/FILE.scad>` from a module folder.
 | --- | --- | --- |
 | `filaments.scad` | The named filaments and `filament_rgba()` | koma, ban, komadai, komabako |
 | `shapes.scad` | Rounded rectangles, slabs and rings | ban, komadai, komabako |
+| `maker_mark.scad` | The maker's mark: an emblem and two lines of text | ban, komadai, komabako |
 
 Move code here only when a second module needs it.

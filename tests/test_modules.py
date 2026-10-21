@@ -17,7 +17,25 @@ OUTPUT_CHOICES = re.compile(r'^Output_Mode = "[^"]*"; // \[(.*)\]$', re.M)
 FURNITURE = [BAN_SCAD, KOMADAI_SCAD, KOMABAKO_SCAD]
 
 # A legged board's playing surface, so that the legged komadai styles fit beside it.
-LEGGED_KOMADAI = ["-D", "Board_Surface_Height=230", "-D", 'Signature_Text="KS"']
+LEGGED_KOMADAI = ["-D", "Board_Surface_Height=230", "-D", 'Mark_Line_1="KS"']
+
+# A full maker's mark: an emblem, a wide-spaced main line, and a Japanese line.
+MARK = [
+    "-D",
+    'Mark_Line_1="KOMASCAD"',
+    "-D",
+    'Mark_Line_2="SHOGI · 将棋"',
+    "-D",
+    "Mark_Spacing_1=1.7",
+    "-D",
+    "Mark_Spacing_2=2.2",
+    "-D",
+    "Mark_Emblem=true",
+    "-D",
+    'Mark_Emblem_Character="王"',
+    "-D",
+    'Mark_Emblem_Font="Yuji Syuku:style=Regular"',
+]
 
 # A tiled board with the default joint (Connectors).
 TILED_BOARD = ["-D", "Panel_Columns=2", "-D", "Panel_Rows=2"]
@@ -206,6 +224,80 @@ class ModelTests(unittest.TestCase):
                     meshes.append(corners)
         self.assertEqual(meshes[0], meshes[2])
         self.assertEqual(meshes[1], meshes[3])
+
+    def test_a_full_mark_fits_every_part_at_its_automatic_size(self):
+        cases = [
+            (BAN_SCAD, ["-D", 'Output_Mode="Color body"']),
+            (KOMADAI_SCAD, []),
+            (KOMABAKO_SCAD, ["-D", 'Mark_Place="Both"']),
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            tree = Path(folder) / "mark.csg"
+            for scad, settings in cases:
+                with self.subTest(model=scad.name):
+                    self.render(scad, tree, MARK + settings)
+
+    def test_a_mark_too_large_or_too_small_is_refused(self):
+        cases = [
+            (["-D", "Mark_Size=12"], "does not fit on the box"),
+            (["-D", "Mark_Size=4", "-D", 'Mark_Line_2=""'], "smaller than Mark Min Text Size"),
+        ]
+        with tempfile.TemporaryDirectory() as folder:
+            for settings, message in cases:
+                with self.subTest(message=message):
+                    command = ["openscad", "-o", str(Path(folder) / "box.csg")] + MARK + settings
+                    command.append(str(KOMABAKO_SCAD))
+                    _, log = openscad.run_openscad(command)
+                    self.assertIn(message, log)
+
+    def test_every_joint_style_bevels_the_underside_of_each_seam(self):
+        # Panel 0, 0 of a 2 x 2 board has seams on its right and back edges.
+        # Where the panel touches the table (z = 0), it must stop the bevel
+        # short of each seam.
+        bevel = 0.8
+        with tempfile.TemporaryDirectory() as folder:
+            mesh = Path(folder) / "panel.stl"
+            for style in ("Connectors", "T-hook", "Dovetail", "Keys"):
+                with self.subTest(style=style):
+                    settings = TILED_BOARD + [
+                        "-D",
+                        f'Joint_Style="{style}"',
+                        "-D",
+                        'Output_Mode="Color body"',
+                    ]
+                    settings += [
+                        "-D",
+                        'Print_Orientation="Playing face up"',
+                        "-D",
+                        "Camp_Dots=false",
+                    ]
+                    settings += [
+                        "-D",
+                        "Joint_Edge_Margin=20",
+                        "-D",
+                        "Support_Band=15",
+                        "--export-format",
+                        "binstl",
+                    ]
+                    if style == "Dovetail":
+                        settings += [
+                            "-D",
+                            "Joint_Depth=5",
+                            "-D",
+                            "Joint_Clearance=0.3",
+                            "-D",
+                            "Joint_Bottom_Chamfer=1",
+                        ]
+                    self.render(BAN_SCAD, mesh, settings)
+                    vertices, _ = openscad.read_stl(mesh)
+                    # The seam edge, where the straight seam wall meets the 0.3 mm
+                    # top edge bevel: 11.7 mm up, above every tab.
+                    side = [(x, y) for x, y, z in vertices if abs(z - 11.7) < 0.001]
+                    seam_x = max(x for x, _ in side)
+                    seam_y = max(y for _, y in side)
+                    on_table = [(x, y) for x, y, z in vertices if abs(z) < 0.001]
+                    self.assertLessEqual(max(x for x, _ in on_table), seam_x - bevel + 0.01)
+                    self.assertLessEqual(max(y for _, y in on_table), seam_y - bevel + 0.01)
 
     def test_closed_box_is_preview_only(self):
         with tempfile.TemporaryDirectory() as folder:

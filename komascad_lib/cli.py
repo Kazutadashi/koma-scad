@@ -305,8 +305,9 @@ def cmd_export(args: argparse.Namespace) -> int:
     destination = (args.output or default_folder).resolve()
     plan = export.plan_files(selected, preset_file.counts, set_name, args.per_file)
     layouts = bool(args.per_file)
-    # Read the row plan now, so that even a dry run reports a wrong one.
+    # Read the row plan and positions now, so that even a dry run reports a wrong one.
     rows = _row_plan(args, path, plan)
+    positions = _layout_positions(args, path, plan)
 
     if args.dry_run:
         print_dry_run(destination, plan, preset_file.counts, layouts)
@@ -316,7 +317,12 @@ def cmd_export(args: argparse.Namespace) -> int:
         _check_lettering(args, plan, preset_file, overrides)
 
     options = ExportOptions(
-        executable=args.openscad, jobs=args.jobs, force=args.force, plain=args.plain, rows=rows
+        executable=args.openscad,
+        jobs=args.jobs,
+        force=args.force,
+        plain=args.plain,
+        rows=rows,
+        positions=positions,
     )
     written, skipped = export.export_files(
         plan, preset_file.presets, overrides, destination, options, report=progress
@@ -340,10 +346,30 @@ def _row_plan(
     Returns:
         The pieces in each row, or None.
     """
-    is_whole_layout = bool(args.per_file) and not args.piece and len(plan) == 1
-    if not is_whole_layout:
+    if not _is_whole_layout(args, plan):
         return None
     return presets.load_layout_rows(path, len(plan[0].presets))
+
+
+def _layout_positions(
+    args: argparse.Namespace, path: Path, plan: list[export.PlannedFile]
+) -> list[tuple[float, float]] | None:
+    """Reads the fixed positions of the preset file, when they apply to this export.
+
+    Like a row plan, positions describe the whole file, so they apply only to
+    one layout that holds every piece.
+
+    Returns:
+        The position of each piece, or None.
+    """
+    if not _is_whole_layout(args, plan):
+        return None
+    return presets.load_layout_positions(path, len(plan[0].presets))
+
+
+def _is_whole_layout(args: argparse.Namespace, plan: list[export.PlannedFile]) -> bool:
+    """Checks whether the export is one layout file that holds every piece of the file."""
+    return bool(args.per_file) and not args.piece and len(plan) == 1
 
 
 def _check_lettering(

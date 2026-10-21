@@ -49,8 +49,9 @@ default board prints as 2 x 2 panels for a 256 mm bed.
 All boards are 12 mm thick, except **Custom - 2 x 3 squares** (10 mm). All
 boards in panels use connectors, except the T-hook and keys presets.
 
-**Minishogi - one piece** has the mark **Osakazuki Shogi** on its underside.
-Clear **Signature Text** to remove it.
+To put your name or brand under the board, see the
+[maker's mark](makers-mark.md). It goes under panel 0, 0, clear of the
+connector sockets.
 
 ## Output modes
 
@@ -255,6 +256,15 @@ slight step, and a sliding piece does not catch on it. On the panel that
 owns the grid line, the bevel cuts the edge of the black line too, so the V
 stays inside the line.
 
+### Seam underside bevel
+
+Every seam edge has a 45 degree bevel of **Seam Underside Bevel** (0.8 mm)
+along its bottom, on both panels, with every joint style. The underside is
+the last layer of a face-down print, and its edges can come out uneven. A
+bulge at a seam edge would lift the panel, so that it does not sit flat on
+the table. The bevel keeps the edge off the table. The playing surface does
+not change.
+
 ### Underside relief
 
 **Underside Relief** recesses the middle of each panel's underside by 0.3 mm.
@@ -343,6 +353,7 @@ To take the board apart, lift each panel straight up, in the opposite order.
 | A panel does not drop into place under its own weight | Raise **Joint Clearance**. Do not push the panel down: a tight joint can hold it up. |
 | A seam opens too far when you pull the panels | Lower **Joint Clearance**, but only while the panels still drop in freely. |
 | A seam has a step | Put each panel on the table alone. Make sure that no corner rocks. The joint cannot make a bent panel flat. |
+| A panel stands high or rocks at a seam | Look at the bottom edge of the seam for a bulge from the last layers. Raise **Seam Underside Bevel**, for example to 1.2 mm. |
 | "Raised lines ... must print face up" | Set **Print Orientation** to **Playing face up**, or use **Flush inlay**. |
 | "A square ... must be larger than the largest piece" | Make **Cell Width** and **Cell Depth** larger, or correct **03 - Largest piece**. |
 | "The shortest seam ... is too short for two tabs" | Use fewer, larger panels, or reduce **Joint Width**. |
@@ -432,6 +443,7 @@ underscores as spaces.
 | `Joint_Roof_Clearance` | `1` | mm. Gap above each tab at the seam. The T-hook socket roof is flat, so sideways play cannot close this gap. |
 | `Seam_Bevel` | `0.3` | mm. 45 degree bevel on the top edge of each seam. It takes up first-layer squish, so the seam closes at the playing surface. |
 | `Seam_Reveal` | `true` | Bevel both edges of each seam, not only the neighbor's. The small V hides a slight step, and a sliding piece does not catch on it. |
+| `Seam_Underside_Bevel` | `0.8` | mm. 45 degree bevel along the bottom edge of each seam, on both panels. The last layers of a print (the underside) can end with an uneven edge; the bevel keeps it off the table, so that each panel sits flat. 0 = none. |
 | `Camp_Dot_Plug_Clearance` | `0.2` | mm. Space around a camp dot where a seam goes around it. |
 
 ### 08 - Joint shape
@@ -468,12 +480,24 @@ underscores as spaces.
 | --- | --- | --- |
 | `Underside_Relief` | `0.3` | mm. Recess the middle of each panel's underside, so that the panel stands on a band near its edges. Both sides of a seam then stand on the same part of the table. 0 = flat underside. |
 | `Support_Band` | `25` | mm. Width of the band that the panel stands on. It covers the sockets. |
+| `Socket_Frame` | `true` | Cut a bevelled frame round the mouth of each connector socket, for its look. The frame follows the outline of the socket with its inner corners filled in. It takes the first 0.4 mm of the shoulders that hold a connector, which leaves almost all of their grip. |
 
-### 11 - Maker signature on underside
+### 11 - Maker's mark
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Signature_Text` | `""` | The mark, cut into the underside of panel 0, 0. Empty = no mark. |
-| `Signature_Font` | `"Liberation Sans:style=Regular"` | An installed font. Find its exact name in Help > Font List. |
-| `Signature_Font_Size` | `3.5` | mm. Text size of the mark. |
-| `Signature_Depth` | `0.4` | mm. Depth of the mark into the underside. |
+| `Mark_Line_1` | `""` | The main line of the mark (銘), cut into the underside of panel 0, 0: your name or brand. Empty = no mark. |
+| `Mark_Line_2` | `""` | A smaller line under it, such as SHOGI · 将棋. Empty = none. |
+| `Mark_Size` | `0` | mm. Text size of the main line. The second line and the emblem follow it. 0 = automatic: as large as the room allows, up to Mark Max Size. |
+| `Mark_Max_Size` | `14` | mm. Automatic only: the largest text size of the main line. |
+| `Mark_Line_2_Ratio` | `0.42` | Size of the second line, as a fraction of the main line. Keep Japanese characters 3 mm or larger. |
+| `Mark_Min_Text_Size` | `7` | mm. Smallest size of any text in the mark, and of the emblem's character, so that it prints. The second line and the emblem grow to it. See docs/makers-mark.md for measured values. |
+| `Mark_Stroke` | `0` | mm. Thickens every stroke of the mark by this much on each side, so that thin strokes print. 0.12 for a thin Mincho. |
+| `Mark_Spacing_1` | `1` | Letter spacing of the main line. 1 = normal. About 1.7 gives a wide-spaced wordmark. |
+| `Mark_Spacing_2` | `1` | Letter spacing of the second line. |
+| `Mark_Font_1` | `"Kaisei Tokumin:style=ExtraBold"` | An installed font for the main line. Find its exact name in Help > Font List. |
+| `Mark_Font_2` | `"Kaisei Tokumin:style=ExtraBold"` | An installed font for the second line. Use one with Japanese characters for Japanese text. |
+| `Mark_Emblem` | `false` | A koma above the text, with a character cut into it. |
+| `Mark_Emblem_Character` | `""` | The character on the emblem, such as 王. |
+| `Mark_Emblem_Font` | `""` | An installed font for the emblem's character, such as a brush font. Empty = Mark Font 1. |
+| `Mark_Depth` | `0.4` | mm. Depth of the mark. |

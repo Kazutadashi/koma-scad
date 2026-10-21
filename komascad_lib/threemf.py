@@ -199,6 +199,26 @@ def grid_positions(
     return positions
 
 
+def fixed_positions(
+    bounds: list[Bounds], positions: list[tuple[float, float]]
+) -> list[tuple[float, float]]:
+    """Moves each piece so that the middle of its footprint lands on a given spot.
+
+    Args:
+        bounds: The footprint of each piece, from piece_bounds().
+        positions: Where the middle of each footprint goes, (x, y) in mm.
+
+    Returns:
+        The (x, y) shift of each piece.
+    """
+    shifts = []
+    for (min_x, max_x, min_y, max_y), (x, y) in zip(bounds, positions, strict=True):
+        piece_x = (min_x + max_x) / 2
+        piece_y = (min_y + max_y) / 2
+        shifts.append((x - piece_x, y - piece_y))
+    return shifts
+
+
 def _row_positions(bounds: list[Bounds], rows: list[int]) -> list[tuple[float, float]]:
     """Places pieces in planned rows. See grid_positions().
 
@@ -419,6 +439,7 @@ def create_3mf(
     title: str,
     rows: list[int] | None = None,
     slicer_settings: bool = True,
+    positions: list[tuple[float, float]] | None = None,
 ) -> list[dict]:
     """Writes one or more pieces as a multipart color 3MF.
 
@@ -432,6 +453,9 @@ def create_3mf(
         slicer_settings: Also write the filament slot of each part (see
             filament_settings()). Turn it off for a tool that cannot read them,
             such as Bambu Studio 2.8's command line.
+        positions: Optional. Where the middle of each piece's footprint goes,
+            (x, y) in mm from the middle of the bed. They replace the grid and
+            the row plan.
 
     Returns:
         One record for each placed piece: its preset, object id, x and y
@@ -442,8 +466,11 @@ def create_3mf(
     slots = _filament_slots(model.color_groups)
 
     footprints = [piece_bounds(parts) for _, parts in pieces]
-    shifts = grid_positions(footprints, rows)
-    single_piece = len(pieces) == 1
+    if positions:
+        shifts = fixed_positions(footprints, positions)
+    else:
+        shifts = grid_positions(footprints, rows)
+    single_piece = len(pieces) == 1 and not positions
 
     mesh_ids: dict[str, list[int]] = {}
     placed = []

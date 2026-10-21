@@ -57,8 +57,9 @@ together. A PLA box cannot include one.
 
 ## Maker's mark
 
-**Signature Text** cuts a mark (銘) into the underside of the box. Use the
-same mark on the board and the komadai.
+The [maker's mark](makers-mark.md) (銘) is cut into the underside of the box,
+into the lid top, or both: set **Mark Place**. A mark on the lid reads from
+above when the box is closed. Use the same mark on the board and the komadai.
 
 ## Settings
 
@@ -114,10 +115,22 @@ Customizer shows underscores as spaces.
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Signature_Text` | `""` | The mark (銘), cut into the underside of the box. Empty = no mark. |
-| `Signature_Font` | `"Liberation Sans:style=Regular"` | An installed font. Find its exact name in Help > Font List. |
-| `Signature_Font_Size` | `5` | mm. Text size of the mark. |
-| `Signature_Depth` | `0.4` | mm. Depth of the mark. |
+| `Mark_Place` | `"Underside"` | Where the mark goes: under the box, on top of the lid, or both. Choices: Underside, Lid top, Both. |
+| `Mark_Line_1` | `""` | The main line of the mark (銘), on the box: your name or brand. Empty = no mark. |
+| `Mark_Line_2` | `""` | A smaller line under it, such as SHOGI · 将棋. Empty = none. |
+| `Mark_Size` | `0` | mm. Text size of the main line. The second line and the emblem follow it. 0 = automatic: as large as the room allows, up to Mark Max Size. |
+| `Mark_Max_Size` | `14` | mm. Automatic only: the largest text size of the main line. |
+| `Mark_Line_2_Ratio` | `0.42` | Size of the second line, as a fraction of the main line. Keep Japanese characters 3 mm or larger. |
+| `Mark_Min_Text_Size` | `7` | mm. Smallest size of any text in the mark, and of the emblem's character, so that it prints. The second line and the emblem grow to it. See docs/makers-mark.md for measured values. |
+| `Mark_Stroke` | `0` | mm. Thickens every stroke of the mark by this much on each side, so that thin strokes print. 0.12 for a thin Mincho. |
+| `Mark_Spacing_1` | `1` | Letter spacing of the main line. 1 = normal. About 1.7 gives a wide-spaced wordmark. |
+| `Mark_Spacing_2` | `1` | Letter spacing of the second line. |
+| `Mark_Font_1` | `"Kaisei Tokumin:style=ExtraBold"` | An installed font for the main line. Find its exact name in Help > Font List. |
+| `Mark_Font_2` | `"Kaisei Tokumin:style=ExtraBold"` | An installed font for the second line. Use one with Japanese characters for Japanese text. |
+| `Mark_Emblem` | `false` | A koma above the text, with a character cut into it. |
+| `Mark_Emblem_Character` | `""` | The character on the emblem, such as 王. |
+| `Mark_Emblem_Font` | `""` | An installed font for the emblem's character, such as a brush font. Empty = Mark Font 1. |
+| `Mark_Depth` | `0.4` | mm. Depth of the mark. |
 
 ### 07 - Filament colors and layout
 

@@ -122,6 +122,28 @@ class ExportCommandTests(unittest.TestCase):
         self.assertEqual(status, 1)
         self.assertIn("places 4 pieces but the file has 3", err)
 
+    def test_layout_positions_put_each_piece_where_asked(self):
+        """LayoutPositions puts the middle of each footprint at a fixed spot, such as a corner."""
+        document = json.loads(self.presets.read_text(encoding="utf-8"))
+        document["layoutPositions"] = [[-100, 100], [100, 100], [0, -100]]
+        self.presets.write_text(json.dumps(document), encoding="utf-8")
+        status, _, _ = run("export", self.presets, "-o", self.out, "--per-file", "all")
+        self.assertEqual(status, 0)
+        with zipfile.ZipFile(self.out / "Piece - Layout 01.3mf") as archive:
+            placed = json.loads(archive.read("Metadata/KomaSCAD.json"))["pieces"]
+        # The test part spans 0 to 10 mm, so its middle is at (5, 5).
+        shifts = [(piece["x"], piece["y"]) for piece in placed]
+        self.assertEqual(shifts, [(-105.0, 95.0), (95.0, 95.0), (-5.0, -105.0)])
+
+    def test_layout_positions_must_match_the_pieces(self):
+        document = json.loads(self.presets.read_text(encoding="utf-8"))
+        document["layoutPositions"] = [[0, 0], [10, 10]]
+        self.presets.write_text(json.dumps(document), encoding="utf-8")
+        status, _, err = run("export", self.presets, "-o", self.out, "--per-file", "all")
+        self.assertEqual(status, 1)
+        self.assertIn("layoutPositions", err)
+        self.assertIn("places 2 pieces but the file has 3", err)
+
     def test_jobs_must_be_at_least_one(self):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             run("export", self.presets, "-o", self.out, "-j", "0")

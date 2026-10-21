@@ -142,5 +142,22 @@ class RenderFailureTests(unittest.TestCase):
         self.assertFalse(openscad._is_touching_shell_warning("WARNING: Ignoring unknown variable"))
 
 
+class FrameTests(unittest.TestCase):
+    """Each animation frame renders its own values."""
+
+    def test_every_frame_gets_its_own_value(self):
+        # Nine frames: OpenSCAD's $t for frame 7 is just under 7/9.
+        with tempfile.TemporaryDirectory() as folder:
+            model = Path(folder) / "model.scad"
+            model.write_text("Size = 1;\ncube(Size);\n", encoding="utf-8")
+            sizes = list(range(1, 10))
+            files = openscad.render_frames("openscad", [], Path(folder), {"Size": sizes}, model)
+            rendered = []
+            for file in files:
+                vertices, _ = openscad.read_stl(file)
+                rendered.append(round(max(x for x, _, _ in vertices)))
+        self.assertEqual(rendered, sizes)
+
+
 if __name__ == "__main__":
     unittest.main()

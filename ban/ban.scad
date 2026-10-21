@@ -102,6 +102,8 @@ Joint_Roof_Clearance = 1; // [0.5:0.1:3]
 Seam_Bevel = 0.3; // [0:0.05:1]
 // Bevel both edges of each seam, not only the neighbor's. The small V hides a slight step, and a sliding piece does not catch on it.
 Seam_Reveal = true;
+// mm. 45 degree bevel along the bottom edge of each seam, on both panels. The last layers of a print (the underside) can end with an uneven edge; the bevel keeps it off the table, so that each panel sits flat. 0 = none.
+Seam_Underside_Bevel = 0.8; // [0:0.1:2]
 // mm. Space around a camp dot where a seam goes around it.
 Camp_Dot_Plug_Clearance = 0.2; // [0:0.05:0.6]
 
@@ -150,16 +152,40 @@ Key_Spares = 2; // [0:1:10]
 Underside_Relief = 0.3; // [0:0.05:1]
 // mm. Width of the band that the panel stands on. It covers the sockets.
 Support_Band = 25; // [8:1:40]
+// Cut a bevelled frame round the mouth of each connector socket, for its look. The frame follows the outline of the socket with its inner corners filled in. It takes the first 0.4 mm of the shoulders that hold a connector, which leaves almost all of their grip.
+Socket_Frame = true;
 
-/* [11 - Maker signature on underside] */
-// The mark, cut into the underside of panel 0, 0. Empty = no mark.
-Signature_Text = "";
-// An installed font. Find its exact name in Help > Font List.
-Signature_Font = "Liberation Sans:style=Regular";
-// mm. Text size of the mark.
-Signature_Font_Size = 3.5; // [2:0.1:8]
-// mm. Depth of the mark into the underside.
-Signature_Depth = 0.4; // [0.2:0.1:1]
+/* [11 - Maker's mark] */
+// The main line of the mark (銘), cut into the underside of panel 0, 0: your name or brand. Empty = no mark.
+Mark_Line_1 = "";
+// A smaller line under it, such as SHOGI · 将棋. Empty = none.
+Mark_Line_2 = "";
+// mm. Text size of the main line. The second line and the emblem follow it. 0 = automatic: as large as the room allows, up to Mark Max Size.
+Mark_Size = 0; // [0:0.1:40]
+// mm. Automatic only: the largest text size of the main line.
+Mark_Max_Size = 14; // [4:0.5:40]
+// Size of the second line, as a fraction of the main line. Keep Japanese characters 3 mm or larger.
+Mark_Line_2_Ratio = 0.42; // [0.2:0.01:1]
+// mm. Smallest size of any text in the mark, and of the emblem's character, so that it prints. The second line and the emblem grow to it. See docs/makers-mark.md for measured values.
+Mark_Min_Text_Size = 7; // [3:0.5:20]
+// mm. Thickens every stroke of the mark by this much on each side, so that thin strokes print. 0.12 for a thin Mincho.
+Mark_Stroke = 0; // [0:0.01:0.3]
+// Letter spacing of the main line. 1 = normal. About 1.7 gives a wide-spaced wordmark.
+Mark_Spacing_1 = 1; // [0.8:0.05:3]
+// Letter spacing of the second line.
+Mark_Spacing_2 = 1; // [0.8:0.05:3]
+// An installed font for the main line. Find its exact name in Help > Font List.
+Mark_Font_1 = "Kaisei Tokumin:style=ExtraBold";
+// An installed font for the second line. Use one with Japanese characters for Japanese text.
+Mark_Font_2 = "Kaisei Tokumin:style=ExtraBold";
+// A koma above the text, with a character cut into it.
+Mark_Emblem = false;
+// The character on the emblem, such as 王.
+Mark_Emblem_Character = "";
+// An installed font for the emblem's character, such as a brush font. Empty = Mark Font 1.
+Mark_Emblem_Font = "";
+// mm. Depth of the mark.
+Mark_Depth = 0.4; // [0.2:0.1:1]
 
 /* [Hidden] */
 // komascad.py sets this to read the panels, materials and fonts without making geometry.
@@ -185,6 +211,7 @@ epsilon = 0.02;   // overlap that keeps boolean operations clean
 
 include <../lib/filaments.scad>
 include <../lib/shapes.scad>
+include <../lib/maker_mark.scad>
 
 
 // ===== 1. Board plan ==========================================================
@@ -268,6 +295,8 @@ function material_name(role) =
 function material_rgb(role) = filament_rgba([Board_Filament, Line_Filament][role], [Board_Color, Line_Color][role]);
 
 
+
+
 // ===== 2. Joint plan ==========================================================
 // Each joint closes when a panel moves straight down: only that motion lets
 // the last panel of a closed grid go in. The tab sides have a slip fit, and
@@ -325,6 +354,28 @@ shortest_seam = min(concat(
     panel_columns > 1 ? [for (ty = [0:panel_rows - 1]) tile_depth(ty)] : [],
     panel_rows > 1 ? [for (tx = [0:panel_columns - 1]) tile_width(tx)] : [],
     [1e9]));
+
+
+// The part of panel 0, 0 that the mark may use: clear of the sockets on its
+// right and back seams, and 3 mm from its other edges. The mark is centered in it.
+mark_margin = 3;
+mark_room_x = [mark_margin, tile_width(0) - (panel_columns > 1 ? connector_extent + 2 : mark_margin)];
+mark_room_y = [mark_margin, tile_depth(0) - (panel_rows > 1 ? connector_extent + 2 : mark_margin)];
+mark_room = [mark_room_x[1] - mark_room_x[0], mark_room_y[1] - mark_room_y[0]];
+
+// The maker's mark, from lib/maker_mark.scad: its text sizes, as large as its
+// room allows, and no text below Mark Min Text Size.
+mark_on = Mark_Line_1 != "" || Mark_Line_2 != "" || Mark_Emblem;
+mark_sizes = maker_mark_sizes(Mark_Line_1, Mark_Line_2, Mark_Size, Mark_Line_2_Ratio, Mark_Min_Text_Size,
+                              Mark_Max_Size, Mark_Spacing_1, Mark_Spacing_2, Mark_Emblem, mark_room);
+mark_extent = maker_mark_extent(Mark_Line_1, Mark_Line_2, mark_sizes[0], mark_sizes[1], Mark_Spacing_1,
+                                Mark_Spacing_2, Mark_Emblem, Mark_Min_Text_Size);
+mark_smallest_text = maker_mark_smallest_text(Mark_Line_1, Mark_Line_2, mark_sizes);
+module mark_2d() {
+    maker_mark_centered_2d(Mark_Line_1, Mark_Line_2, mark_sizes[0], mark_sizes[1], Mark_Font_1, Mark_Font_2,
+                           Mark_Spacing_1, Mark_Spacing_2, Mark_Emblem, Mark_Emblem_Character, Mark_Emblem_Font,
+                           Mark_Stroke, Mark_Min_Text_Size);
+}
 
 
 // ===== 3. Joints ==============================================================
@@ -421,7 +472,7 @@ module t_below_roof(top) {
 module t_tab() {
     intersection() {
         union() {
-            translate([0, 0, tab_bottom + Joint_Bottom_Chamfer]) linear_extrude(Board_Thickness) t_tab_outline();
+            translate([0, 0, tab_bottom + Joint_Bottom_Chamfer]) linear_extrude(Board_Thickness, convexity=4) t_tab_outline();
             // Chamfer the neck and the head separately, so that the shoulders stay square above the chamfer.
             for (head = [false, true]) hull() {
                 translate([0, 0, tab_bottom]) linear_extrude(epsilon)
@@ -436,7 +487,7 @@ module t_tab() {
 // A flat roof keeps Joint Roof Clearance at the limits of sideways play. The
 // face-down playing surface under it supports it in printing.
 module t_socket(relief=0) {
-    translate([0, 0, -epsilon]) linear_extrude(socket_roof_height + epsilon)
+    translate([0, 0, -epsilon]) linear_extrude(socket_roof_height + epsilon, convexity=4)
         t_outline(Joint_Clearance, relief, T_Neck_Relief);
     // Flare only the open underside, below the seated tab.
     for (head = [false, true]) hull() {
@@ -468,23 +519,25 @@ module edge_joints(span, at, vertical, socket) {
     }
 }
 
-// The butterfly key (契り), centered on the origin, its length across the seam along x.
-module key_2d(clearance=0) {
+// The butterfly key (契り), centered on the origin, its length across the seam
+// along x. It is two convex halves, one on each side of the seam.
+module key_half_2d(side, clearance=0) {
     offset(delta=clearance) polygon([
-        [-Key_Length/2, -Key_Width/2], [0, -Key_Waist/2], [Key_Length/2, -Key_Width/2],
-        [Key_Length/2, Key_Width/2], [0, Key_Waist/2], [-Key_Length/2, Key_Width/2]]);
+        [0, -Key_Waist/2], [side*Key_Length/2, -Key_Width/2], [side*Key_Length/2, Key_Width/2], [0, Key_Waist/2]]);
 }
+module key_2d(clearance=0) { for (side = [-1, 1]) key_half_2d(side, clearance); }
 
-module key() { linear_extrude(Key_Thickness) key_2d(); }
+module key() { linear_extrude(Key_Thickness, convexity=4) key_2d(); }
 
 // The pocket for a key, open through the underside, with a chamfered mouth.
 // Its floor is a top surface when the panel prints face down.
 module key_pocket() {
     depth = Key_Thickness + key_recess;
     translate([0, 0, -epsilon]) linear_extrude(depth + epsilon) key_2d(Key_Clearance);
-    hull() {
-        translate([0, 0, -epsilon]) linear_extrude(epsilon) key_2d(Key_Clearance + key_lead_in);
-        translate([0, 0, key_lead_in]) linear_extrude(epsilon) key_2d(Key_Clearance);
+    // One hull for each half, so that the waist stays narrow.
+    for (side = [-1, 1]) hull() {
+        translate([0, 0, -epsilon]) linear_extrude(epsilon) key_half_2d(side, Key_Clearance + key_lead_in);
+        translate([0, 0, key_lead_in]) linear_extrude(epsilon) key_half_2d(side, Key_Clearance);
     }
 }
 
@@ -531,20 +584,30 @@ loose_count = !loose_parts || !seams_exist ? 0 : joint_total + (keys ? Key_Spare
 // for the neck across the seam, a pocket for the head or nut on each side,
 // and room for a screw tip beyond. Open through the underside, with a flat
 // roof. Every panel edge has the same half, so any panel joins any other.
-module connector_socket_2d(grow=0) {
+// The socket is three convex pieces: the slot across the seam (piece 0), and
+// a head or nut pocket on each side (pieces 1 and 2).
+module connector_socket_piece(piece, grow=0) {
     reach = spec_shoulder + spec_end_length + spec_tail;
     offset(delta=grow) {
-        square([2*reach, spec_neck_width], center=true);
-        for (side = [-1, 1]) translate([side*(spec_shoulder + spec_end_length/2), 0])
+        if (piece == 0) square([2*reach, spec_neck_width], center=true);
+        else translate([(piece == 1 ? -1 : 1)*(spec_shoulder + spec_end_length/2), 0])
             square([spec_end_length, spec_end_width], center=true);
     }
 }
+module connector_socket_2d(grow=0) { for (piece = [0:2]) connector_socket_piece(piece, grow); }
 
 module connector_socket() {
     translate([0, 0, -epsilon]) linear_extrude(spec_height + epsilon) connector_socket_2d();
-    hull() {
+    // The chamfered mouth. With Socket_Frame, one hull of the whole outline
+    // fills in its inner corners: a bevelled frame. Without it, each piece gets
+    // its own hull, so that the chamfer follows the outline exactly.
+    if (Socket_Frame) hull() {
         translate([0, 0, -epsilon]) linear_extrude(epsilon) connector_socket_2d(spec_lead_in);
         translate([0, 0, spec_lead_in]) linear_extrude(epsilon) connector_socket_2d();
+    }
+    else for (piece = [0:2]) hull() {
+        translate([0, 0, -epsilon]) linear_extrude(epsilon) connector_socket_piece(piece, spec_lead_in);
+        translate([0, 0, spec_lead_in]) linear_extrude(epsilon) connector_socket_piece(piece);
     }
 }
 
@@ -560,7 +623,7 @@ module connector_2d() {
     for (side = [-1, 1]) translate([side*(end_inner + end_outer)/2, 0])
         square([end_outer - end_inner, spec_end_width - 2*connector_side_fit], center=true);
 }
-module connector() { linear_extrude(connector_height) connector_2d(); }
+module connector() { linear_extrude(connector_height, convexity=4) connector_2d(); }
 
 // The sockets along one seam edge, at the given places. A vertical edge runs
 // along y at x = at, the others along x at y = at.
@@ -608,6 +671,17 @@ module seam_bevels(tx, ty) {
 
 // A bevel along the bottom of a panel edge, on the panel's +x side. It leaves
 // room for small bulges on the first layers without opening the playing seam.
+// The underside bevel on every seam edge of a panel, for every joint style.
+module underside_seam_bevels(tx, ty) {
+    width = tile_width(tx);
+    depth = tile_depth(ty);
+    bevel = Seam_Underside_Bevel;
+    if (tx > 0) translate([0, depth/2, 0]) underside_bevel_cut(depth + 2, bevel);
+    if (tx < panel_columns - 1) translate([width, depth/2, 0]) rotate([0, 0, 180]) underside_bevel_cut(depth + 2, bevel);
+    if (ty > 0) translate([width/2, 0, 0]) rotate([0, 0, 90]) underside_bevel_cut(width + 2, bevel);
+    if (ty < panel_rows - 1) translate([width/2, depth, 0]) rotate([0, 0, -90]) underside_bevel_cut(width + 2, bevel);
+}
+
 module underside_bevel_cut(length, bevel=Joint_Bottom_Chamfer) {
     if (bevel > 0) rotate([90, 0, 0]) linear_extrude(length, center=true)
         polygon([[-epsilon, -epsilon], [bevel + epsilon, -epsilon], [-epsilon, bevel + epsilon]]);
@@ -618,13 +692,13 @@ module underside_bevel_cut(length, bevel=Joint_Bottom_Chamfer) {
 // Each module draws one panel in its own coordinates: the front-left corner of
 // the panel is at the origin and the underside is at z = 0.
 
-// The mark on the underside of panel 0, 0. It is mirrored, so that it reads
-// correctly when you turn the board over.
+// The maker's mark on the underside of panel 0, 0. It is mirrored, so that it
+// reads correctly when you turn the board over. It is Mark Depth deep from the
+// relief floor, and deeper where it crosses the band that the panel stands on.
 module signature_cut(tx, ty) {
-    if (tx == 0 && ty == 0 && Signature_Text != "")
-        translate([tile_width(tx)/2, tile_depth(ty)/2, Underside_Relief - epsilon]) linear_extrude(Signature_Depth + epsilon)
-            mirror([0, 1, 0]) text(Signature_Text, size=Signature_Font_Size, font=Signature_Font,
-                                   halign="center", valign="center");
+    if (tx == 0 && ty == 0 && mark_on)
+        translate([(mark_room_x[0] + mark_room_x[1])/2, (mark_room_y[0] + mark_room_y[1])/2, -epsilon])
+            linear_extrude(Underside_Relief + Mark_Depth + epsilon, convexity=20) mirror([0, 1, 0]) mark_2d();
 }
 
 module at_dot(dot, x_min, y_min, z=0) {
@@ -680,9 +754,10 @@ module underside_relief(tx, ty) {
 
 // One printable panel, with its grid grooves cut but not filled.
 module panel_body(tx, ty) {
-    // OpenSCAD's preview can show a T-hook tab as see-through where its roof,
-    // chamfers and socket cuts overlap. Rendering the panel first prevents it.
-    if (seams_exist && Joint_Style == "T-hook") render(convexity=12) panel_body_geometry(tx, ty);
+    // OpenSCAD's preview draws concave cuts, such as T-hook roofs and the
+    // sockets of keys and connectors, as see-through holes. Rendering the
+    // panel first makes the preview exact.
+    if (seams_exist && (Joint_Style == "T-hook" || loose_parts)) render(convexity=12) panel_body_geometry(tx, ty);
     else panel_body_geometry(tx, ty);
 }
 
@@ -727,6 +802,10 @@ module panel_body_geometry(tx, ty) {
             translate([width/2, 0, 0]) rotate([0, 0, 90]) underside_bevel_cut(width + 2);
             translate([width/2, depth, 0]) rotate([0, 0, -90]) underside_bevel_cut(width + 2);
         }
+        // Every seam edge gets an underside bevel, on both panels. The top of
+        // the print can end with an uneven edge, which would lift the panel
+        // off the table at the seam.
+        underside_seam_bevels(tx, ty);
         // The tabs are added after the footprint's notches, so cut the notches again.
         foreign_dot_notches(tx, ty);
         grid_cuts(tx, ty);
@@ -815,6 +894,8 @@ module test_tab_block() {
         if (connectors) translate([test_tab_block, test_length/2, 0]) connector_socket();
         if (Seam_Reveal || split_lines)
             translate([test_tab_block, test_length/2, 0]) rotate([0, 0, 180]) seam_bevel_cut(test_length + 2, Seam_Bevel);
+        translate([test_tab_block, test_length/2, 0]) rotate([0, 0, 180])
+            underside_bevel_cut(test_length + 2, Seam_Underside_Bevel);
         test_bevels(test_tab_block);
     }
 }
@@ -829,6 +910,7 @@ module test_socket_block() {
             translate([-epsilon, -epsilon, Board_Thickness - Grid_Groove_Depth])
                 cube([Grid_Groove_Width/2 + epsilon, test_length + 2*epsilon, Grid_Groove_Depth + epsilon]);
         translate([0, test_length/2, 0]) seam_bevel_cut(test_length + 2, Seam_Bevel);
+        translate([0, test_length/2, 0]) underside_bevel_cut(test_length + 2, Seam_Underside_Bevel);
         test_bevels(test_socket_block);
     }
 }
@@ -859,11 +941,17 @@ assert(Grid_Groove_Depth < Board_Thickness, "Grid Groove Depth must be less than
 assert(line_height > 0, "Line Recess must be less than Grid Groove Depth.");
 assert(!camp_dots_on || (Camp_Dot_Diameter > Grid_Groove_Width && Camp_Dot_Diameter < min(Cell_Width, Cell_Depth)/2),
     "Camp Dot Diameter must be wider than a grid line and less than half a square.");
-assert(Signature_Text == ""
-    || (Signature_Depth + Underside_Relief < Board_Thickness - Grid_Groove_Depth - 1
-        && len(Signature_Text)*Signature_Font_Size < tile_width(0) - 2*(Board_Margin + connector_extent)
-        && 2*Signature_Font_Size < tile_depth(0) - 2*(Board_Margin + connector_extent)),
-    "The signature does not fit under panel 0, 0. Shorten the text, or reduce its size or depth.");
+assert(!mark_on
+    || (Mark_Depth + Underside_Relief < Board_Thickness - Grid_Groove_Depth - 1
+        && mark_extent[0] < mark_room_x[1] - mark_room_x[0]
+        && mark_extent[1] < mark_room_y[1] - mark_room_y[0]),
+    str("The maker's mark (about ", mark_extent[0], " x ", mark_extent[1], " mm) does not fit under panel 0, 0 (",
+        mark_room_x[1] - mark_room_x[0], " x ", mark_room_y[1] - mark_room_y[0],
+        " mm clear of the sockets). Set Mark Size to 0 (automatic), reduce the letter spacing, or shorten the lines."));
+assert(!mark_on || mark_smallest_text >= Mark_Min_Text_Size - 0.001,
+    str("The maker's mark text would be ", round(mark_smallest_text*10)/10, " mm, smaller than Mark Min Text Size (",
+        Mark_Min_Text_Size, " mm), and would not print. Set Mark Size to 0 (automatic) or larger, ",
+        "reduce the letter spacing, or shorten the main line."));
 assert(!raised_lines || !face_down,
     "Raised lines stand above the playing surface, so the board must print face up. Set Print Orientation to Playing face up.");
 // The largest panel footprint on the bed, with the tabs on its right and back edges.
@@ -904,6 +992,9 @@ if (joints_used) {
             "Connectors need a board at least ", spec_height + Grid_Groove_Depth + 1, " mm thick."));
     assert(!keys || (Key_Waist < Key_Width && Key_Thickness + key_recess < Board_Thickness - Grid_Groove_Depth - 1),
         "The keys do not fit: Key Waist must be less than Key Width, and the pockets must stay 1 mm below the grid grooves.");
+    assert(Seam_Underside_Bevel < Board_Thickness/4, "Seam Underside Bevel is too large for the board.");
+    assert(!tabs || Seam_Underside_Bevel < Joint_Floor_Gap + Joint_Bottom_Chamfer,
+        "Seam Underside Bevel must stay below the tabs. Reduce it, or raise Joint Floor Gap.");
     assert(!Seam_Reveal || Seam_Bevel < Grid_Groove_Width,
         "With Seam Reveal, Seam Bevel must be less than Grid Groove Width, or the bevel cuts past the grid line.");
     assert(!split_lines || Seam_Bevel < Grid_Groove_Width/2,
@@ -927,6 +1018,9 @@ assert(Output_Mode == "Assembled board" || Output_Mode == "All panels" || joint_
 // Information in the Console.
 echo(str("KomaSCAD ban ", version, ". Board: ", board_width, " x ", board_depth, " x ", Board_Thickness,
          " mm. Panels: ", panel_columns, " x ", panel_rows, "."));
+if (mark_on)
+    echo(str("Maker's mark: about ", round(mark_extent[0]), " x ", round(mark_extent[1]), " mm. Main line ",
+             round(mark_sizes[0]*10)/10, " mm, second line ", round(mark_sizes[1]*10)/10, " mm."));
 if (seams_exist && tabs)
     echo(str(Joint_Style, " joints. Tab thickness at the seam / at the tip: ", tab_thickness, " / ", tab_tip_height,
              " mm. A pulled seam opens ", seam_play, " mm."));
@@ -940,7 +1034,7 @@ if (seams_exist && connectors)
 // row, width, depth and offset from the front-left corner of the board, and
 // the number and kind of loose parts to print (0 for a board without them).
 if (Export_Metadata) {
-    echo("KOMASCAD_FONTS", Signature_Text == "" ? [] : [Signature_Font]);
+    echo("KOMASCAD_FONTS", mark_on ? concat([Mark_Font_1, Mark_Font_2], Mark_Emblem_Font == "" ? [] : [Mark_Emblem_Font]) : []);
     echo("KOMASCAD_EXPORT", [for (role = [0:1]) [role_names[role], material_name(role), material_rgb(role), true]]);
     echo("KOMASCAD_BAN", [board_width, board_depth, Board_Thickness], [panel_columns, panel_rows],
          [for (ty = [0:panel_rows - 1], tx = [0:panel_columns - 1])

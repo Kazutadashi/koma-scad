@@ -68,9 +68,11 @@ piece.
 ## Customizer preset files
 
 A preset file is a normal OpenSCAD Customizer file. You can export any of
-them with `komascad.py`. Two extra keys are optional:
+them with `komascad.py`. Three extra keys are optional:
 
 - `pieceCounts`: how many of each preset a set needs. A preset that is not in
   the list counts once.
 - `layoutRows`: the number of pieces in each row of a layout, from the back of
   the bed. See [the command reference](../../docs/cli.md#one-file-for-each-piece-or-full-sets).
+- `layoutPositions`: the [x, y] of the middle of each piece, in mm from the
+  middle of the bed, for pieces at fixed places. They replace `layoutRows`.

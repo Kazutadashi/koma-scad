@@ -27,6 +27,41 @@ fit the socket. Use steel or nylon. To fit one:
    of the seam and the nut, flat side down, in the pocket on the other.
 3. If it does not drop in, turn the nut back a little. Use the smallest gap
    that still drops in: each extra 0.1 mm lets the seam open 0.1 mm more.
+   A quarter turn of an M4 nut moves it about 0.18 mm.
+
+A screw in a socket, seen from below. Panel A is on the left of the seam
+and panel B on the right. Sizes are in mm.
+
+```text
+                  PANEL A           │           PANEL B
+                                    │ seam
+                                    │
+              pocket                │                pocket
+             ┌──────┐               │               ┌──────┐
+             │ ▓▓▓▓ │               │               │ ╔══╗ │
+   tail      │ ▓▓▓▓ │     neck slot │               │ ║  ║ │      tail
+ ┌───────────┤ ▓▓▓▓ ├───────────────┼───────────────┤ ║  ║ ├───────────┐
+ │           │ ▓▓▓▓ ════════════════╪════════════════╪═║══║═╪═══╸       │
+ └───────────┤ ▓▓▓▓ ├───────────────┼───────────────┤ ║  ║ ├───────────┘
+             │ ▓▓▓▓ │               │               │ ║  ║ │
+             │ ▓▓▓▓ │               │               │ ╚══╝ │
+             └──────┘               │               └──────┘
+               HEAD  ◄── shoulder ──┼── shoulder ──►  NUT      tip
+                         (7 mm)     │    (7 mm)
+                                    │
+   ◄── 6 ──► ◄ 4.8 ►◄───── 7 ──────►│◄───── 7 ──────►◄ 4.8 ► ◄── 6 ──►
+```
+
+| Symbol | Part |
+| --- | --- |
+| `▓▓▓▓` | The screw head, in the pocket on one side |
+| `═════` | The screw shank, flat in the neck slot, across the seam |
+| `╔══╗` | The hex nut, flat side down, in the pocket on the other side |
+| `╸` | The screw tip, in the tail beyond the nut |
+
+When the panels are pulled apart, the head pushes on the shoulder of panel
+A, and the nut pushes on the shoulder of panel B. The seam can open only by
+the gap that you set in step 1.
 
 A steel screw is much stronger than a printed connector. If a seam with a
 steel screw is pulled very hard, the panel can break instead of the screw.

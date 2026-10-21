@@ -8,6 +8,7 @@ import zipfile
 from pathlib import Path
 
 from komascad_lib import ban
+from komascad_lib.openscad import Part
 from komascad_lib.project import BAN_PRESETS, KomaError
 
 from .support import part, run
@@ -76,6 +77,29 @@ class BoardReportTests(unittest.TestCase):
         corner = self.board.panels[3]
         self.assertEqual(ban.neighbors(self.board, corner), {"left": "00-01", "front": "01-00"})
 
+    def test_a_markings_part_as_tall_as_the_board_is_rejected(self):
+        board = ban.parse_board("Mini", TWO_BY_TWO_LOG)
+        ban.check_role("body", [(0, 0, 0), (0, 0, 12)], board)
+        ban.check_role("markings", [(0, 0, 11.6), (0, 0, 12)], board)
+        with self.assertRaisesRegex(KomaError, "as tall as the board"):
+            ban.check_role("markings", [(0, 0, 0), (0, 0, 12)], board)
+        with self.assertRaisesRegex(KomaError, "body rendered only"):
+            ban.check_role("body", [(0, 0, 11.6), (0, 0, 12)], board)
+
+    def test_connectors_go_beside_the_panels(self):
+        def square(width, depth):
+            return [Part("body", "PLA", (0, 0, 0, 1), [(0, 0, 0), (width, depth, 0)], [])]
+
+        pieces = [(name, square(100, 110)) for name in ("a", "b", "c", "d")]
+        loose = square(50, 55)[0]
+        places = ban.plate_positions(pieces, [2, 2], loose)
+        panel_right = max(x for x, _ in places[:4]) + 50
+        loose_left = places[4][0] - 25
+        self.assertAlmostEqual(loose_left - panel_right, ban.BED_MARGIN)
+        # The plate is centered: as far from the origin on the left as on the right.
+        plate_left = min(x for x, _ in places[:4]) - 50
+        self.assertAlmostEqual(plate_left, -(places[4][0] + 25))
+
     def test_bed_puts_the_back_row_at_the_back(self):
         ordered, rows = ban.bed_order(self.board.panels, self.board)
         self.assertEqual([panel.address for panel in ordered], ["00-01", "01-01", "00-00", "01-00"])
@@ -105,7 +129,7 @@ class BanCommandTests(unittest.TestCase):
     def render(self, executable, definitions, board):
         self.rendered.append(board.name)
         panels = [[part("body"), part("markings", "Black")] for _ in board.panels]
-        return panels, None
+        return panels, (part("connectors") if board.loose else None)
 
     def test_without_a_board_the_presets_are_listed(self):
         status, out, _ = run("ban")
@@ -127,6 +151,22 @@ class BanCommandTests(unittest.TestCase):
         with zipfile.ZipFile(self.out / "Minishogi - 2 x 2 panels - All panels.3mf") as archive:
             settings = archive.read("Metadata/model_settings.config").decode("utf-8")
         self.assertEqual(settings.count('subtype="normal_part"'), 8)
+
+    def test_the_all_panels_file_also_holds_the_connectors(self):
+        self.stub(
+            ban,
+            "read_board",
+            lambda executable, name, definitions: ban.parse_board(name, CONNECTORS_LOG),
+        )
+        status, out, _ = run("ban", "Minishogi - 2 x 2 panels", "-o", self.out)
+
+        self.assertEqual(status, 0, out)
+        with zipfile.ZipFile(self.out / "Minishogi - 2 x 2 panels - All panels.3mf") as archive:
+            summary = json.loads(archive.read("Metadata/KomaSCAD.json"))
+        names = [piece["preset"] for piece in summary["pieces"]]
+        self.assertEqual(names[-1], "Connectors")
+        self.assertEqual(len(names), 5)
+        self.assertTrue((self.out / "Minishogi - 2 x 2 panels - Connectors.3mf").exists())
 
     def test_existing_files_are_skipped_without_rendering(self):
         run("ban", "Minishogi - 2 x 2 panels", "-o", self.out)

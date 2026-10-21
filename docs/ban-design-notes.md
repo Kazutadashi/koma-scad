@@ -130,6 +130,15 @@ connector socket needs about 18 mm of panel on each side of its seam, so a
 separate strip cannot hold one. The edge and corner modules carry the border
 instead.
 
+## Seam underside bevel
+
+Printed boards showed that the underside, the last layers of a face-down
+print, can end with uneven edges. At a seam, such an edge lifted the panel
+off the table. The T-hook panels already had an underside bevel; now every
+joint style has a 0.8 mm bevel on the bottom of each seam edge, on both
+panels (**Seam Underside Bevel**). A test checks that the underside stops the
+bevel short of each seam, for every joint style.
+
 ## Open work
 
 - **One panel only.** `komascad.py ban` renders every panel. It cannot yet

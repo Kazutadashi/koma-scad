@@ -58,14 +58,38 @@ Lid_Skirt_Height = 12; // [3:0.5:30]
 Lid_Roof_Thickness = 3; // [1.2:0.2:8]
 
 /* [06 - Maker's mark] */
-// The mark (銘), cut into the underside of the box. Empty = no mark.
-Signature_Text = "";
-// An installed font. Find its exact name in Help > Font List.
-Signature_Font = "Liberation Sans:style=Regular";
-// mm. Text size of the mark.
-Signature_Font_Size = 5; // [2:0.1:12]
+// Where the mark goes: under the box, on top of the lid, or both.
+Mark_Place = "Underside"; // [Underside,Lid top,Both]
+// The main line of the mark (銘), on the box: your name or brand. Empty = no mark.
+Mark_Line_1 = "";
+// A smaller line under it, such as SHOGI · 将棋. Empty = none.
+Mark_Line_2 = "";
+// mm. Text size of the main line. The second line and the emblem follow it. 0 = automatic: as large as the room allows, up to Mark Max Size.
+Mark_Size = 0; // [0:0.1:40]
+// mm. Automatic only: the largest text size of the main line.
+Mark_Max_Size = 14; // [4:0.5:40]
+// Size of the second line, as a fraction of the main line. Keep Japanese characters 3 mm or larger.
+Mark_Line_2_Ratio = 0.42; // [0.2:0.01:1]
+// mm. Smallest size of any text in the mark, and of the emblem's character, so that it prints. The second line and the emblem grow to it. See docs/makers-mark.md for measured values.
+Mark_Min_Text_Size = 7; // [3:0.5:20]
+// mm. Thickens every stroke of the mark by this much on each side, so that thin strokes print. 0.12 for a thin Mincho.
+Mark_Stroke = 0; // [0:0.01:0.3]
+// Letter spacing of the main line. 1 = normal. About 1.7 gives a wide-spaced wordmark.
+Mark_Spacing_1 = 1; // [0.8:0.05:3]
+// Letter spacing of the second line.
+Mark_Spacing_2 = 1; // [0.8:0.05:3]
+// An installed font for the main line. Find its exact name in Help > Font List.
+Mark_Font_1 = "Kaisei Tokumin:style=ExtraBold";
+// An installed font for the second line. Use one with Japanese characters for Japanese text.
+Mark_Font_2 = "Kaisei Tokumin:style=ExtraBold";
+// A koma above the text, with a character cut into it.
+Mark_Emblem = false;
+// The character on the emblem, such as 王.
+Mark_Emblem_Character = "";
+// An installed font for the emblem's character, such as a brush font. Empty = Mark Font 1.
+Mark_Emblem_Font = "";
 // mm. Depth of the mark.
-Signature_Depth = 0.4; // [0.2:0.1:1]
+Mark_Depth = 0.4; // [0.2:0.1:1]
 
 /* [07 - Filament colors and layout] */
 // Box color. Kuwa is the island mulberry of fine boxes. Custom uses Box Color.
@@ -86,6 +110,7 @@ epsilon = 0.02;   // overlap that keeps boolean operations clean
 
 include <../lib/filaments.scad>
 include <../lib/shapes.scad>
+include <../lib/maker_mark.scad>
 
 
 // ===== 1. Sizes ===============================================================
@@ -119,14 +144,41 @@ lid_radius = inro ? Corner_Radius : Corner_Radius + Lid_Skirt_Thickness + Lid_Cl
 closed_height = inro ? shoulder_height + lid_height : box_height + Lid_Roof_Thickness;
 
 
+// The room for the mark: 3 mm in from the chamfered edges.
+mark_room = [outer_width, outer_depth] - 2*[Edge_Chamfer + 3, Edge_Chamfer + 3];
+
+// The maker's mark, from lib/maker_mark.scad: its text sizes, as large as its
+// room allows, and no text below Mark Min Text Size.
+mark_on = Mark_Line_1 != "" || Mark_Line_2 != "" || Mark_Emblem;
+mark_sizes = maker_mark_sizes(Mark_Line_1, Mark_Line_2, Mark_Size, Mark_Line_2_Ratio, Mark_Min_Text_Size,
+                              Mark_Max_Size, Mark_Spacing_1, Mark_Spacing_2, Mark_Emblem, mark_room);
+mark_extent = maker_mark_extent(Mark_Line_1, Mark_Line_2, mark_sizes[0], mark_sizes[1], Mark_Spacing_1,
+                                Mark_Spacing_2, Mark_Emblem, Mark_Min_Text_Size);
+mark_smallest_text = maker_mark_smallest_text(Mark_Line_1, Mark_Line_2, mark_sizes);
+module mark_2d() {
+    maker_mark_centered_2d(Mark_Line_1, Mark_Line_2, mark_sizes[0], mark_sizes[1], Mark_Font_1, Mark_Font_2,
+                           Mark_Spacing_1, Mark_Spacing_2, Mark_Emblem, Mark_Emblem_Character, Mark_Emblem_Font,
+                           Mark_Stroke, Mark_Min_Text_Size);
+}
+mark_under = mark_on && Mark_Place != "Lid top";
+mark_on_lid = mark_on && Mark_Place != "Underside";
+
+
 // ===== 2. Box and lid =========================================================
 
 // The mark on the underside, mirrored so that it reads from below.
 module signature_cut() {
-    if (Signature_Text != "")
-        translate([outer_width/2, outer_depth/2, -epsilon]) linear_extrude(Signature_Depth + epsilon)
-            mirror([1, 0, 0]) text(Signature_Text, size=Signature_Font_Size, font=Signature_Font,
-                                   halign="center", valign="center");
+    if (mark_under)
+        translate([outer_width/2, outer_depth/2, -epsilon]) linear_extrude(Mark_Depth + epsilon, convexity=20)
+            mirror([1, 0, 0]) mark_2d();
+}
+
+// The mark on the lid top. The lid prints top down and turns over onto the
+// box, so the mark is mirrored front to back, and reads from above when closed.
+module lid_mark_cut() {
+    if (mark_on_lid)
+        translate([lid_width/2, lid_depth/2, -epsilon]) linear_extrude(Mark_Depth + epsilon, convexity=20)
+            mirror([0, 1, 0]) mark_2d();
 }
 
 module box() {
@@ -151,6 +203,7 @@ module box() {
 module lid() {
     difference() {
         chamfered_slab([lid_width, lid_depth, lid_height], lid_radius, Edge_Chamfer, Edge_Chamfer);
+        lid_mark_cut();
         translate([Lid_Skirt_Thickness, Lid_Skirt_Thickness, Lid_Roof_Thickness])
             rounded_slab([lid_opening[0], lid_opening[1], Lid_Skirt_Height + epsilon],
                          max(0, lid_radius - Lid_Skirt_Thickness));
@@ -178,11 +231,21 @@ assert(!inro || shoulder_height > Bottom_Thickness + 2*Edge_Chamfer,
     "The lid comes down below the floor of the box. Reduce Lid Skirt Height.");
 assert(2*Edge_Chamfer < min(Lid_Skirt_Thickness, Wall_Thickness) + Lid_Roof_Thickness,
     "Edge Chamfer is too large.");
-assert(Signature_Text == "" || Signature_Depth < Bottom_Thickness - 0.6,
-    "The mark is too deep for the bottom. Reduce Signature Depth.");
+assert(!mark_on || Mark_Depth < min(Bottom_Thickness, Lid_Roof_Thickness) - 0.6,
+    "The mark is too deep for the bottom or the lid. Reduce Mark Depth.");
+assert(!mark_on || (mark_extent[0] < mark_room[0] && mark_extent[1] < mark_room[1]),
+    str("The maker's mark (about ", mark_extent[0], " x ", mark_extent[1], " mm) does not fit on the box (",
+        mark_room[0], " x ", mark_room[1], " mm). Set Mark Size to 0 (automatic), reduce the letter spacing, or shorten the lines."));
+assert(!mark_on || mark_smallest_text >= Mark_Min_Text_Size - 0.001,
+    str("The maker's mark text would be ", round(mark_smallest_text*10)/10, " mm, smaller than Mark Min Text Size (",
+        Mark_Min_Text_Size, " mm), and would not print. Set Mark Size to 0 (automatic) or larger, ",
+        "reduce the letter spacing, or shorten the main line."));
 assert(Output_Mode != "Closed" || $preview, "Closed is F5 only. Select Box, Lid, or Box and lid to export an STL.");
 
 // Information in the Console.
+if (mark_on)
+    echo(str("Maker's mark: about ", round(mark_extent[0]), " x ", round(mark_extent[1]), " mm. Main line ",
+             round(mark_sizes[0]*10)/10, " mm, second line ", round(mark_sizes[1]*10)/10, " mm."));
 echo(str("KomaSCAD komabako ", version, ". Closed: ", outer_width, " x ", outer_depth, " x ", closed_height,
          " mm. Inside: ", inner_width, " x ", inner_depth, " x ", inner_height, " mm. Layers: ", layer_count, "."));
 

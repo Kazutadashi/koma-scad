@@ -106,6 +106,17 @@ class ThreeMFTests(unittest.TestCase):
         self.assertEqual(big_y - (left_y + 10.0), 6.0)
         self.assertEqual(left_y, right_y)
 
+    def test_fixed_positions_center_each_footprint_on_its_spot(self):
+        footprints = [(0.0, 10.0, 0.0, 20.0), (-5.0, 5.0, -5.0, 5.0)]
+        shifts = threemf.fixed_positions(footprints, [(100.0, -50.0), (0.0, 0.0)])
+        self.assertEqual(shifts, [(95.0, -60.0), (0.0, 0.0)])
+
+    def test_one_piece_at_a_fixed_position_is_moved(self):
+        """A single piece normally keeps its coordinates, but a fixed position moves it."""
+        files, placed = self.write([("Pawn", PARTS)], positions=[(50.0, 50.0)])
+        self.assertIn("transform", files["3D/3dmodel.model"].decode("utf-8"))
+        self.assertEqual((placed[0]["x"], placed[0]["y"]), (45.0, 45.0))
+
 
 if __name__ == "__main__":
     unittest.main()

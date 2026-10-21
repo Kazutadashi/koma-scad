@@ -137,6 +137,18 @@ uses it:
 "layoutRows": [5, 5, 10, 11]
 ```
 
+Or it can have `layoutPositions`: the [x, y] of the middle of each piece, in
+mm from the middle of the bed. The pieces go in file order, each preset
+repeated as `pieceCounts` gives. Positions replace `layoutRows`. The
+[bed consistency test](print-test-page.md#bed-consistency-test) uses them to
+put pieces in the corners of the bed:
+
+```json
+"layoutPositions": [[-103.75, 102], [73.25, 102], [-15.25, 0]]
+```
+
+Do not let the slicer arrange the plate: arranging moves the pieces.
+
 ### Print orientation
 
 `--orientation` sets the orientation of all pieces. Without it, each piece

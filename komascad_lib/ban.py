@@ -19,7 +19,7 @@ from . import openscad
 from .export import portable_path, safe_name, sha256_file
 from .openscad import Part
 from .project import BAN_SCAD, KomaError
-from .threemf import create_3mf
+from .threemf import BED_MARGIN, create_3mf, grid_positions, piece_bounds
 
 # The line in which the model reports the board, such as
 # ECHO: "KOMASCAD_BAN", [192, 208.5, 12], [1, 1], [[0, 0, 192, 208.5, 0, 0]], 0, "Connectors"
@@ -37,6 +37,9 @@ MANIFEST_INDENT = 2
 
 # How manifest.json counts panels and measures their offsets.
 COORDINATES = "columns count from the left, rows from the front; offsets from the front-left corner"
+
+# How far a part's height may be from the board's thickness and still be a body, in mm.
+ROLE_TOLERANCE = 0.1
 
 # A panel address has two digits for the column and two for the row, such as "01-02".
 ADDRESS_DIGITS = 2
@@ -260,6 +263,7 @@ def render_panels(
         for frame, file in enumerate(files[:panel_frames]):
             role, material, rgba = board.materials[frame % len(COLOR_MODES)]
             vertices, faces = openscad.read_stl(file)
+            check_role(role, vertices, board)
             parts.append(Part(role, material, tuple(rgba), vertices, faces))
 
         loose = None
@@ -272,6 +276,36 @@ def render_panels(
     for first in range(0, len(parts), len(COLOR_MODES)):
         panel_parts.append(parts[first : first + len(COLOR_MODES)])
     return panel_parts, loose
+
+
+def check_role(role: str, vertices: list, board: Board) -> None:
+    """Stops when a rendered part is not the part that its frame asked for.
+
+    A body is as tall as the board. The markings are a thin layer at the
+    playing surface. A markings part as tall as the board means that OpenSCAD
+    returned the wrong frame, and the file would print a whole panel in the
+    line color.
+
+    Args:
+        role: "body" or "markings".
+        vertices: The corners of the part's mesh.
+        board: The board.
+
+    Raises:
+        KomaError: The part has the height of the other role.
+    """
+    heights = [z for _, _, z in vertices]
+    height = max(heights) - min(heights)
+    is_body = height > board.size[2] - ROLE_TOLERANCE
+    if role == "body" and not is_body:
+        raise KomaError(
+            f"A panel body rendered only {height:.2f} mm tall. Please report this as a bug."
+        )
+    if role != "body" and is_body:
+        raise KomaError(
+            f"The {role} of a panel rendered as tall as the board ({height:.2f} mm)."
+            " Please report this as a bug."
+        )
 
 
 # --- Planning the files ---------------------------------------------------------
@@ -358,6 +392,37 @@ def bed_order(panels: list[Panel], board: Board) -> tuple[list[Panel], list[int]
     return ordered, rows
 
 
+def plate_positions(
+    pieces: list[tuple[str, list[Part]]], rows: list[int], loose: Part
+) -> list[tuple[float, float]]:
+    """Places the panels in their rows, and the connectors or keys to their right.
+
+    Args:
+        pieces: (name, parts) of each panel, in bed order.
+        rows: The number of panels in each row, from bed_order().
+        loose: The connectors or keys.
+
+    Returns:
+        Where the middle of each footprint goes, (x, y) in mm: the panels, then
+        the loose parts. The whole plate is centered on the origin.
+    """
+    bounds = [piece_bounds(parts) for _, parts in pieces]
+    centers = []
+    for (min_x, max_x, min_y, max_y), (x, y) in zip(
+        bounds, grid_positions(bounds, rows), strict=True
+    ):
+        centers.append(((min_x + max_x) / 2 + x, (min_y + max_y) / 2 + y, (max_x - min_x) / 2))
+    left = min(x - half for x, _, half in centers)
+    right = max(x + half for x, _, half in centers)
+
+    min_x, max_x, _, _ = piece_bounds([loose])
+    loose_x = right + BED_MARGIN + (max_x - min_x) / 2
+    shift = (left + right + BED_MARGIN + max_x - min_x) / 2
+    places = [(x - shift, y) for x, y, _ in centers]
+    places.append((loose_x - shift, 0.0))
+    return places
+
+
 # --- Writing ----------------------------------------------------------------------
 
 
@@ -413,7 +478,7 @@ def export_board(
         for planned in pending:
             output = destination / planned.filename
             if planned.panels:
-                _write_file(output, planned, board, parts_of, plain)
+                _write_file(output, planned, board, parts_of, plain, loose)
             else:
                 _write_loose(output, loose, board.loose_name, plain)
             report("Saved " + planned.filename)
@@ -428,6 +493,7 @@ def _write_file(
     board: Board,
     parts_of: dict[str, list[Part]],
     plain: bool,
+    loose: Part | None = None,
 ) -> None:
     """Writes one 3MF, so that it gets its final name only when it is complete.
 
@@ -437,6 +503,8 @@ def _write_file(
         board: The board.
         parts_of: The parts of each panel, by address.
         plain: Leave out the slicer filament slots.
+        loose: The connectors or keys. A file with more than one panel puts
+            them beside the panels.
     """
     panels = planned.panels
     rows = None
@@ -447,9 +515,18 @@ def _write_file(
     for panel in panels:
         pieces.append(("Panel " + panel.address, parts_of[panel.address]))
 
+    # The file with every panel also holds the connectors or keys, so that one
+    # file prints the whole board.
+    positions = None
+    if loose is not None and len(panels) > 1:
+        positions = plate_positions(pieces, rows, loose)
+        pieces.append((board.loose_name, [loose]))
+
     partial = output.with_name("." + output.name + ".partial")
     try:
-        create_3mf(partial, pieces, output.stem, rows, slicer_settings=not plain)
+        create_3mf(
+            partial, pieces, output.stem, rows, slicer_settings=not plain, positions=positions
+        )
         os.replace(partial, output)
     finally:
         if partial.exists():

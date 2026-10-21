@@ -15,6 +15,7 @@ The [README](../README.md) describes the project. Start with
 | [Board connector spec](ban-connector-spec.md) | Replace or make a board connector: socket sizes and screw-and-nut hardware |
 | [Komadai guide](komadai.md) | Make a stand for captured pieces |
 | [Komabako guide](komabako.md) | Make a box for a set of pieces |
+| [Maker's mark](makers-mark.md) | Put your name or brand on the board, the komadai and the box |
 | [Command reference](cli.md) | Use every `komascad.py` command and option |
 | [Parameter reference](parameters.md) | Look up one OpenSCAD setting |
 | [Print guide](printing/print-guide.md) | Import a color 3MF, set up the slicer, and print |

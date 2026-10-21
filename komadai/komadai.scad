@@ -66,14 +66,36 @@ Foot_Size_Ratio = 0.8; // [0.4:0.01:1]
 Foot_Thickness = 8; // [3:0.5:20]
 
 /* [05 - Maker's mark] */
-// The mark (銘), cut into the underside of the top. Empty = no mark.
-Signature_Text = "";
-// An installed font. Find its exact name in Help > Font List.
-Signature_Font = "Liberation Sans:style=Regular";
-// mm. Text size of the mark.
-Signature_Font_Size = 5; // [2:0.1:12]
+// The main line of the mark (銘), cut into the underside of the top: your name or brand. Empty = no mark.
+Mark_Line_1 = "";
+// A smaller line under it, such as SHOGI · 将棋. Empty = none.
+Mark_Line_2 = "";
+// mm. Text size of the main line. The second line and the emblem follow it. 0 = automatic: as large as the room allows, up to Mark Max Size.
+Mark_Size = 0; // [0:0.1:40]
+// mm. Automatic only: the largest text size of the main line.
+Mark_Max_Size = 14; // [4:0.5:40]
+// Size of the second line, as a fraction of the main line. Keep Japanese characters 3 mm or larger.
+Mark_Line_2_Ratio = 0.42; // [0.2:0.01:1]
+// mm. Smallest size of any text in the mark, and of the emblem's character, so that it prints. The second line and the emblem grow to it. See docs/makers-mark.md for measured values.
+Mark_Min_Text_Size = 7; // [3:0.5:20]
+// mm. Thickens every stroke of the mark by this much on each side, so that thin strokes print. 0.12 for a thin Mincho.
+Mark_Stroke = 0; // [0:0.01:0.3]
+// Letter spacing of the main line. 1 = normal. About 1.7 gives a wide-spaced wordmark.
+Mark_Spacing_1 = 1; // [0.8:0.05:3]
+// Letter spacing of the second line.
+Mark_Spacing_2 = 1; // [0.8:0.05:3]
+// An installed font for the main line. Find its exact name in Help > Font List.
+Mark_Font_1 = "Kaisei Tokumin:style=ExtraBold";
+// An installed font for the second line. Use one with Japanese characters for Japanese text.
+Mark_Font_2 = "Kaisei Tokumin:style=ExtraBold";
+// A koma above the text, with a character cut into it.
+Mark_Emblem = false;
+// The character on the emblem, such as 王.
+Mark_Emblem_Character = "";
+// An installed font for the emblem's character, such as a brush font. Empty = Mark Font 1.
+Mark_Emblem_Font = "";
 // mm. Depth of the mark.
-Signature_Depth = 0.4; // [0.2:0.1:1]
+Mark_Depth = 0.4; // [0.2:0.1:1]
 
 /* [06 - Filament color and layout] */
 // Color. Kaya matches the bundled board. Custom uses Komadai Color.
@@ -92,6 +114,7 @@ epsilon = 0.02;   // overlap that keeps boolean operations clean
 
 include <../lib/filaments.scad>
 include <../lib/shapes.scad>
+include <../lib/maker_mark.scad>
 
 
 // ===== 1. Sizes ===============================================================
@@ -109,16 +132,37 @@ top_thickness = flat ? Flat_Thickness : Top_Thickness;
 leg_height = overall_height - top_thickness;
 
 
+
+// The room for the mark under the top, clear of the legs or the column.
+column_top = top_width*Column_Top_Ratio;
+mark_room = Table_Style == "Yagura" ? [top_width, top_depth] - 2*[Leg_Inset + Leg_Width + 2, Leg_Inset + Leg_Width + 2]
+    : Table_Style == "One leg" ? [top_width - 2*Edge_Chamfer - 6, (top_depth - column_top)/2 - 6]
+    : [top_width, top_depth] - 2*[Edge_Chamfer + 3, Edge_Chamfer + 3];
+
+// The maker's mark, from lib/maker_mark.scad: its text sizes, as large as its
+// room allows, and no text below Mark Min Text Size.
+mark_on = Mark_Line_1 != "" || Mark_Line_2 != "" || Mark_Emblem;
+mark_sizes = maker_mark_sizes(Mark_Line_1, Mark_Line_2, Mark_Size, Mark_Line_2_Ratio, Mark_Min_Text_Size,
+                              Mark_Max_Size, Mark_Spacing_1, Mark_Spacing_2, Mark_Emblem, mark_room);
+mark_extent = maker_mark_extent(Mark_Line_1, Mark_Line_2, mark_sizes[0], mark_sizes[1], Mark_Spacing_1,
+                                Mark_Spacing_2, Mark_Emblem, Mark_Min_Text_Size);
+mark_smallest_text = maker_mark_smallest_text(Mark_Line_1, Mark_Line_2, mark_sizes);
+module mark_2d() {
+    maker_mark_centered_2d(Mark_Line_1, Mark_Line_2, mark_sizes[0], mark_sizes[1], Mark_Font_1, Mark_Font_2,
+                           Mark_Spacing_1, Mark_Spacing_2, Mark_Emblem, Mark_Emblem_Character, Mark_Emblem_Font,
+                           Mark_Stroke, Mark_Min_Text_Size);
+}
+
+
 // ===== 2. The komadai =========================================================
 
 // The mark under the top, mirrored so that it reads from below. On a One leg
 // komadai it goes beside the column, toward the front.
 module signature_cut() {
-    one_leg_offset = Table_Style == "One leg" ? -(top_depth*Column_Top_Ratio + top_depth)/4 : 0;
-    if (Signature_Text != "")
-        translate([top_width/2, top_depth/2 + one_leg_offset, -epsilon]) linear_extrude(Signature_Depth + epsilon)
-            mirror([1, 0, 0]) text(Signature_Text, size=Signature_Font_Size, font=Signature_Font,
-                                   halign="center", valign="center");
+    one_leg_offset = Table_Style == "One leg" ? -(column_top + top_depth)/4 : 0;
+    if (mark_on)
+        translate([top_width/2, top_depth/2 + one_leg_offset, -epsilon]) linear_extrude(Mark_Depth + epsilon, convexity=20)
+            mirror([1, 0, 0]) mark_2d();
 }
 
 module top() {
@@ -207,7 +251,14 @@ assert(Output_Mode == "Display" || overall_height <= Print_Height,
 assert(Table_Style != "Yagura" || !Stretchers || Stretcher_Height + 1.5*Leg_Width*0.45 < leg_height,
     "The stretchers are higher than the legs. Lower Stretcher Height.");
 assert(2*Edge_Chamfer < top_thickness, "Edge Chamfer is too large for the top.");
-assert(Signature_Text == "" || Signature_Depth < top_thickness/2, "The mark is too deep for the top. Reduce Signature Depth.");
+assert(!mark_on || Mark_Depth < top_thickness/2, "The mark is too deep for the top. Reduce Mark Depth.");
+assert(!mark_on || (mark_extent[0] < mark_room[0] && mark_extent[1] < mark_room[1]),
+    str("The maker's mark (about ", mark_extent[0], " x ", mark_extent[1], " mm) does not fit under the top (",
+        mark_room[0], " x ", mark_room[1], " mm). Set Mark Size to 0 (automatic), reduce the letter spacing, or shorten the lines."));
+assert(!mark_on || mark_smallest_text >= Mark_Min_Text_Size - 0.001,
+    str("The maker's mark text would be ", round(mark_smallest_text*10)/10, " mm, smaller than Mark Min Text Size (",
+        Mark_Min_Text_Size, " mm), and would not print. Set Mark Size to 0 (automatic) or larger, ",
+        "reduce the letter spacing, or shorten the main line."));
 assert(!Surface_Border_Groove || (Groove_Depth < top_thickness && 2*Groove_Inset < min(top_width, top_depth)),
     "The groove does not fit on the top. Change Groove Inset or Groove Depth.");
 assert(Table_Style != "Yagura" || 2*(Leg_Inset + Leg_Width) < min(top_width, top_depth),
@@ -216,6 +267,9 @@ assert(Table_Style != "One leg" || leg_height > Foot_Thickness + (min(top_width,
     "The column is too short for the foot and its flare. Raise Board Surface Height, or reduce Foot Size Ratio.");
 
 // Information in the Console.
+if (mark_on)
+    echo(str("Maker's mark: about ", round(mark_extent[0]), " x ", round(mark_extent[1]), " mm. Main line ",
+             round(mark_sizes[0]*10)/10, " mm, second line ", round(mark_sizes[1]*10)/10, " mm."));
 echo(str("KomaSCAD komadai ", version, ". ", Table_Style, ". Top: ", top_width, " x ", top_depth,
          " mm. Height: ", overall_height, " mm, ", Board_Surface_Height - overall_height, " mm below the board."));
 

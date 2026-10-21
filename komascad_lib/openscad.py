@@ -534,7 +534,9 @@ def render_frames(
     """
     frame_count = len(next(iter(frames.values())))
     # $t runs from 0 to 1 over the animation, so frame i gets values[i].
-    frame_index = f"min(floor($t*{frame_count}),{frame_count - 1})"
+    # OpenSCAD makes $t as i * (1 / frames), which can land just under i:
+    # floor() would then repeat the frame before, so round instead.
+    frame_index = f"min(round($t*{frame_count}),{frame_count - 1})"
 
     output = folder / "part.stl"
     command = [executable, "--animate", str(frame_count)]
