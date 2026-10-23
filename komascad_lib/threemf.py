@@ -9,6 +9,10 @@ colors in different ways, so the file holds three kinds of color information:
   filament assignments.
 - Metadata/model_settings.config: the filament slot of each part, which Bambu
   Studio and the OrcaSlicer family (such as Elegoo Slicer) read.
+
+A file can also spread its pieces over several plates (beds), for parts that
+do not fit on one bed. model_settings.config then lists the plates, and each
+piece lies on its plate in the grid in which those slicers lay plates out.
 """
 
 from __future__ import annotations
@@ -67,6 +71,11 @@ SUMMARY_INDENT = 2
 
 # A 4 x 4 transform that moves nothing, for model_settings.config.
 IDENTITY_MATRIX = "1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1"
+
+# Bambu Studio and the OrcaSlicer family put plates in a grid, each a fifth of
+# a bed apart, and put each object on the plate that its footprint is on
+# (LOGICAL_PART_PLATE_GAP in their PartPlate.cpp).
+PLATE_GAP = 0.2
 
 Bounds = tuple[float, float, float, float]  # min x, max x, min y, max y
 MaterialKey = tuple[str, str]  # filament name, #RRGGBB
@@ -199,6 +208,35 @@ def grid_positions(
     return positions
 
 
+def plate_columns(count: int) -> int:
+    """The number of plates in each row of the grid, as Bambu Studio counts them.
+
+    Args:
+        count: The number of plates.
+
+    Returns:
+        The square root of count, rounded up.
+    """
+    return math.ceil(math.sqrt(count) - 1e-9)
+
+
+def plate_origin(index: int, count: int, bed: tuple[float, float]) -> tuple[float, float]:
+    """Finds the front-left corner of one plate in the grid of plates.
+
+    Plates fill rows from the left; each next row is in front of the one before.
+
+    Args:
+        index: The plate, from 0.
+        count: The number of plates.
+        bed: The width and depth of the print bed, in mm.
+
+    Returns:
+        The (x, y) of the plate's front-left corner, in mm.
+    """
+    row, column = divmod(index, plate_columns(count))
+    return (column * bed[0] * (1 + PLATE_GAP), -row * bed[1] * (1 + PLATE_GAP))
+
+
 def fixed_positions(
     bounds: list[Bounds], positions: list[tuple[float, float]]
 ) -> list[tuple[float, float]]:
@@ -266,7 +304,9 @@ def _row_positions(bounds: list[Bounds], rows: list[int]) -> list[tuple[float, f
 # --- Slicer filament slots ----------------------------------------------------------
 
 
-def filament_settings(items: list[BuildItem], slots: dict[MaterialKey, int]) -> str:
+def filament_settings(
+    items: list[BuildItem], slots: dict[MaterialKey, int], plates: list[int] | None = None
+) -> str:
     """Writes Metadata/model_settings.config: the filament slot of each part.
 
     OrcaSlicer forks ignore the standard 3MF colors when they import a file
@@ -277,6 +317,8 @@ def filament_settings(items: list[BuildItem], slots: dict[MaterialKey, int]) -> 
     Args:
         items: Every placed piece, in build order.
         slots: The filament slot of each material.
+        plates: Optional. The plate of each piece, from 0. The file then lists
+            the plates and the pieces on each.
 
     Returns:
         The file text.
@@ -297,8 +339,37 @@ def filament_settings(items: list[BuildItem], slots: dict[MaterialKey, int]) -> 
             lines.append("    </part>")
 
         lines.append("  </object>")
+    if plates:
+        lines += _plate_lines(items, plates)
     lines.append("</config>")
     return "\n".join(lines) + "\n"
+
+
+def _plate_lines(items: list[BuildItem], plates: list[int]) -> list[str]:
+    """Lists each plate and the pieces on it, for model_settings.config.
+
+    Args:
+        items: Every placed piece, in build order.
+        plates: The plate of each piece, from 0.
+
+    Returns:
+        The lines of the plate entries.
+    """
+    lines = []
+    for plate in range(max(plates) + 1):
+        lines.append("  <plate>")
+        lines.append(f'    <metadata key="plater_id" value="{plate + 1}"/>')
+        lines.append(f'    <metadata key="plater_name" value="Plate {plate + 1}"/>')
+        lines.append('    <metadata key="locked" value="false"/>')
+        for item, item_plate in zip(items, plates, strict=True):
+            if item_plate != plate:
+                continue
+            lines.append("    <model_instance>")
+            lines.append(f'      <metadata key="object_id" value="{item.object_id}"/>')
+            lines.append('      <metadata key="instance_id" value="0"/>')
+            lines.append("    </model_instance>")
+        lines.append("  </plate>")
+    return lines
 
 
 # --- The model document ---------------------------------------------------------------
@@ -440,6 +511,7 @@ def create_3mf(
     rows: list[int] | None = None,
     slicer_settings: bool = True,
     positions: list[tuple[float, float]] | None = None,
+    plates: list[int] | None = None,
 ) -> list[dict]:
     """Writes one or more pieces as a multipart color 3MF.
 
@@ -456,6 +528,9 @@ def create_3mf(
         positions: Optional. Where the middle of each piece's footprint goes,
             (x, y) in mm from the middle of the bed. They replace the grid and
             the row plan.
+        plates: Optional, with positions. The plate of each piece, from 0, for
+            a file of several plates. Each position is then on its plate in the
+            grid of plate_origin().
 
     Returns:
         One record for each placed piece: its preset, object id, x and y
@@ -493,7 +568,7 @@ def create_3mf(
 
     settings = None
     if slicer_settings:
-        settings = filament_settings(build_items, slots)
+        settings = filament_settings(build_items, slots, plates)
     _write_package(destination, model, settings, _summary(placed, slots))
     return placed
 

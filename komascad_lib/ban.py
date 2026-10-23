@@ -19,7 +19,7 @@ from . import openscad
 from .export import portable_path, safe_name, sha256_file
 from .openscad import Part
 from .project import BAN_SCAD, KomaError
-from .threemf import BED_MARGIN, create_3mf, grid_positions, piece_bounds
+from .threemf import BED_MARGIN, create_3mf, piece_bounds, plate_origin
 
 # The line in which the model reports the board, such as
 # ECHO: "KOMASCAD_BAN", [192, 208.5, 12], [1, 1], [[0, 0, 192, 208.5, 0, 0]], 0, "Connectors"
@@ -314,9 +314,9 @@ def check_role(role: str, vertices: list, board: Board) -> None:
 def plan_files(board: Board) -> list[BoardFile]:
     """Decides which panels go into which file.
 
-    A one-piece board is one file. Otherwise each panel gets its own file, and
-    one more file holds every panel on one bed. A board with connectors or keys
-    has one more file with all of them.
+    A one-piece board is one file. Otherwise one file holds the whole board:
+    every panel and every connector or key, on as many plates as it needs.
+    Each panel also gets its own file, and the connectors or keys one more.
 
     Args:
         board: The board.
@@ -328,10 +328,9 @@ def plan_files(board: Board) -> list[BoardFile]:
     if board.one_piece:
         return [BoardFile(base + ".3mf", board.panels)]
 
-    files = []
+    files = [BoardFile(base + " - Whole board.3mf", board.panels)]
     for panel in board.panels:
         files.append(BoardFile(f"{base} - Panel {panel.address}.3mf", [panel]))
-    files.append(BoardFile(base + " - All panels.3mf", board.panels))
     if board.loose:
         files.append(BoardFile(f"{base} - {board.loose_name}.3mf", []))
     return files
@@ -392,35 +391,65 @@ def bed_order(panels: list[Panel], board: Board) -> tuple[list[Panel], list[int]
     return ordered, rows
 
 
-def plate_positions(
-    pieces: list[tuple[str, list[Part]]], rows: list[int], loose: Part
-) -> list[tuple[float, float]]:
-    """Places the panels in their rows, and the connectors or keys to their right.
+def pack_plates(
+    pieces: list[tuple[str, list[Part]]], bed: tuple[float, float]
+) -> tuple[list[tuple[float, float]], list[int]]:
+    """Spreads pieces over as few print beds (plates) as they need.
+
+    Each piece goes on the first plate where it fits: at the end of the
+    plate's last row, or in a new row in front of it. Pieces keep the turn that
+    they have, so that the bottom surface lines run from the front to the back
+    of the board. The pieces on each plate are centered on it.
 
     Args:
-        pieces: (name, parts) of each panel, in bed order.
-        rows: The number of panels in each row, from bed_order().
-        loose: The connectors or keys.
+        pieces: (name, parts) of each piece, in the order to place them.
+        bed: The width and depth of the print bed, in mm.
 
     Returns:
-        Where the middle of each footprint goes, (x, y) in mm: the panels, then
-        the loose parts. The whole plate is centered on the origin.
+        Where the middle of each footprint goes, (x, y) in mm, on its plate in
+        the grid of threemf.plate_origin(), and the plate of each piece, from 0.
     """
-    bounds = [piece_bounds(parts) for _, parts in pieces]
-    centers = []
-    for (min_x, max_x, min_y, max_y), (x, y) in zip(
-        bounds, grid_positions(bounds, rows), strict=True
-    ):
-        centers.append(((min_x + max_x) / 2 + x, (min_y + max_y) / 2 + y, (max_x - min_x) / 2))
-    left = min(x - half for x, _, half in centers)
-    right = max(x + half for x, _, half in centers)
+    width, depth = bed
+    sizes = []
+    for _, parts in pieces:
+        min_x, max_x, min_y, max_y = piece_bounds(parts)
+        sizes.append((max_x - min_x, max_y - min_y))
 
-    min_x, max_x, _, _ = piece_bounds([loose])
-    loose_x = right + BED_MARGIN + (max_x - min_x) / 2
-    shift = (left + right + BED_MARGIN + max_x - min_x) / 2
-    places = [(x - shift, y) for x, y, _ in centers]
-    places.append((loose_x - shift, 0.0))
-    return places
+    # Each plate: its pieces as (index, left, back, width, depth), measured from
+    # the back-left corner of the bed, and its last row as [top, depth, next x].
+    plates: list[list[tuple[int, float, float, float, float]]] = []
+    rows: list[list[float]] = []
+    for index, (piece_width, piece_depth) in enumerate(sizes):
+        for plate, row in zip(plates, rows, strict=True):
+            top, row_depth, next_x = row
+            if next_x + piece_width <= width and top + piece_depth <= depth:
+                plate.append((index, next_x, top, piece_width, piece_depth))
+                row[1] = max(row_depth, piece_depth)
+                row[2] = next_x + piece_width + BED_MARGIN
+                break
+            new_top = top + row_depth + BED_MARGIN
+            if piece_width <= width and new_top + piece_depth <= depth:
+                plate.append((index, 0.0, new_top, piece_width, piece_depth))
+                row[:] = [new_top, piece_depth, piece_width + BED_MARGIN]
+                break
+        else:
+            plates.append([(index, 0.0, 0.0, piece_width, piece_depth)])
+            rows.append([0.0, piece_depth, piece_width + BED_MARGIN])
+
+    positions = [(0.0, 0.0)] * len(pieces)
+    plate_of = [0] * len(pieces)
+    for number, plate in enumerate(plates):
+        origin_x, origin_y = plate_origin(number, len(plates), bed)
+        used_width = max(left + size_x for _, left, _, size_x, _ in plate)
+        used_depth = max(back + size_y for _, _, back, _, size_y in plate)
+        margin_x = (width - used_width) / 2
+        margin_y = (depth - used_depth) / 2
+        for index, left, back, size_x, size_y in plate:
+            x = origin_x + margin_x + left + size_x / 2
+            y = origin_y + depth - margin_y - back - size_y / 2
+            positions[index] = (x, y)
+            plate_of[index] = number
+    return positions, plate_of
 
 
 # --- Writing ----------------------------------------------------------------------
@@ -459,6 +488,8 @@ def export_board(
     """
     definitions = openscad.scad_definitions(name, values, {}, BAN_SCAD)
     board = read_board(executable, name, definitions)
+    settings = resolved_settings(values)
+    bed = (float(settings["Print_Bed_Width"]), float(settings["Print_Bed_Depth"]))
     plan = plan_files(board)
 
     pending = []
@@ -478,12 +509,12 @@ def export_board(
         for planned in pending:
             output = destination / planned.filename
             if planned.panels:
-                _write_file(output, planned, board, parts_of, plain, loose)
+                _write_file(output, planned, board, parts_of, plain, loose, bed)
             else:
                 _write_loose(output, loose, board.loose_name, plain)
             report("Saved " + planned.filename)
 
-    write_manifest(destination, board, plan, preset_path, resolved_settings(values))
+    write_manifest(destination, board, plan, preset_path, settings)
     return len(pending), skipped
 
 
@@ -494,6 +525,7 @@ def _write_file(
     parts_of: dict[str, list[Part]],
     plain: bool,
     loose: Part | None = None,
+    bed: tuple[float, float] = (256.0, 256.0),
 ) -> None:
     """Writes one 3MF, so that it gets its final name only when it is complete.
 
@@ -503,8 +535,9 @@ def _write_file(
         board: The board.
         parts_of: The parts of each panel, by address.
         plain: Leave out the slicer filament slots.
-        loose: The connectors or keys. A file with more than one panel puts
-            them beside the panels.
+        loose: The connectors or keys. A file with more than one panel holds
+            them too.
+        bed: The width and depth of the print bed, in mm.
     """
     panels = planned.panels
     rows = None
@@ -515,17 +548,26 @@ def _write_file(
     for panel in panels:
         pieces.append(("Panel " + panel.address, parts_of[panel.address]))
 
-    # The file with every panel also holds the connectors or keys, so that one
-    # file prints the whole board.
+    # The whole-board file also holds the connectors or keys, and spreads
+    # everything over as many plates as the print bed needs: one file prints
+    # the whole board.
     positions = None
-    if loose is not None and len(panels) > 1:
-        positions = plate_positions(pieces, rows, loose)
-        pieces.append((board.loose_name, [loose]))
+    plates = None
+    if len(panels) > 1:
+        if loose is not None:
+            pieces.append((board.loose_name, [loose]))
+        positions, plates = pack_plates(pieces, bed)
 
     partial = output.with_name("." + output.name + ".partial")
     try:
         create_3mf(
-            partial, pieces, output.stem, rows, slicer_settings=not plain, positions=positions
+            partial,
+            pieces,
+            output.stem,
+            rows,
+            slicer_settings=not plain,
+            positions=positions,
+            plates=plates,
         )
         os.replace(partial, output)
     finally:

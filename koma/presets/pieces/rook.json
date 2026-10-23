@@ -21,7 +21,7 @@
         "learner": {
             "Front_Characters": "飛",
             "Front_Moves": ".#./#@#/.#.",
-            "Front_Font_Size": "9.92"
+            "Front_Font_Size": "11.16"
         }
     },
     "back": {
@@ -32,7 +32,7 @@
         "learner": {
             "Back_Characters": "龍",
             "Back_Moves": "o#o/#@#/o#o",
-            "Back_Font_Size": "9.92"
+            "Back_Font_Size": "11.16"
         }
     }
 }

@@ -44,8 +44,9 @@ The front and back faces slope equally from the heel to the point. To give
 each face its own slope, set **Taper Mode** to **Reference side angles**, then
 set the two side angles in **10 - Advanced shape angles**.
 
-**Bevel Width** and **Bevel Depth** cut a small chamfer on all edges. Set
-either to 0 for sharp edges.
+**Bevel Width** and **Bevel Depth** cut a small chamfer on all edges: 0.3
+mm by default. The chamfer lets a piece slide over a seam of the board
+without catching on it. Set either to 0 for sharp edges.
 
 ### Outline angles
 

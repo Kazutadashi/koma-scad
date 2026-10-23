@@ -7,7 +7,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from komascad_lib import ban
+from komascad_lib import ban, threemf
 from komascad_lib.openscad import Part
 from komascad_lib.project import BAN_PRESETS, KomaError
 
@@ -52,10 +52,10 @@ class BoardReportTests(unittest.TestCase):
         with self.assertRaisesRegex(KomaError, "did not report the panels"):
             ban.parse_board("Mini", "ECHO: something else")
 
-    def test_tiled_board_has_one_file_per_panel_and_one_with_all(self):
+    def test_tiled_board_has_one_whole_board_file_and_one_per_panel(self):
         names = [planned.filename for planned in ban.plan_files(self.board)]
-        self.assertEqual(names[0], "Mini - Panel 00-00.3mf")
-        self.assertEqual(names[-1], "Mini - All panels.3mf")
+        self.assertEqual(names[0], "Mini - Whole board.3mf")
+        self.assertEqual(names[1], "Mini - Panel 00-00.3mf")
         self.assertEqual(len(names), 5)
 
     def test_one_piece_board_is_one_file(self):
@@ -86,24 +86,48 @@ class BoardReportTests(unittest.TestCase):
         with self.assertRaisesRegex(KomaError, "body rendered only"):
             ban.check_role("body", [(0, 0, 11.6), (0, 0, 12)], board)
 
-    def test_connectors_go_beside_the_panels(self):
-        def square(width, depth):
-            return [Part("body", "PLA", (0, 0, 0, 1), [(0, 0, 0), (width, depth, 0)], [])]
-
+    def test_pieces_that_fit_share_a_plate(self):
         pieces = [(name, square(100, 110)) for name in ("a", "b", "c", "d")]
-        loose = square(50, 55)[0]
-        places = ban.plate_positions(pieces, [2, 2], loose)
-        panel_right = max(x for x, _ in places[:4]) + 50
-        loose_left = places[4][0] - 25
-        self.assertAlmostEqual(loose_left - panel_right, ban.BED_MARGIN)
-        # The plate is centered: as far from the origin on the left as on the right.
-        plate_left = min(x for x, _ in places[:4]) - 50
-        self.assertAlmostEqual(plate_left, -(places[4][0] + 25))
+        pieces.append(("Connectors", square(200, 20)))
+        positions, plates = ban.pack_plates(pieces, (256, 256))
+        self.assertEqual(plates, [0, 0, 0, 0, 0])
+        # Two rows of two panels, the connectors in front, all on one bed.
+        self.assertTrue(all(0 < x < 256 and 0 < y < 256 for x, y in positions))
+        self.assertGreater(positions[0][1], positions[2][1])
+        self.assertLess(positions[4][1], positions[2][1])
+
+    def test_pieces_too_large_for_one_bed_get_more_plates(self):
+        # The panels of a full shogi board in 2 x 2: one on each 256 mm bed.
+        pieces = [
+            ("01", square(186, 163)),
+            ("11", square(150, 163)),
+            ("00", square(186, 202)),
+            ("10", square(150, 202)),
+            ("Connectors", square(229, 31)),
+        ]
+        positions, plates = ban.pack_plates(pieces, (256, 256))
+        self.assertEqual(plates, [0, 1, 2, 3, 0])
+        # Each piece lies inside its plate, in the grid that the slicers use.
+        for (x, y), plate in zip(positions, plates, strict=True):
+            left, front = threemf.plate_origin(plate, 4, (256, 256))
+            self.assertTrue(left < x < left + 256 and front < y < front + 256)
+
+    def test_the_plate_grid_follows_bambu_studio(self):
+        self.assertEqual(
+            [threemf.plate_columns(count) for count in (1, 2, 3, 4, 5, 9)], [1, 2, 2, 2, 3, 3]
+        )
+        self.assertEqual(threemf.plate_origin(1, 2, (256, 256)), (307.2, 0))
+        self.assertEqual(threemf.plate_origin(2, 3, (256, 200)), (0, -240.0))
 
     def test_bed_puts_the_back_row_at_the_back(self):
         ordered, rows = ban.bed_order(self.board.panels, self.board)
         self.assertEqual([panel.address for panel in ordered], ["00-01", "01-01", "00-00", "01-00"])
         self.assertEqual(rows, [2, 2])
+
+
+def square(width, depth):
+    """A flat part of the given footprint, enough to place on a bed."""
+    return [Part("body", "PLA", (0, 0, 0, 1), [(0, 0, 0), (width, depth, 0)], [])]
 
 
 class BanCommandTests(unittest.TestCase):
@@ -148,11 +172,11 @@ class BanCommandTests(unittest.TestCase):
         self.assertEqual(len(manifest["files"]), 5)
         self.assertEqual(manifest["settings"]["Joint_Style"], "Connectors")
 
-        with zipfile.ZipFile(self.out / "Minishogi - 2 x 2 panels - All panels.3mf") as archive:
+        with zipfile.ZipFile(self.out / "Minishogi - 2 x 2 panels - Whole board.3mf") as archive:
             settings = archive.read("Metadata/model_settings.config").decode("utf-8")
         self.assertEqual(settings.count('subtype="normal_part"'), 8)
 
-    def test_the_all_panels_file_also_holds_the_connectors(self):
+    def test_the_whole_board_file_also_holds_the_connectors(self):
         self.stub(
             ban,
             "read_board",
@@ -161,11 +185,13 @@ class BanCommandTests(unittest.TestCase):
         status, out, _ = run("ban", "Minishogi - 2 x 2 panels", "-o", self.out)
 
         self.assertEqual(status, 0, out)
-        with zipfile.ZipFile(self.out / "Minishogi - 2 x 2 panels - All panels.3mf") as archive:
+        with zipfile.ZipFile(self.out / "Minishogi - 2 x 2 panels - Whole board.3mf") as archive:
             summary = json.loads(archive.read("Metadata/KomaSCAD.json"))
+            settings = archive.read("Metadata/model_settings.config").decode("utf-8")
         names = [piece["preset"] for piece in summary["pieces"]]
         self.assertEqual(names[-1], "Connectors")
         self.assertEqual(len(names), 5)
+        self.assertIn('<metadata key="plater_id" value="1"/>', settings)
         self.assertTrue((self.out / "Minishogi - 2 x 2 panels - Connectors.3mf").exists())
 
     def test_existing_files_are_skipped_without_rendering(self):
@@ -178,7 +204,7 @@ class BanCommandTests(unittest.TestCase):
     def test_dry_run_writes_nothing(self):
         status, out, _ = run("ban", "Minishogi - 2 x 2 panels", "-o", self.out, "-n")
         self.assertEqual(status, 0)
-        self.assertIn("All panels.3mf  (4 panel(s))", out)
+        self.assertIn("Whole board.3mf  (4 panel(s))", out)
         self.assertFalse(self.out.exists())
 
     def test_unknown_board_is_explained(self):

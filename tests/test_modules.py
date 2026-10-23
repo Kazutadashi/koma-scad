@@ -63,6 +63,22 @@ def board_presets() -> dict[str, dict]:
     return json.loads(BAN_PRESETS.read_text(encoding="utf-8"))["parameterSets"]
 
 
+def mesh_volume(path: Path) -> float:
+    """The volume of an ASCII STL, in cubic mm. An empty or flat mesh has none."""
+    points = [
+        tuple(float(value) for value in line.split()[1:])
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip().startswith("vertex")
+    ]
+    volume = 0.0
+    for first in range(0, len(points), 3):
+        (ax, ay, az), (bx, by, bz), (cx, cy, cz) = points[first : first + 3]
+        volume += (
+            ax * (by * cz - bz * cy) - ay * (bx * cz - bz * cx) + az * (bx * cy - by * cx)
+        ) / 6
+    return abs(volume)
+
+
 class VersionTests(unittest.TestCase):
     """Every model has the version of the tool."""
 
@@ -83,9 +99,12 @@ class ConnectorSpecTests(unittest.TestCase):
             with self.subTest(hardware=hardware):
                 self.assertLess(shank, spec["spec_neck_width"])
                 self.assertLess(max(head, corners), spec["spec_end_width"])
-                self.assertLess(max(head_length, nut), spec["spec_end_length"])
                 # Lying flat: the head stands its diameter tall, a nut its width across flats.
                 self.assertLess(max(head, flats), spec["spec_height"])
+                # The shoulders lean into the pocket, so it is shortest at the top of each part.
+                taper = spec["spec_taper"]
+                self.assertLess(head_length, spec["spec_end_length"] - taper * head)
+                self.assertLess(nut, spec["spec_end_length"] - taper * flats)
 
 
 class BoardPresetTests(unittest.TestCase):
@@ -290,14 +309,72 @@ class ModelTests(unittest.TestCase):
                         ]
                     self.render(BAN_SCAD, mesh, settings)
                     vertices, _ = openscad.read_stl(mesh)
-                    # The seam edge, where the straight seam wall meets the 0.3 mm
-                    # top edge bevel: 11.7 mm up, above every tab.
-                    side = [(x, y) for x, y, z in vertices if abs(z - 11.7) < 0.001]
+                    # The seam edge, where the straight seam wall meets the 0.4 mm
+                    # top edge bevel: 11.6 mm up, above every tab.
+                    side = [(x, y) for x, y, z in vertices if abs(z - 11.6) < 0.001]
                     seam_x = max(x for x, _ in side)
                     seam_y = max(y for _, y in side)
                     on_table = [(x, y) for x, y, z in vertices if abs(z) < 0.001]
                     self.assertLessEqual(max(x for x, _ in on_table), seam_x - bevel + 0.01)
                     self.assertLessEqual(max(y for _, y in on_table), seam_y - bevel + 0.01)
+
+    def test_assembled_panels_meet_without_overlap(self):
+        # The tongue on panel 0, 0 sits in the groove of panel 1, 0 and of
+        # panel 0, 1: the panels may touch at the seam, but not overlap.
+        with tempfile.TemporaryDirectory() as folder:
+            model = Path(folder) / "overlap.scad"
+            model.write_text(
+                f"include <{BAN_SCAD.resolve()}>\n"
+                "module placed(at) translate([tile_x_min(at[0]), tile_y_min(at[1]), 0])"
+                " panel_body(at[0], at[1]);\n"
+                "intersection() { placed([0, 0]); placed(B); }\n",
+                encoding="utf-8",
+            )
+            mesh = Path(folder) / "overlap.stl"
+            for neighbor in ("[1, 0]", "[0, 1]"):
+                with self.subTest(neighbor=neighbor):
+                    command = ["openscad", "-o", str(mesh), "--export-format", "asciistl"]
+                    command += TILED_BOARD + ["-D", "Export_Metadata=true", "-D", f"B={neighbor}"]
+                    command.append(str(model))
+                    status, log = openscad.run_openscad(command)
+                    self.assertEqual(status, 0, log[-800:])
+                    self.assertLess(mesh_volume(mesh), 0.001)
+
+    def test_a_pressed_connector_stops_at_its_seat(self):
+        # A connector in the first socket of panel 0, 0's right seam. At its
+        # seat it touches the shoulders; 0.05 mm deeper, it would be inside them.
+        with tempfile.TemporaryDirectory() as folder:
+            model = Path(folder) / "seat.scad"
+            model.write_text(
+                f"include <{BAN_SCAD.resolve()}>\n"
+                "module placed(at) translate([tile_x_min(at[0]), tile_y_min(at[1]), 0])"
+                " panel_body(at[0], at[1]);\n"
+                "intersection() {\n"
+                "    union() { placed([0, 0]); placed([1, 0]); }\n"
+                "    translate([tile_x_min(0) + tile_width(0),"
+                " tile_y_min(0) + socket_places_y(0)[0], connector_seat + DEEPER])"
+                " connector();\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            mesh = Path(folder) / "seat.stl"
+            for deeper, touches in ((-0.05, False), (0.05, True)):
+                with self.subTest(deeper=deeper):
+                    mesh.unlink(missing_ok=True)
+                    command = ["openscad", "-o", str(mesh), "--export-format", "asciistl"]
+                    command += TILED_BOARD + [
+                        "-D",
+                        "Export_Metadata=true",
+                        "-D",
+                        f"DEEPER={deeper}",
+                    ]
+                    command.append(str(model))
+                    openscad.run_openscad(command)
+                    volume = mesh_volume(mesh) if mesh.exists() else 0.0
+                    if touches:
+                        self.assertGreater(volume, 0.1)
+                    else:
+                        self.assertLess(volume, 0.001)
 
     def test_closed_box_is_preview_only(self):
         with tempfile.TemporaryDirectory() as folder:

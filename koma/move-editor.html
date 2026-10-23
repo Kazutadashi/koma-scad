@@ -1653,13 +1653,13 @@
       const DEFAULT_SETTINGS = {
         body: "King",
         font: 0,
-        ratio: 0.32,
-        center: 0.73,
-        stroke: 0.6,
+        ratio: 0.36,
+        center: 0.702,
+        stroke: 0.75,
         gap: 0.6,
-        pitch: 3.75,
+        pitch: 4,
         scale: 1,
-        spacing: 0.96,
+        spacing: 0.88,
       };
 
       /** The settings that have an input on the page. Each input's id is the setting's name. */
@@ -1713,7 +1713,7 @@
         "Chu shogi: dragon horse → horned falcon (igui)": {
           body: "King",
           scale: 1.4,
-          ratio: 0.34,
+          ratio: 0.36,
           pitch: 4,
           front: { chars: "馬", grid: "#o#/o@o/#o#" },
           back: { chars: "鷹", grid: ".x./#!#/#@#/###" },
@@ -2076,7 +2076,8 @@
 
         const textSize = settings.ratio * piece.length;
         const spacing = textSize * SPACING_SIZES * settings.spacing;
-        const gapAbove = spacing - textSize;
+        // Half a character gap: the diagram is one gap from the characters, as they are from each other.
+        const gapAbove = chars.length > 0 ? (spacing - textSize) / 2 : 0;
 
         let diagram = null;
         if (grid) {
@@ -2100,6 +2101,8 @@
           slide: Boolean(diagram),
         });
         const centers = slotCenters(top, slots);
+        // The diagram sits at the bottom of its slot, under the gap.
+        if (diagram) centers[centers.length - 1] -= gapAbove / 2;
 
         const stack = { top, total, center: centers[centers.length - 1] };
         const problem = diagram ? diagramProblem(diagram, stack, piece) : null;

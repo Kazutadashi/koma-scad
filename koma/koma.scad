@@ -143,9 +143,9 @@ Text_Rounding_Steps = 6; // [2:1:12]
 
 /* [09 - Edges and face margin] */
 // mm. Width of the edge bevel, seen from above. 0 = no bevel.
-Bevel_Width = 0; // [0:0.05:3]
+Bevel_Width = 0.3; // [0:0.05:3]
 // mm. Depth of the edge bevel. 0 = no bevel.
-Bevel_Depth = 0; // [0:0.02:2]
+Bevel_Depth = 0.3; // [0:0.02:2]
 // mm. Smallest distance from the text to the edge of the flat face.
 Text_Margin = 0.9; // [0:0.1:4]
 // Cut off text that goes past the margin. Inspect front and Inspect back show it in red.
@@ -397,11 +397,11 @@ function safe_ys(f) = [for (p = safe_outline) p[1]/cosine(f)];
 function safe_length(f) = max(safe_ys(f)) - min(safe_ys(f));
 
 // With a diagram, the characters get the face length that the smallest
-// printable diagram leaves. The space above the diagram is (spacing_sizes - 1) sizes.
+// printable diagram leaves. The diagram slot adds half a character gap, (spacing - 1)/2 sizes.
 function auto_font_size(f) =
-    let(n = len(chars(f)))
+    let(n = len(chars(f)), spacing = spacing_sizes*spacing_scale(f))
     has_moves(f) && n > 0
-    ? (safe_length(f)*move_fill - min_diagram_size(f)[1]) / (spacing_sizes*spacing_scale(f)*n + spacing_sizes - 1)
+    ? (safe_length(f)*move_fill - min_diagram_size(f)[1]) / (spacing*n + (spacing - 1)/2)
     : face_length(f)*auto_fill/(auto_slot_sizes*max(1, slots(f)));
 function font_size(f) =
     text_scale(f) * (font_size_setting(f) > 0 ? font_size_setting(f)
@@ -410,13 +410,18 @@ function char_spacing(f) =
     spacing_setting(f) > 0 ? spacing_setting(f) : font_size(f)*spacing_sizes*spacing_scale(f);
 
 // Slots stack from the point to the heel. A character slot is one character
-// spacing long. A diagram slot is the diagram plus the space above a character.
+// spacing long, with half a character gap on each side of the character. A
+// diagram slot is the diagram plus half a gap on the characters' side only, so
+// the diagram is one gap from the characters and nothing is wasted at the edge.
+function diagram_pad(f) = len(chars(f)) > 0 ? (char_spacing(f) - font_size(f))/2 : 0;
 function slot_height(f, i) =
-    i == diagram_slot(f) ? diagram_size(f)[1] + char_spacing(f) - font_size(f) : char_spacing(f);
+    i == diagram_slot(f) ? diagram_size(f)[1] + diagram_pad(f) : char_spacing(f);
 function slot_heights(f) = [for (i = [0:slots(f)-1]) slot_height(f, i)];
 function stack_height(f) = sum(slot_heights(f), slots(f));
 // The center of slot i, from the center of the stack.
 function slot_y(f, i) = stack_height(f)/2 - sum(slot_heights(f), i) - slot_heights(f)[i]/2;
+// The center of the diagram: the end of its slot away from the characters.
+function diagram_y(f) = slot_y(f, diagram_slot(f)) + (moves_above(f) ? 1 : -1)*diagram_pad(f)/2;
 
 // The center of the stack on the face.
 function center_y(f) =
@@ -445,7 +450,8 @@ module raw_inscription(f, diagram=true) {
     if (slots(f) > 0 && style(f) != "None")
     translate([text_x(f), center_y(f)]) rotate(text_rotation(f))
     for (i = [0:slots(f)-1])
-        translate([glyph_x(f, i), slot_y(f, i) + glyph_y(f, i)]) rotate(glyph_rotation(f, i))
+        translate([glyph_x(f, i), (i == diagram_slot(f) ? diagram_y(f) : slot_y(f, i)) + glyph_y(f, i)])
+        rotate(glyph_rotation(f, i))
         if (i == diagram_slot(f)) { if (diagram) move_diagram(f); }
         // Stroke expansion is for lettering only. Expand after scaling, so that it stays a true mm value.
         else offset(delta=stroke_expansion(f)) scale(glyph_size(f, i)*[glyph_width(f, i), glyph_height(f, i)])
@@ -487,7 +493,7 @@ function min_diagram_size(f) = f ? front_min_size : back_min_size;
 function drawn_pitch(f) =
     Move_Pitch > 0 ? Move_Pitch/Model_Scale :
     let(size = min_diagram_size(f),
-        letters = len(chars(f))*char_spacing(f) + char_spacing(f) - font_size(f),
+        letters = len(chars(f))*char_spacing(f) + diagram_pad(f),
         room = (safe_length(f)*move_fill - letters)/size[1])
     min_pitch(f) * max(1, min(diagram_growth*font_size(f)/max(size), room)) * max(1, glyph_size(f, diagram_slot(f)));
 front_pitch = has_moves(true) ? drawn_pitch(true) : 0;
@@ -848,7 +854,7 @@ for (f = [true, false]) if (has_moves(f) && active(f)) {
     // Across the face too: Protect Face Edges would cut a wide diagram without a message.
     i = diagram_slot(f);
     size = diagram_size(f);
-    at = [text_x(f) + glyph_x(f, i), center_y(f) + slot_y(f, i) + glyph_y(f, i)];
+    at = [text_x(f) + glyph_x(f, i), center_y(f) + diagram_y(f) + glyph_y(f, i)];
     corners_out = [for (dx = [-1, 1], dy = [-1, 1])
         if (!inside_convex(at + [dx*size[0]/2, dy*size[1]/2], face_polygon(safe_outline, f))) 1];
     assert(len(corners_out) == 0,

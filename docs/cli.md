@@ -255,9 +255,11 @@ The command reads the saved preset. Save your changes in the Customizer
 before you export. The files go to `exports/ban/BOARD/`:
 
 - A one-piece board is one file, `BOARD.3mf`.
-- A board in panels has one file for each panel, `BOARD - Panel CC-RR.3mf`,
-  and `BOARD - All panels.3mf` with every panel on one bed. `CC-RR` is the
-  column and row of the panel, from 0 at the front left.
+- A board in panels has `BOARD - Whole board.3mf`: every panel, and every
+  connector or key, on as many plates as the print bed (**Print Bed Width**
+  and **Print Bed Depth**) needs. It also has one file for each panel,
+  `BOARD - Panel CC-RR.3mf`. `CC-RR` is the column and row of the panel, from
+  0 at the front left.
 - A board with **Joint Style** Connectors or Keys also has
   `BOARD - Connectors.3mf` or `BOARD - Keys.3mf`, with all of them and the
   spares.

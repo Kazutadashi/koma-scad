@@ -114,14 +114,19 @@ The learner sets use these values (in `koma/presets/pieces/_defaults.json`):
 | Setting | Value |
 | --- | --- |
 | Font | LXGW WenKai Mono, Stroke Expansion 0.08 mm |
-| Character size | 0.32 × the piece length |
-| Center Fraction | 0.73 |
-| Spacing Scale | 0.96 (about 3 mm between the character and its diagram) |
-| Move Stroke, Move Gap | 0.6 mm |
-| Move Pitch | 3.75 mm |
+| Character size | 0.36 × the piece length |
+| Center Fraction | 0.702 |
+| Spacing Scale | 0.88 (the diagram is as far from the character as two characters are from each other) |
+| Move Stroke | 0.75 mm |
+| Move Gap | 0.6 mm |
+| Move Pitch | 4 mm |
 
-Every learner piece still fits when the characters move 0.01 of the face up
-or down.
+These fill the face as far as it goes. The rook and bishop set the limit: a
+slide arrow is never shorter than the piece mark, a gap, a two-line shaft and
+its head, so a thicker **Move Stroke** makes their diagrams longer at any
+**Move Pitch**. Characters set higher than this run into the shoulders, and
+**Protect Face Edges** trims them. Every learner piece still fits when the
+characters move 0.01 of the face up or down.
 
 ## When a diagram does not fit
 

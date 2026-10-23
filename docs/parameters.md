@@ -113,8 +113,8 @@ settings together.
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Bevel_Width` | `0` | mm. Width of the edge bevel, seen from above. 0 = no bevel. |
-| `Bevel_Depth` | `0` | mm. Depth of the edge bevel. 0 = no bevel. |
+| `Bevel_Width` | `0.3` | mm. Width of the edge bevel, seen from above. 0 = no bevel. |
+| `Bevel_Depth` | `0.3` | mm. Depth of the edge bevel. 0 = no bevel. |
 | `Text_Margin` | `0.9` | mm. Smallest distance from the text to the edge of the flat face. |
 | `Protect_Face_Edges` | `true` | Cut off text that goes past the margin. Inspect front and Inspect back show it in red. |
 | `Minimum_Web` | `1.2` | mm, after Model Scale. Smallest solid thickness at the point, between the front and back recesses. |

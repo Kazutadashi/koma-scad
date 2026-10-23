@@ -23,8 +23,8 @@
         "Back_Text_X": "0",
         "Back_Text_Y": "0",
         "Back_Width_Scale": "1",
-        "Bevel_Depth": "0",
-        "Bevel_Width": "0",
+        "Bevel_Depth": "0.3",
+        "Bevel_Width": "0.3",
         "Body_Color": "[0.82, 0.68, 0.43, 1]",
         "Body_Filament": "Wood",
         "Face_Base_Angle": "81",
@@ -98,15 +98,16 @@
             "Front_Height_Scale": "1"
         },
         "learner": {
-            "Front_Center_Fraction": "0.73",
+            "Front_Center_Fraction": "0.702",
             "Front_Glyph_Size": "[1, 1, 1]",
             "Front_Glyph_Width": "[1, 1, 1]",
             "Front_Glyph_Y": "[0, 0, 0]",
             "Front_Height_Scale": "1",
-            "Move_Pitch": "3.75",
+            "Move_Pitch": "4",
             "Font_Name": "LXGW WenKai Mono:style=Regular",
             "Front_Stroke_Expansion": "0.08",
-            "Front_Spacing_Scale": "0.96"
+            "Front_Spacing_Scale": "0.88",
+            "Move_Stroke": "0.75"
         }
     },
     "back": {
@@ -117,13 +118,13 @@
             "Back_Height_Scale": "1"
         },
         "learner": {
-            "Back_Center_Fraction": "0.73",
+            "Back_Center_Fraction": "0.702",
             "Back_Glyph_Size": "[1, 1, 1]",
             "Back_Glyph_Width": "[1, 1, 1]",
             "Back_Glyph_Y": "[0, 0, 0]",
             "Back_Height_Scale": "1",
             "Back_Stroke_Expansion": "0.08",
-            "Back_Spacing_Scale": "0.96"
+            "Back_Spacing_Scale": "0.88"
         }
     }
 }
