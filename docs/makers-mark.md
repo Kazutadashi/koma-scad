@@ -20,6 +20,11 @@ line. OpenSCAD multiplies the width of each letter by the spacing. Thus,
 tracking of +0.3 em (0.3 of a letter's width added after it) is about 1.4 for
 capitals and 1.3 for Japanese characters.
 
+The default is 1.1. At 1, some fonts set letters closer than one printed
+line: in Kaisei Tokumin ExtraBold at 9 mm, three pairs in "Osakazu" were, and
+they printed as one blob. If letters run together in a print, raise the
+spacing of that line; 1.05 already separated every pair of that example.
+
 ## Where the mark goes
 
 | Part | Place | Reads correctly when you |

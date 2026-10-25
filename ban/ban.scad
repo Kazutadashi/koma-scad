@@ -172,10 +172,10 @@ Mark_Line_2_Ratio = 0.42; // [0.2:0.01:1]
 Mark_Min_Text_Size = 7; // [3:0.5:20]
 // mm. Thickens every stroke of the mark by this much on each side, so that thin strokes print. 0.12 for a thin Mincho.
 Mark_Stroke = 0; // [0:0.01:0.3]
-// Letter spacing of the main line. 1 = normal. About 1.7 gives a wide-spaced wordmark.
-Mark_Spacing_1 = 1; // [0.8:0.05:3]
-// Letter spacing of the second line.
-Mark_Spacing_2 = 1; // [0.8:0.05:3]
+// Letter spacing of the main line: each letter's width times this. Raise it if letters run together: a gap narrower than one printed line does not print, and the letters merge. 1.1 clears it for most fonts. About 1.7 gives a wide-spaced wordmark.
+Mark_Spacing_1 = 1.1; // [0.8:0.05:3]
+// Letter spacing of the second line. Raise it if letters run together.
+Mark_Spacing_2 = 1.1; // [0.8:0.05:3]
 // An installed font for the main line. Find its exact name in Help > Font List.
 Mark_Font_1 = "Kaisei Tokumin:style=ExtraBold";
 // An installed font for the second line. Use one with Japanese characters for Japanese text.

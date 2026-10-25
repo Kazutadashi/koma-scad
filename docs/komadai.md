@@ -120,8 +120,8 @@ shows underscores as spaces.
 | `Mark_Line_2_Ratio` | `0.42` | Size of the second line, as a fraction of the main line. Keep Japanese characters 3 mm or larger. |
 | `Mark_Min_Text_Size` | `7` | mm. Smallest size of any text in the mark, and of the emblem's character, so that it prints. The second line and the emblem grow to it. See docs/makers-mark.md for measured values. |
 | `Mark_Stroke` | `0` | mm. Thickens every stroke of the mark by this much on each side, so that thin strokes print. 0.12 for a thin Mincho. |
-| `Mark_Spacing_1` | `1` | Letter spacing of the main line. 1 = normal. About 1.7 gives a wide-spaced wordmark. |
-| `Mark_Spacing_2` | `1` | Letter spacing of the second line. |
+| `Mark_Spacing_1` | `1.1` | Letter spacing of the main line: each letter's width times this. Raise it if letters run together: a gap narrower than one printed line does not print, and the letters merge. 1.1 clears it for most fonts. About 1.7 gives a wide-spaced wordmark. |
+| `Mark_Spacing_2` | `1.1` | Letter spacing of the second line. Raise it if letters run together. |
 | `Mark_Font_1` | `"Kaisei Tokumin:style=ExtraBold"` | An installed font for the main line. Find its exact name in Help > Font List. |
 | `Mark_Font_2` | `"Kaisei Tokumin:style=ExtraBold"` | An installed font for the second line. Use one with Japanese characters for Japanese text. |
 | `Mark_Emblem` | `false` | A koma above the text, with a character cut into it. |
