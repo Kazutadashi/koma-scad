@@ -172,9 +172,10 @@ the joint was changed to remove the play:
   the connector's ends. A pressed connector pulls the seam faces together.
   The angle is below PLA's friction angle, so the connector stays in. Print
   error changes only the depth: 0.1 mm on a face moves it 0.67 mm. Panels and
-  connectors both print large, which seats the connector higher, so a
-  Standard connector seats 1.6 mm above the table: room for 0.21 mm of error
-  upward and 0.15 mm downward. Narrow and Wide move it 0.67 mm each way.
+  connectors both print large, which stops the connector nearer the table, so
+  a Standard connector seats 2.3 mm above the table: room for 0.35 mm of
+  such error on each face, and 0.15 mm the other way. Narrow and Wide move it
+  0.67 mm each way.
 - **Height:** the tongue, with 0.1 mm of space on each side. The seam faces,
   not the tongue, stop the seam, so the tongue cannot hold a seam open. The
   step is at most about 0.14 mm, less when the tongue prints large.
@@ -205,6 +206,22 @@ Modules still work: every center module carries the lines on its right and
 back edges, so center modules stay interchangeable, and the edge and corner
 modules differ already, because they carry the border. A camp dot on a seam
 stays whole on a plug, with a notch in the neighbor.
+
+## Connector strength and fit
+
+Printed connectors snapped at the neck, and were hard to press in.
+
+- **The neck did not reach the ends.** It was 15 mm long, but each end's
+  inner face leans away from the seam, from 7.2 mm at the bottom to 8.2 mm at
+  the top. Above the bottom 1.7 mm, a wedge-shaped gap cut each end off the
+  neck, and the chamfers left a hairline. The neck now runs through both
+  ends, so each end is joined over the full 4.2 x 6 mm neck section.
+- **Too tight.** A Standard connector seated 1.6 mm above the table, which
+  left room for only 0.24 mm of oversize on each face (0.1 mm moves it
+  0.67 mm). Printed connectors run large and pockets small, so it stopped
+  short and had to be forced. It now seats 2.3 mm above the table: 0.35 mm
+  of room. The connector is 0.6 mm thinner (6.0 mm), so a Wide one still
+  clears the socket roof. The socket (spec v1) is unchanged.
 
 ## Open work
 

@@ -111,17 +111,17 @@ the grid groove, and 1 mm between them.
 ## The printed connector
 
 A flat double-T, printed flat. Its end faces on the seam side lean like the
-shoulders. Seated, a Standard connector's bottom is 1.6 mm above the table and
-its top 1.1 mm below the socket roof. It never touches the table or the roof,
+shoulders. Seated, a Standard connector's bottom is 2.3 mm above the table and
+its top 1.0 mm below the socket roof. It never touches the table or the roof,
 so the table sets every panel's height, and the table keeps the connector
 from falling out.
 
 | Part | Size (mm) |
 | --- | --- |
-| Neck | 4.2 wide (the slot, less 0.3 mm each side) |
-| Each end | 10.0 wide, along the seam. Its inner face is 7 + 0.15 × (1.6 + height above its bottom) from the seam, less the fit. Its outer face is 12.2 from the seam. |
-| Thickness | 6.6 |
-| Fit | Narrow: inner faces 0.1 mm nearer the seam (seats 0.67 mm higher). Standard: as above. Wide: 0.1 mm further (seats 0.67 mm deeper). |
+| Neck | 4.2 wide (the slot, less 0.3 mm each side), and 24.4 long: it runs through both ends, so each end is joined over its full height |
+| Each end | 10.0 wide, along the seam. Its inner face is 7 + 0.15 × (2.3 + height above its bottom) from the seam, less the fit. Its outer face is 12.2 from the seam. |
+| Thickness | 6.0 |
+| Fit | Narrow: inner faces 0.1 mm nearer the seam (seats 0.67 mm nearer the table). Standard: as above. Wide: 0.1 mm further (seats 0.67 mm deeper). |
 | Edges | 0.4 mm chamfer at 45 degrees, top and bottom |
 | Fit dots | 1, 2 or 3 dots on the top of one end: Narrow, Standard or Wide |
 

@@ -643,18 +643,23 @@ module connector_socket() {
 // larger or smaller moves it 0.67 mm lower or higher, and it still closes the
 // seam. Its edges are chamfered, top and bottom: the chamfer takes off the
 // first layer's squish, and leads the connector into its socket.
-connector_seat = 1.6;       // mm from the underside to the bottom of a Standard connector, when seated
-connector_height = 6.6;
+// Printed parts run large and pockets small, which seats a connector lower: the
+// seat leaves 0.35 mm of such error on each face before the connector stops
+// short of the underside, and the roof leaves 0.15 mm the other way.
+connector_seat = 2.3;       // mm from the underside to the bottom of a Standard connector, when seated
+connector_height = 6;
 connector_end_space = 0.6;  // mm between each end and the far wall of its pocket
 connector_chamfer = 0.4;
 connector_dot = 1.2;        // mm. The diameter of each fit dot on the top face.
 // The connector is three convex pieces: the neck (piece 0) and the two ends.
-// z is the height above the connector's bottom.
+// z is the height above the connector's bottom. The neck runs through both
+// ends: the ends' inner faces lean away from the seam, so a shorter neck would
+// leave them joined only near the bottom, where they snap off.
 module connector_piece_2d(piece, fit, z=0, grow=0) {
     inner = spec_shoulder + spec_taper*(connector_seat + z) - fit;
     outer = spec_shoulder + spec_end_length - connector_end_space;
     offset(delta=grow) {
-        if (piece == 0) square([2*spec_shoulder + 1, spec_neck_width - 2*connector_side_fit], center=true);
+        if (piece == 0) square([2*outer, spec_neck_width - 2*connector_side_fit], center=true);
         else translate([(piece == 1 ? -1 : 1)*(inner + outer)/2, 0])
             square([outer - inner, spec_end_width - 2*connector_side_fit], center=true);
     }
@@ -1119,7 +1124,8 @@ if (joints_used) {
         str("The shortest seam (", shortest_seam, " mm) is too short for two tabs. ",
             "Use fewer, larger panels, or reduce Joint Width."));
     assert(!tabs || Seam_Bevel < Board_Thickness - socket_roof_height, "Seam Bevel is so deep that it reaches the sockets.");
-    assert(!connectors || connector_seat + connector_height < spec_height - 0.5,
+    // A Wide connector seats deepest.
+    assert(!connectors || connector_seat - min(connector_fit_values)/spec_taper + connector_height < spec_height - 0.2,
         "A seated connector must stay below the socket roof.");
     assert(!connectors || spec_height <= Board_Thickness - Grid_Groove_Depth - 1,
         str("The connector sockets are ", spec_height, " mm deep, which leaves less than 1 mm under a grid groove. ",
