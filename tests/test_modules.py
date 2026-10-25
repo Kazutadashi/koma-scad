@@ -337,6 +337,9 @@ class ModelTests(unittest.TestCase):
                     command += TILED_BOARD + ["-D", "Export_Metadata=true", "-D", f"B={neighbor}"]
                     command.append(str(model))
                     status, log = openscad.run_openscad(command)
+                    # Panels that do not touch at all leave nothing to export.
+                    if "Current top level object is empty" in log:
+                        continue
                     self.assertEqual(status, 0, log[-800:])
                     self.assertLess(mesh_volume(mesh), 0.001)
 

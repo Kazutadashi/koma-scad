@@ -119,8 +119,9 @@ This breaks rule 1 above (no loose parts) on purpose: repair and modularity
 are worth more. Connectors are model values, not yet printed; the T-hook
 preset stays for comparison.
 
-For modularity, **Seam Lines = Split** puts half of each seam line on each
-panel, so every panel edge is the same. **Panel Layout = Modules** cuts the
+For modularity, **Seam Lines = Split** first put half of each seam line on each
+panel, so every panel edge was the same. It is no longer the default; see
+[Seam lines on one side](#seam-lines-on-one-side). **Panel Layout = Modules** cuts the
 board into N x N-square modules, and connector sockets sit at the middles of
 squares. Thus a center module is the same, to the vertex, on a 9 x 9 and a
 12 x 12 board; a test checks this.
@@ -189,6 +190,21 @@ Choices that were not taken:
   bridged undercuts in the socket, and no screw and nut.
 - **Crush ribs** on the tongue, to take up its space. The wedge force from a
   thumb may not crush PLA, and a crushed rib fits only its first neighbor.
+
+## Seam lines on one side
+
+Printed boards showed the seam down the middle of each black line: Split
+puts 0.45 mm of the line on each panel, about one printed line, so each half
+prints thin and uneven, and the seam reads as a crack that splits the line.
+**Seam Lines = One side** is now the default for every preset. The left or
+front panel carries the whole 0.9 mm line (two printed lines), and the seam
+runs along the line's right or back edge, where the color changes, so the eye
+reads it as the edge of the line.
+
+Modules still work: every center module carries the lines on its right and
+back edges, so center modules stay interchangeable, and the edge and corner
+modules differ already, because they carry the border. A camp dot on a seam
+stays whole on a plug, with a notch in the neighbor.
 
 ## Open work
 

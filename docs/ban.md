@@ -140,11 +140,14 @@ use on more than one board, set **Camp Dots** off.
 
 | Seam Lines | The line on a seam | Camp dot on a seam |
 | --- | --- | --- |
-| Split (default) | Half on each panel: 0.45 mm each side of a 0.9 mm line. Every seam edge is the same. | Cut with the line: each panel carries its part |
-| One side | All on one panel. The seam runs along the edge of the line. | Kept whole on a plug, with a notch in the neighbor |
+| One side (default) | All on the left or front panel. The seam runs along the edge of the line, where the color changes. | Kept whole on a plug, with a notch in the neighbor |
+| Split | Half on each panel: 0.45 mm each side of a 0.9 mm line. The seam runs down the middle of the line. | Cut with the line: each panel carries its part |
 
-Either way, the seam gap merges into the black line. Split lines make every
-panel edge the same, which modules need.
+One side hides the seam: it lies on the edge between the line and the board,
+and the line prints whole, two printed lines wide. With Split, each half is
+about one printed line wide, and the seam shows as a crack down the middle of
+the line. Modules work with either: every center module carries the lines on
+its right and back edges.
 
 ## Joints
 
@@ -483,7 +486,7 @@ underscores as spaces.
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Seam_Lines` | `"Split"` | Split: each panel carries half of the grid line on a seam, so every seam edge is the same and panels fit anywhere. One side: one panel carries the whole line. Choices: Split, One side. |
+| `Seam_Lines` | `"One side"` | One side: the left or front panel carries the whole grid line on a seam, and the seam runs along the line's edge, where the color change hides it. Split: each panel carries half of the line, so the seam runs down its middle and splits it. Choices: One side, Split. |
 | `Line_Style` | `"Flush inlay"` | Flush inlay: the lines are level with the playing surface. Raised: they stand above it, like lacquer lines, and the board prints face up. Choices: Flush inlay, Raised. |
 | `Grid_Groove_Width` | `0.9` | mm. Width of the grid lines. Use a whole number of printed line widths: 0.9 is two lines of a 0.4 mm nozzle. |
 | `Grid_Groove_Depth` | `0.45` | mm. Depth of the grid grooves. |

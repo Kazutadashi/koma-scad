@@ -60,8 +60,8 @@ Print_Bed_Depth = 256; // [100:1:1000]
 Print_Layout_Gap = 10; // [2:1:30]
 
 /* [05 - Markings] */
-// Split: each panel carries half of the grid line on a seam, so every seam edge is the same and panels fit anywhere. One side: one panel carries the whole line.
-Seam_Lines = "Split"; // [Split,One side]
+// One side: the left or front panel carries the whole grid line on a seam, and the seam runs along the line's edge, where the color change hides it. Split: each panel carries half of the line, so the seam runs down its middle and splits it.
+Seam_Lines = "One side"; // [One side,Split]
 // Flush inlay: the lines are level with the playing surface. Raised: they stand above it, like lacquer lines, and the board prints face up.
 Line_Style = "Flush inlay"; // [Flush inlay,Raised]
 // mm. Width of the grid lines. Use a whole number of printed line widths: 0.9 is two lines of a 0.4 mm nozzle.
