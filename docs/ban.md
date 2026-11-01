@@ -60,7 +60,7 @@ connector sockets.
 | Assembled board | Every panel in its place, face up | F6, then STL (one color) |
 | One panel | The panel at **Panel X**, **Panel Y**, as it sits on the bed | F6, then STL (one color) |
 | All panels | Every panel, as each sits on the bed | F6, then STL (one color) |
-| Joint test | Two small blocks with one joint, the seam tongue and a grid line at the seam. With Connectors, also one connector of each fit: Narrow, Standard and Wide, marked with 1, 2 and 3 dots. With Keys, also one key. | F6, then STL |
+| Joint test | Two small blocks with one joint, the seam tongue and a grid line at the seam. With Connectors, also one connector of each fit: Loose, Standard and Tight, marked with 1, 2 and 3 dots. With Keys, also one key. | F6, then STL |
 | Loose parts | Every connector or key of the board, and the spares | F6, then STL |
 
 F5 shows the grid lines in their color. F6 makes the board with empty grid
@@ -156,7 +156,7 @@ together and in line.
 
 | Joint Style | Put the board together | What sets the height | If a joint breaks |
 | --- | --- | --- | --- |
-| Connectors (default) | Face down: drop a connector into each socket, then turn the board over | The table | Replace one connector: print it, or use a screw and nut |
+| Connectors (default) | Face down: press a connector into each socket, then turn the board over | The table | Replace one connector: print it, or use a screw and nut |
 | T-hook | Face up: lower each panel straight down onto the table | The table | The panel's tab is broken: reprint the panel |
 | Dovetail | The same, with angled tab sides | The table | Reprint the panel |
 | Keys | Face down: press butterfly keys (契り) into the underside, then turn the board over | The table, touching the playing faces | Replace one key |
@@ -172,11 +172,12 @@ modular:
   head cap screw and an M4 hex nut**, or a **#8-32 x 7/8 inch socket cap
   screw and nut**. Hardware stores and hobby shops sell both. See the
   [connector spec](ban-connector-spec.md).
-- **The seam closes.** Each connector is a small wedge. Pressed in, it pulls
-  its seam closed, so there is no gap at the playing surface.
+- **The seam closes, and the board stays flat.** Each connector has a small
+  spring. Pressed in, it pulls its seam closed with a light, even force, near
+  the top of the board, so there is no gap and the panels do not bow up.
 - **Every seam edge is the same.** All sockets follow one fixed spec, so
   connectors fit every board.
-- **Easy to take apart.** Lift any panel straight up: the wedges let go.
+- **Easy to take apart.** Lift the panels straight up: the connectors let go.
 
 The T-hook has been printed and tuned. The Connectors and Keys styles have
 not been printed yet. Print their Joint test first.
@@ -186,32 +187,44 @@ not been printed yet. Print their Joint test first.
 Each seam has sockets in the underside, half in each panel. A socket has a
 slot across the seam, and a pocket on each side for the head or the nut. Its
 roof is flat, 9.3 mm above the underside. The pocket's face on the seam side
-(the shoulder) leans away from the seam as it goes deeper, and so do the
-connector's ends: the connector is a wedge.
+(the shoulder) leans away from the seam as it goes deeper.
 
-1. Lay the panels face down on a flat table, in their places. Push the edges
-   together, so that each seam tongue goes into its groove. Put each panel in
-   after its left and front neighbors. A panel that has neighbors on two
-   sides goes in at an angle, toward both.
+The connector is a flat double-T with a zigzag spring in its neck. Its end
+faces are straight up, so only their top edges touch the leaning shoulders.
+In the last 0.7 mm before the roof, the shoulders stretch the spring, and the
+spring pulls the seam closed.
+
+1. Lay the panels face down on a flat table, in their places. Start with the
+   panel that has no tongues (the back-right panel of the board). Lower each
+   next panel straight down, so that its tongues drop into the grooves of the
+   panels already on the table.
 2. Put a connector in each socket, dots up. Press it in with your thumb until
-   it stops. It pulls the two panels together, and the seam closes.
-3. Turn the board over. The connectors stay in. The table keeps them from
-   falling out.
+   it stops against the roof. You need no force: if it does not reach the
+   roof, use a Loose connector.
+3. Turn the board over. The connectors stay in. Their bottoms are 2.3 mm
+   above the table, so the table, not a connector, holds each panel up.
 
-To take the board apart, lift each panel straight up: the wedges let go. To
-change the layout, lift the panels, pick up the connectors, and start again.
+To take the board apart, lift the panels straight up, starting with the
+back-right panel: lifting a panel moves its shoulders away from the
+connectors, which let go. Each connector then drops out when you lift the
+panel under it.
 
-A printer makes a connector a little larger or smaller than the model. That
-changes only how deep it goes in: 0.1 mm on each face moves it 0.67 mm. A
-seated connector must stay below the underside, so that it does not lift the
-board. **Connector Fit** moves the connector's faces for your printer. The
-dots on a connector show its fit.
+Why a spring: a pull below the place where the seam faces touch bends the
+panels up at the seam, like a bow. The earlier solid wedge pulled near the
+underside, and as hard as you pressed, often 100 N or more. The spring pulls
+about 10 to 25 N (model values, not measured), at the middle of the seam
+faces, which is not enough to lift a panel.
+
+The roof sets how deep a connector goes, so a printer that makes it a little
+larger only makes it pull a little harder: 0.1 mm on each face adds about
+12 N. **Connector Fit** sets the pull for your printer. The dots on a
+connector show its fit.
 
 | Connector Fit | Dots | Use it when |
 | --- | --- | --- |
-| Narrow | 1 | A Standard connector goes in deep, and the seam stays loose |
+| Loose | 1 | A Standard connector is hard to press up to the roof |
 | Standard (the default) | 2 | Most printers |
-| Wide | 3 | A Standard connector stops before it is inside the socket |
+| Tight | 3 | A seam opens when you push the panels apart gently |
 
 The connector's edges are chamfered, so the squashed first layer does not
 catch in the socket.
@@ -219,7 +232,7 @@ catch in the socket.
 **With a screw and nut:** turn the nut onto the screw until the gap between
 the head and the nut is a little over 16.5 mm. Lay it flat in the socket, with
 the head in one pocket and the nut in the other. Use the smallest gap that
-still drops in. A screw is not a wedge: its seam can open 0.3 to 0.5 mm. See
+still drops in. A screw has no spring: its seam can open 0.3 to 0.5 mm. See
 the [connector spec](ban-connector-spec.md).
 
 ### T-hook and Dovetail
@@ -288,23 +301,27 @@ were printed on different parts of the bed.
 
 With **Seam Tongues** on (the default, for Connectors and Keys), each right
 and back seam edge has a short tongue, and each left and front seam edge a
-groove. The tongue reaches 1.2 mm past the seam, at the middle of the board's
-thickness, and has 45 degree sides. When you push the panels together, the
-tongue goes into the groove, and holds both playing surfaces at the same
-height. The tongue is measured from the middle of each panel, so the shape of
-the print bed does not change it. A short nub on each tongue sits in a notch
-in the groove, so that the grid lines meet across the seam. The sides at 45
-degrees print without supports. No part of the tongue flexes, so it does not
-wear.
+groove that is open at the bottom. The tongue reaches 1.2 mm past the seam,
+4.5 mm above the underside, and has 45 degree sides. If a panel sinks, it
+rests on its neighbor's tongue, so both playing surfaces stay at the same
+height. The groove is open at the bottom, so a panel still lifts straight off
+the tongue. A short nub on each tongue sits in a notch in the groove, so that
+the grid lines meet across the seam. No part of the tongue flexes, so it does
+not wear.
 
-The tongue has 0.1 mm of space in its groove, so that it never holds a seam
-open. A seam that a connector has closed can therefore have a step of up to
-about 0.14 mm. A printer makes the tongue a little larger and the groove a
-little smaller, which makes this smaller still.
+The tongue has 0.15 mm of space under the groove. Printed face down, the
+tongue's top is an overhang, which sags a little; the space is larger than
+the sag, so the tongue never holds a seam open or a panel up. A panel can
+therefore sink about 0.2 mm on a cloth before the tongue holds it. On a hard
+table, the table holds both panels level.
+
+The tongue is low in the board, so the seam faces touch only above it, from
+6.7 mm up to the playing surface. The connectors pull at 8.9 mm, about the
+middle of that face, so the pull does not bend the panels.
 
 The tongues are part of the [connector spec](ban-connector-spec.md): a
 module joins any other module of the same squares and thickness. A board
-needs to be 7.1 mm thick or more for tongues.
+needs to be 8.1 mm thick or more for tongues.
 
 **Seam Bevel** (0.4 mm) also helps. A sliding piece meets a slope, not a
 wall, at a step of up to 0.4 mm. The default pieces have a 0.3 mm bevel on
@@ -370,15 +387,18 @@ All parts are PLA.
      block straight down into it. It must drop in under its own weight, and
      lift out freely. Change **Joint Clearance** in 0.05 mm steps until it
      does.
-   - Connectors: lay both blocks face down, and push the edges together so
-     that the tongue goes into its groove. Press the connector with 2 dots
-     (Standard) into the socket until it stops. Its bottom must be inside the
-     socket, and the seam must be closed: no light through it, and no movement
-     when you pull gently. If it stops before it is inside the socket, use the
-     3-dot connector (Wide). If it goes in deep and the seam stays loose, use
-     the 1-dot connector (Narrow). Set **Connector Fit** to the one that works.
-     Turn the blocks over, and run a fingertip and a piece across the seam:
-     you must not feel a step. Try a screw and nut in the same socket.
+   - Connectors: lay the block with the groove face down, then lower the
+     block with the tongue straight down beside it, so that the tongue drops
+     into the groove. Press the connector with 2 dots (Standard) into the
+     socket until it stops against the roof. It must go in with a thumb, and
+     the seam must be closed: no light through it, and it springs back closed
+     when you pull gently. If it is hard to press up to the roof, use the
+     1-dot connector (Loose). If the seam opens under a gentle pull, use the
+     3-dot connector (Tight). Set **Connector Fit** to the one that works.
+     Turn the blocks over on a flat table: both must lie flat, with no rise at
+     the seam. Run a fingertip and a piece across the seam: you must not feel
+     a step. Lift the tongue block straight up: the connector must let go.
+     Try a screw and nut in the same socket.
    - In the slicer, turn on elephant's foot compensation (about 0.2 mm for a
      0.4 mm nozzle). It keeps the first layer of each part the right size.
    - Keys: lay both blocks face down, edges together. Press the key in by
@@ -422,9 +442,10 @@ To take the board apart, lift each panel straight up, in the opposite order.
 | A seam opens too far when you pull the panels | Lower **Joint Clearance**, but only while the panels still drop in freely. |
 | A seam has a step | Put each panel on the table alone. Make sure that no corner rocks. The joint cannot make a bent panel flat. With Connectors or Keys, turn on **Seam Tongues**. |
 | A piece catches at a seam | Measure the step with a feeler gauge, on a hard table and on a cloth. More than 0.4 mm: see the row above. Give the pieces a bevel (**Bevel Width** and **Bevel Depth**). |
-| A connector stops before it is inside its socket | Set **Connector Fit** to **Wide**, or sand its end faces on the seam side a little. |
-| A seam stays open after you press the connector in | Set **Connector Fit** to **Narrow**. Also look in the groove for strings or a blob. |
-| Two panels do not push together | Look in the groove and on the tongue for strings or a blob, and remove them. |
+| A connector is hard to press up to the roof | Set **Connector Fit** to **Loose**. Do not force it: a hard pull bends the panels up at the seam. |
+| A seam stays open after you press the connector in | Set **Connector Fit** to **Tight**. Also look on the tongue and in the groove for strings or a blob. |
+| The board rises at a seam | Press the connectors with less force, or use **Loose**. Look on the tongue and in the groove for strings or a blob that holds the seam open. |
+| A panel does not drop onto its neighbor's tongue | Look in the groove and on the tongue for strings or a blob, and remove them. |
 | A panel stands high or rocks at a seam | Look at the bottom edge of the seam for a bulge from the last layers. Raise **Seam Underside Bevel**, for example to 1.2 mm. |
 | "Raised lines ... must print face up" | Set **Print Orientation** to **Playing face up**, or use **Flush inlay**. |
 | "A square ... must be larger than the largest piece" | Make **Cell Width** and **Cell Depth** larger, or correct **03 - Largest piece**. |
@@ -509,13 +530,13 @@ underscores as spaces.
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `Joint_Style` | `"Connectors"` | Connectors: every panel has the same sockets on every seam edge, joined by small separate connectors, which you can print or replace with an M4 or #8-32 screw and nut. A broken connector costs one connector, and panels fit anywhere. T-hook: tabs printed on the panels; drop each panel in. Dovetail: the same, with angled sides. Keys: butterfly keys (契り) pressed into the underside. Choices: Connectors, T-hook, Dovetail, Keys. |
-| `Connector_Fit` | `"Standard"` | Connectors only: the connector is a wedge that pulls the seam closed when you press it in. A printer makes it a little larger or smaller than the model, so it seats a little higher or lower. Standard suits most printers. Use Wide if a Standard connector stands out of its socket, and Narrow if it goes in deep but the seam stays loose. Print the Joint test to choose: its connectors are marked with 1, 2 and 3 dots. Choices: Narrow, Standard, Wide. |
+| `Connector_Fit` | `"Standard"` | Connectors only: how hard the connector's spring pulls the seam closed. Pressed in, a connector stops against the socket roof, and a printer that makes it a little larger only makes the pull a little stronger. Standard suits most printers. Use Loose if a Standard connector is hard to press up to the roof, and Tight if the seam opens when you push the panels apart gently. Print the Joint test to choose: its connectors are marked with 1, 2 and 3 dots. Choices: Loose, Standard, Tight. |
 | `Connector_Spares` | `2` | Connectors only: extra connectors to print, in case one is lost or breaks. |
 | `Joint_Clearance` | `0.4` | mm. Space between each tab side and its socket. Each panel must drop into place under its own weight. Raise this if one does not. |
 | `Joint_Roof_Clearance` | `1` | mm. Gap above each tab at the seam. The T-hook socket roof is flat, so sideways play cannot close this gap. |
 | `Seam_Bevel` | `0.4` | mm. 45 degree bevel on the top edge of each seam. It takes up first-layer squish, so the seam closes at the playing surface, and a sliding piece rides over a small step instead of catching on it. |
 | `Seam_Reveal` | `true` | Bevel both edges of each seam, not only the neighbor's. The small V hides a slight step, and a sliding piece does not catch on it. |
-| `Seam_Tongues` | `true` | Connectors and Keys only: a short V-shaped tongue along each right and back seam edge, which goes into a groove in the neighbor when you push the panels together. It holds both playing surfaces at the same height, also on a cloth or an uneven table, so that a sliding piece does not catch at a seam. |
+| `Seam_Tongues` | `true` | Connectors and Keys only: a short tongue along each right and back seam edge. The neighbor's groove is open at the bottom, so the neighbor rests on the tongue if it sinks, also on a cloth or an uneven table, and still lifts straight off. |
 | `Seam_Underside_Bevel` | `0.8` | mm. 45 degree bevel along the bottom edge of each seam, on both panels. The last layers of a print (the underside) can end with an uneven edge; the bevel keeps it off the table, so that each panel sits flat. 0 = none. |
 | `Camp_Dot_Plug_Clearance` | `0.2` | mm. Space around a camp dot where a seam goes around it. |
 
@@ -553,7 +574,6 @@ underscores as spaces.
 | --- | --- | --- |
 | `Underside_Relief` | `0.3` | mm. Recess the middle of each panel's underside, so that the panel stands on a band near its edges. Both sides of a seam then stand on the same part of the table. 0 = flat underside. |
 | `Support_Band` | `25` | mm. Width of the band that the panel stands on. It covers the sockets. |
-| `Socket_Frame` | `true` | Cut a bevelled frame round the mouth of each connector socket, for its look. The frame follows the outline of the socket with its inner corners filled in. It takes the first 0.4 mm of the shoulders that hold a connector, which leaves almost all of their grip. |
 
 ### 11 - Maker's mark
 

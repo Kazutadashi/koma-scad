@@ -150,6 +150,12 @@ def build_games() -> dict[str, Game]:
             piece = read_json(PIECES / (filename + ".json"))
 
             preset = build_preset(defaults, piece, filename, recipe["front"], recipe["back"])
+            # A game can change shared settings, such as the font, for all its pieces.
+            overrides = recipe.get("settings", {})
+            unknown = sorted(set(overrides) - set(preset))
+            if unknown:
+                raise KomaError(f"games.json {key!r} uses unknown parameter(s): {', '.join(unknown)}")
+            preset.update(overrides)
             preset["Category"] = f"{title} / {piece['category']}"
 
             name = f"{title} {number:02d} - {piece['name']}"

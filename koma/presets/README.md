@@ -60,6 +60,8 @@ A later layer wins:
 - `title` starts each preset name.
 - `front` and `back` select the style in each piece file.
 - `pieces` gives the piece files, in order, and how many a set needs.
+- `settings` is optional. Its settings replace those of every piece in the
+  game, last of all. The WenKai and Syuku variants use it to change `Font_Name`.
 
 The build writes the counts into each game file as `pieceCounts`. OpenSCAD
 ignores it. `export --per-file` uses it to place the correct number of each

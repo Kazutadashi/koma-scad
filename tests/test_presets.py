@@ -59,6 +59,16 @@ class BuildTests(unittest.TestCase):
         for piece in ("06 - Silver", "07 - Knight", "08 - Lance", "09 - Pawn"):
             self.assertEqual(learner[f"Shogi Learner {piece}"]["Back_Moves"], gold, piece)
 
+    def test_game_settings_override_every_piece(self):
+        """A game's settings, such as a font, win over the piece and style layers."""
+        games = presets.build_games()
+        wenkai = "LXGW WenKai Mono:style=Regular"
+        syuku = "Yuji Syuku:style=Regular"
+        for key, font in (("shogi-wenkai", wenkai), ("shogi-1char-wenkai", wenkai),
+                          ("shogi-learner-syuku", syuku), ("shogi", syuku)):
+            for name, preset in games[key].presets.items():
+                self.assertEqual(preset["Font_Name"], font, name)
+
     def test_bundled_presets_use_only_parameters_the_model_declares(self):
         """Every generated preset can be turned into OpenSCAD definitions."""
         for game in presets.build_games().values():

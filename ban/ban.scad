@@ -90,8 +90,8 @@ Line_Color = [0.01, 0.01, 0.01, 1];
 /* [07 - Joint fit] */
 // Connectors: every panel has the same sockets on every seam edge, joined by small separate connectors, which you can print or replace with an M4 or #8-32 screw and nut. A broken connector costs one connector, and panels fit anywhere. T-hook: tabs printed on the panels; drop each panel in. Dovetail: the same, with angled sides. Keys: butterfly keys (契り) pressed into the underside.
 Joint_Style = "Connectors"; // [Connectors,T-hook,Dovetail,Keys]
-// Connectors only: the connector is a wedge that pulls the seam closed when you press it in. A printer makes it a little larger or smaller than the model, so it seats a little higher or lower. Standard suits most printers. Use Wide if a Standard connector stands out of its socket, and Narrow if it goes in deep but the seam stays loose. Print the Joint test to choose: its connectors are marked with 1, 2 and 3 dots.
-Connector_Fit = "Standard"; // [Narrow,Standard,Wide]
+// Connectors only: how hard the connector's spring pulls the seam closed. Pressed in, a connector stops against the socket roof, and a printer that makes it a little larger only makes the pull a little stronger. Standard suits most printers. Use Loose if a Standard connector is hard to press up to the roof, and Tight if the seam opens when you push the panels apart gently. Print the Joint test to choose: its connectors are marked with 1, 2 and 3 dots.
+Connector_Fit = "Standard"; // [Loose,Standard,Tight]
 // Connectors only: extra connectors to print, in case one is lost or breaks.
 Connector_Spares = 2; // [0:1:20]
 // mm. Space between each tab side and its socket. Each panel must drop into place under its own weight. Raise this if one does not.
@@ -102,7 +102,7 @@ Joint_Roof_Clearance = 1; // [0.5:0.1:3]
 Seam_Bevel = 0.4; // [0:0.05:1]
 // Bevel both edges of each seam, not only the neighbor's. The small V hides a slight step, and a sliding piece does not catch on it.
 Seam_Reveal = true;
-// Connectors and Keys only: a short V-shaped tongue along each right and back seam edge, which goes into a groove in the neighbor when you push the panels together. It holds both playing surfaces at the same height, also on a cloth or an uneven table, so that a sliding piece does not catch at a seam.
+// Connectors and Keys only: a short tongue along each right and back seam edge. The neighbor's groove is open at the bottom, so the neighbor rests on the tongue if it sinks, also on a cloth or an uneven table, and still lifts straight off.
 Seam_Tongues = true;
 // mm. 45 degree bevel along the bottom edge of each seam, on both panels. The last layers of a print (the underside) can end with an uneven edge; the bevel keeps it off the table, so that each panel sits flat. 0 = none.
 Seam_Underside_Bevel = 0.8; // [0:0.1:2]
@@ -154,8 +154,6 @@ Key_Spares = 2; // [0:1:10]
 Underside_Relief = 0.3; // [0:0.05:1]
 // mm. Width of the band that the panel stands on. It covers the sockets.
 Support_Band = 25; // [8:1:40]
-// Cut a bevelled frame round the mouth of each connector socket, for its look. The frame follows the outline of the socket with its inner corners filled in. It takes the first 0.4 mm of the shoulders that hold a connector, which leaves almost all of their grip.
-Socket_Frame = true;
 
 /* [11 - Maker's mark] */
 // The main line of the mark (銘), cut into the underside of panel 0, 0: your name or brand. Empty = no mark.
@@ -195,7 +193,7 @@ Export_Metadata = false;
 
 version = "3.5";   // the same as VERSION in komascad.py; a test checks this
 
-// The connector socket, spec v1 (docs/ban-connector-spec.md). Do not change
+// The connector socket, spec v2 (docs/ban-connector-spec.md). Do not change
 // these values: printed connectors from any board, and the hardware that
 // replaces them, must fit every board. The socket takes a printed connector,
 // or an M4 x 20 to 25 socket head cap screw (ISO 4762) with an M4 hex nut
@@ -209,14 +207,16 @@ spec_taper = 0.15;          // mm that each shoulder face leans away from the se
 spec_tail = 5;              // mm. Room past each pocket for the screw's tip.
 spec_height = 9.3;          // mm from the underside. A #8-32 nut lying on a flat is 8.73 tall.
 spec_lead_in = 0.4;         // mm chamfer round the socket mouth, so a connector finds its socket.
-// The seam tongue (spec v1). Panels from one board meet tongue to groove, so
-// these are fixed too. The tongue is centered on the board's thickness.
+// The seam tongue (spec v2). Panels from one board meet tongue to groove, so
+// these are fixed too. The groove is open at the bottom, so that a panel lifts
+// straight off the tongue.
+spec_tongue_center = 4.5;       // mm from the underside to the tongue's center line. Low, so that the seam faces touch above it, around the connector's pull.
 spec_tongue_depth = 1.2;        // mm the tongue reaches past the seam. Its sides are at 45 degrees.
 spec_tongue_half_height = 2;    // mm above and below the tongue's center line, at the seam.
-spec_tongue_clearance = 0.1;    // mm between the tongue and its groove, on each side.
+spec_tongue_clearance = 0.15;   // mm between the tongue's top and the groove. More than a printed 45 degree overhang sags, so the tongue never holds a seam open.
 spec_tongue_tip_space = 0.3;    // mm past the tongue tip, so that the seam faces meet first.
 spec_tongue_margin = 6;         // mm from each end of a seam edge to the tongue.
-spec_groove_margin = 3;         // mm from each end of a seam edge to the groove: room to slide a panel in at an angle.
+spec_groove_margin = 3;         // mm from each end of a seam edge to the groove.
 spec_nub_reach = 0.6;           // mm a nub on the tongue reaches past the tongue, with sides at 45 degrees. It sits in a notch in the groove and lines the panels up along the seam.
 $fn = 36;
 epsilon = 0.02;   // overlap that keeps boolean operations clean
@@ -343,14 +343,13 @@ socket_half_width = Joint_Style == "Dovetail"
 socket_extent = Joint_Style == "Dovetail"
     ? socket_reach + Joint_Clearance + socket_lead_in
     : Joint_Depth + Joint_Clearance + t_mouth_bevel;
-// How far a seam opens when the panels are pulled apart. A seated connector
-// holds its seam closed. Along the seam, a connector has 0.3 mm of space on
-// each side; the nub on the seam tongue lines the panels up. Along the seam, the space is looser; it does
-// not open the seam.
-// How far each inner face of a connector moves toward the seam, for each fit.
-// 0.1 mm moves the connector 0.1/spec_taper = 0.67 mm higher or lower in its socket.
-connector_fits = ["Narrow", "Standard", "Wide"];
-connector_fit_values = [0.1, 0, -0.1];
+// How far a seam opens when the panels are pulled apart. A seated connector's
+// spring holds its seam closed. Along the seam, a connector has 0.3 mm of space
+// on each side; the nub on the seam tongue lines the panels up.
+// How far each end face of a connector reaches past its shoulder, at the
+// socket roof, for each fit. The connector's spring takes it up.
+connector_fits = ["Loose", "Standard", "Tight"];
+connector_fit_values = [-0.1, 0, 0.1];
 function connector_fit_of(name) = connector_fit_values[search([name], connector_fits)[0]];
 connector_fit = connector_fit_of(Connector_Fit);
 connector_side_fit = 0.3;
@@ -567,7 +566,7 @@ module edge_key_pockets(span, at, vertical) {
     }
 }
 
-// Connector sockets go at standard places (spec v1): the middle of each
+// Connector sockets go at standard places (spec v2): the middle of each
 // square along a seam, except where the socket would meet the sockets of
 // the crossing seam at an inner corner, or run off the board at its edge.
 // The places depend only on the grid, so any two panels with the same
@@ -597,7 +596,7 @@ key_count = keys ? joint_total : 0;
 // The loose parts to print, spares included, for a board in panels.
 loose_count = !loose_parts || !seams_exist ? 0 : joint_total + (keys ? Key_Spares : Connector_Spares);
 
-// The connector socket (spec v1), centered on the seam (the y axis): a slot
+// The connector socket (spec v2), centered on the seam (the y axis): a slot
 // for the neck across the seam, a pocket for the head or nut on each side,
 // and room for a screw tip beyond. Open through the underside, with a flat
 // roof. Every panel edge has the same half, so any panel joins any other.
@@ -622,62 +621,92 @@ module connector_socket() {
         slice(-epsilon) connector_socket_piece(piece);
         slice(spec_height - epsilon) connector_socket_piece(piece, 0, spec_height);
     }
-    // The chamfered mouth. With Socket_Frame, one hull of the whole outline
-    // fills in its inner corners: a bevelled frame. Without it, each piece gets
-    // its own hull, so that the chamfer follows the outline exactly.
-    if (Socket_Frame) hull() {
-        translate([0, 0, -epsilon]) linear_extrude(epsilon) connector_socket_2d(spec_lead_in);
-        translate([0, 0, spec_lead_in]) linear_extrude(epsilon) connector_socket_2d();
-    }
-    else for (piece = [0:2]) hull() {
+    // The chamfered mouth. Each piece gets its own hull, so that the chamfer
+    // follows the outline of the socket exactly.
+    for (piece = [0:2]) hull() {
         translate([0, 0, -epsilon]) linear_extrude(epsilon) connector_socket_piece(piece, spec_lead_in);
         translate([0, 0, spec_lead_in]) linear_extrude(epsilon) connector_socket_piece(piece);
     }
 }
 
-// The printed connector: a flat double-T, and a wedge. Its end faces on the
-// seam side lean like the shoulders. Pressed into its socket, it slides up the
-// leaning shoulders until it pulls them together and closes the seam. It
-// then sits connector_seat above the table, so it never sets a panel's height,
-// and the table keeps it from falling out. A printer that makes it 0.1 mm
-// larger or smaller moves it 0.67 mm lower or higher, and it still closes the
-// seam. Its edges are chamfered, top and bottom: the chamfer takes off the
-// first layer's squish, and leads the connector into its socket.
-// Printed parts run large and pockets small, which seats a connector lower: the
-// seat leaves 0.35 mm of such error on each face before the connector stops
-// short of the underside, and the roof leaves 0.15 mm the other way.
-connector_seat = 2.3;       // mm from the underside to the bottom of a Standard connector, when seated
-connector_height = 6;
-connector_end_space = 0.6;  // mm between each end and the far wall of its pocket
+// The printed connector: a flat double-T with a spring in its neck. The
+// connector's shape is not part of the spec; only the socket is.
+//
+// Pressed into its socket, it stops against the flat roof. Its end faces on
+// the seam side are straight up, so only their top edges touch the leaning
+// shoulders, at connector_contact. In the last 0.7 mm before the roof, the
+// shoulders stretch the spring, which pulls the seam closed. The pull is near
+// the top of the board, about where the seam faces touch, so it does not bend
+// the panels up at the seam, as a pull near the underside does.
+//
+// The roof sets how deep it goes, so a printer that makes it a little larger
+// only stretches the spring a little more. 0.1 mm on each face adds about
+// 12 N of pull (model value, not measured). Without the spring, the solid PLA
+// neck would turn 0.1 mm into several hundred newtons.
+//
+// The shoulders lean at less than PLA's friction angle, so a seated connector
+// stays in. Lifting a panel moves its shoulder down and away from the
+// connector, which then lets go.
+connector_height = 7;
 connector_chamfer = 0.4;
+connector_seat = spec_height - connector_height;          // mm from the underside to the bottom of a seated connector
+connector_contact = spec_height - connector_chamfer;      // mm from the underside to where the end faces touch the shoulders
+connector_end_space = 0.6;  // mm between each end and the far wall of its pocket
 connector_dot = 1.2;        // mm. The diameter of each fit dot on the top face.
+connector_neck = spec_neck_width - 2*connector_side_fit;
+// The spring: slots cut into the neck from alternate sides leave a zigzag of
+// thin beams across it. Each beam bends a little when the neck is pulled.
+// With n beams of thickness t, free length a and height b, the spring
+// constant is about E*b*t^3/(n*a^3): 60 N/mm for printed PLA (E = 2.5 GPa).
+// A pull of 20 N bends the beams to about 35 MPa, half of PLA's strength.
+connector_spring_beams = 6;
+connector_spring_beam = 0.9;   // mm. Two printed lines of a 0.4 mm nozzle.
+connector_spring_gap = 0.8;    // mm. Wide enough not to fuse.
+connector_spring_turn = 0.9;   // mm. The material where the zigzag turns, at each side of the neck.
+connector_spring_length = (connector_spring_beams + 1)*connector_spring_gap
+    + connector_spring_beams*connector_spring_beam;
+function connector_inner(fit) = spec_shoulder + spec_taper*connector_contact - fit;
+connector_outer = spec_shoulder + spec_end_length - connector_end_space;
+
 // The connector is three convex pieces: the neck (piece 0) and the two ends.
-// z is the height above the connector's bottom. The neck runs through both
-// ends: the ends' inner faces lean away from the seam, so a shorter neck would
-// leave them joined only near the bottom, where they snap off.
-module connector_piece_2d(piece, fit, z=0, grow=0) {
-    inner = spec_shoulder + spec_taper*(connector_seat + z) - fit;
-    outer = spec_shoulder + spec_end_length - connector_end_space;
+// The neck runs through both ends, so that each end is joined over its full
+// face.
+module connector_piece_2d(piece, fit, grow=0) {
+    inner = connector_inner(fit);
     offset(delta=grow) {
-        if (piece == 0) square([2*outer, spec_neck_width - 2*connector_side_fit], center=true);
-        else translate([(piece == 1 ? -1 : 1)*(inner + outer)/2, 0])
-            square([outer - inner, spec_end_width - 2*connector_side_fit], center=true);
+        if (piece == 0) square([2*connector_outer, connector_neck], center=true);
+        else translate([(piece == 1 ? -1 : 1)*(inner + connector_outer)/2, 0])
+            square([connector_outer - inner, spec_end_width - 2*connector_side_fit], center=true);
     }
 }
-// One connector. Dots on one end show its fit: 1 Narrow, 2 Standard, 3 Wide.
+// The slots of the spring, cut through the neck from alternate sides.
+module connector_spring_slots() {
+    slots = connector_spring_beams + 1;
+    pitch = connector_spring_gap + connector_spring_beam;
+    reach = connector_neck - connector_spring_turn;   // how far each slot goes across the neck
+    for (k = [0:slots - 1]) {
+        side = k % 2 == 0 ? 1 : -1;
+        translate([(k - (slots - 1)/2)*pitch - connector_spring_gap/2,
+                   side > 0 ? connector_neck/2 - reach : -connector_neck/2 - 1, -1])
+            cube([connector_spring_gap, reach + 1, connector_height + 2]);
+    }
+}
+// One connector. Its edges are chamfered, top and bottom: the chamfer takes
+// off the first layer's squish, and leads the connector into its socket.
+// Dots on one end show its fit: 1 Loose, 2 Standard, 3 Tight.
 module connector(fit_name=Connector_Fit) {
     fit = connector_fit_of(fit_name);
     dots = search([fit_name], connector_fits)[0] + 1;
     top = connector_height;
     difference() {
         for (piece = [0:2]) hull() {
-            slice(0) connector_piece_2d(piece, fit, 0, -connector_chamfer);
-            slice(connector_chamfer) connector_piece_2d(piece, fit, connector_chamfer);
-            slice(top - connector_chamfer - epsilon) connector_piece_2d(piece, fit, top - connector_chamfer);
-            slice(top - epsilon) connector_piece_2d(piece, fit, top, -connector_chamfer);
+            slice(0) connector_piece_2d(piece, fit, -connector_chamfer);
+            slice(connector_chamfer) connector_piece_2d(piece, fit);
+            slice(top - connector_chamfer - epsilon) connector_piece_2d(piece, fit);
+            slice(top - epsilon) connector_piece_2d(piece, fit, -connector_chamfer);
         }
-        dot_x = (spec_shoulder + spec_taper*(connector_seat + top) + spec_shoulder + spec_end_length
-                 - connector_end_space)/2;
+        connector_spring_slots();
+        dot_x = (connector_inner(fit) + connector_outer)/2;
         for (i = [0:dots - 1])
             translate([dot_x, (i - (dots - 1)/2)*2.5, top - 0.4]) cylinder(d=connector_dot, h=1, $fn=16);
     }
@@ -695,7 +724,7 @@ module edge_connector_sockets(places, at, vertical) {
 // Every key or connector, and the spares, in rows for one print.
 module loose_layout() {
     size = keys ? [Key_Length, Key_Width]
-        : [2*(spec_shoulder + spec_end_length - connector_end_space), spec_end_width];
+        : [2*connector_outer, spec_end_width];
     total = max(1, loose_count);
     pitch = size + [5, 5];
     // Long rows, as wide as the print bed: the strip fits beside the panels.
@@ -748,38 +777,54 @@ module underside_bevel_cut(length, bevel=Joint_Bottom_Chamfer) {
 
 // The seam tongue and its groove: seam on the y axis, length mm long and
 // centered on the origin. The tongue reaches into +x from the panel at x < 0;
-// the groove is cut into the panel at x > 0. Both sides are at 45 degrees, so
-// each prints without supports, and the tongue holds the two playing
-// surfaces at the same height. The tongue is a short, solid ridge: no part of
-// it flexes, so it does not wear like a clip.
-tongue_center = Board_Thickness/2;
+// the groove is cut into the panel at x > 0. The tongue's sides are at 45
+// degrees, so it prints without supports. The groove is everything below the
+// tongue's top, open at the bottom: the neighbor rests on the tongue if it
+// sinks, and still lifts straight off. The tongue is a short, solid ridge: no
+// part of it flexes, so it does not wear like a clip.
+//
+// Printed face down, only the tongue's top is an overhang, which sags a
+// little. spec_tongue_clearance is more than that sag, so the tongue never
+// holds a seam open. A closed V groove had two such faces, and only 0.1 mm.
+tongue_center = spec_tongue_center;
 function tongue_profile(reach) =
     let(h = spec_tongue_half_height)
     [[-1, -h - 1], [0, -h], [reach, -h + reach], [reach, h - reach], [0, h], [-1, h + 1]];
+// The region below the tongue's top, down past the underside.
+function groove_profile(reach) =
+    let(h = spec_tongue_half_height, below = tongue_center + 1)
+    [[0, -below], [reach, -below], [reach, h - reach], [0, h]];
 module seam_tongue(length) {
     translate([0, 0, tongue_center]) rotate([90, 0, 0]) linear_extrude(length, center=true)
         polygon(tongue_profile(spec_tongue_depth));
 }
 module seam_groove(length) {
+    wall = spec_tongue_depth + spec_tongue_tip_space + spec_tongue_clearance;
     translate([0, 0, tongue_center]) rotate([90, 0, 0]) linear_extrude(length, center=true)
-        offset(delta=spec_tongue_clearance) polygon(tongue_profile(spec_tongue_depth + spec_tongue_tip_space));
+        offset(delta=spec_tongue_clearance) polygon(groove_profile(spec_tongue_depth + spec_tongue_tip_space));
+    // The groove's wall is a seam edge on the underside too, so it gets the bevel.
+    translate([wall, 0, 0]) underside_bevel_cut(length, Seam_Underside_Bevel);
 }
 // The nub: the tongue reaches spec_nub_reach further over a short length,
-// with sides at 45 degrees seen from above. extra makes the matching notch.
-module tongue_slice(reach, y) {
-    translate([0, y, tongue_center]) rotate([90, 0, 0]) linear_extrude(epsilon, center=true)
-        polygon(tongue_profile(reach));
+// with sides at 45 degrees seen from above.
+module profile_slice(points, y) {
+    translate([0, y, tongue_center]) rotate([90, 0, 0]) linear_extrude(epsilon, center=true) polygon(points);
 }
-module seam_nub(extra=0) {
+module seam_nub() {
     hull() {
-        for (y = [-1, 1]) tongue_slice(spec_tongue_depth + extra, y*spec_nub_reach);
-        tongue_slice(spec_tongue_depth + spec_nub_reach + extra, 0);
+        for (y = [-1, 1]) profile_slice(tongue_profile(spec_tongue_depth), y*spec_nub_reach);
+        profile_slice(tongue_profile(spec_tongue_depth + spec_nub_reach), 0);
     }
 }
+// The notch for the nub: the groove's shape over the nub, open at the bottom,
+// and grown by the clearance all round.
 module seam_notch() {
-    // The nub, grown by the clearance all round.
+    reach = spec_tongue_depth + spec_tongue_tip_space;
     minkowski() {
-        seam_nub(spec_tongue_tip_space);
+        hull() {
+            for (y = [-1, 1]) profile_slice(groove_profile(reach), y*spec_nub_reach);
+            profile_slice(groove_profile(reach + spec_nub_reach), 0);
+        }
         sphere(r=spec_tongue_clearance, $fn=8);
     }
 }
@@ -1124,9 +1169,10 @@ if (joints_used) {
         str("The shortest seam (", shortest_seam, " mm) is too short for two tabs. ",
             "Use fewer, larger panels, or reduce Joint Width."));
     assert(!tabs || Seam_Bevel < Board_Thickness - socket_roof_height, "Seam Bevel is so deep that it reaches the sockets.");
-    // A Wide connector seats deepest.
-    assert(!connectors || connector_seat - min(connector_fit_values)/spec_taper + connector_height < spec_height - 0.2,
-        "A seated connector must stay below the socket roof.");
+    // The table, not a connector, must hold each panel up.
+    assert(!connectors || connector_seat >= 1.5, "A seated connector must stay 1.5 mm or more above the underside.");
+    assert(!connectors || connector_spring_length < 2*connector_inner(max(connector_fit_values)) - 2,
+        "The connector's spring must fit between its ends.");
     assert(!connectors || spec_height <= Board_Thickness - Grid_Groove_Depth - 1,
         str("The connector sockets are ", spec_height, " mm deep, which leaves less than 1 mm under a grid groove. ",
             "Connectors need a board at least ", spec_height + Grid_Groove_Depth + 1, " mm thick."));
@@ -1139,7 +1185,8 @@ if (joints_used) {
                         && tongue_center + spec_tongue_half_height + spec_tongue_clearance
                            < Board_Thickness - Grid_Groove_Depth - max(Seam_Bevel, 1)),
         str("The board is too thin for seam tongues: it needs to be at least ",
-            2*(spec_tongue_half_height + spec_tongue_clearance + Grid_Groove_Depth + 1), " mm thick. ",
+            tongue_center + spec_tongue_half_height + spec_tongue_clearance + Grid_Groove_Depth + max(Seam_Bevel, 1),
+            " mm thick. ",
             "Set Seam Tongues off, or make the board thicker."));
     assert(!Seam_Reveal || Seam_Bevel < Grid_Groove_Width,
         "With Seam Reveal, Seam Bevel must be less than Grid Groove Width, or the bevel cuts past the grid line.");

@@ -1,4 +1,4 @@
-# Ban connector spec, version 1
+# Ban connector spec, version 2
 
 This page fixes the shape of the connector socket and the seam tongue of a
 KomaSCAD board, so that a connector fits every board and any two panels with
@@ -14,17 +14,17 @@ connectors would no longer fit.
 Three parts work together:
 
 - **The connector pulls the seam closed.** Each pocket's face on the seam
-  side (the shoulder) leans away from the seam as it goes deeper. The
-  connector's ends lean the same way. When you press a connector in, it
-  slides up the leaning shoulders until it pulls them together. The seam
-  faces then touch: there is no gap.
-- **The tongue holds the height.** It is centered on the board's thickness,
-  so both playing surfaces are at the same height at the seam.
+  side (the shoulder) leans away from the seam as it goes deeper. A connector
+  pressed in up to the socket roof is stretched by the leaning shoulders, and
+  pulls them together. The seam faces then touch: there is no gap.
+- **The tongue holds the height.** If a panel sinks, it rests on its
+  neighbor's tongue. The groove is open at the bottom, so a panel lifts
+  straight off.
 - **The nub lines the panels up along the seam.** It sits in a notch in the
   groove, so the grid lines meet.
 
-A printer makes parts a little larger or smaller than the model. That
-changes only how deep the connector goes, not how well the seam closes.
+A printer makes parts a little larger or smaller than the model. With the
+printed connector, that changes only how hard its spring pulls.
 
 ## Replacement hardware
 
@@ -46,7 +46,7 @@ fit the socket. Use steel or nylon. To fit one:
 3. If it does not drop in, turn the nut back a little. Use the smallest gap
    that still drops in. A quarter turn of an M4 nut moves it about 0.18 mm.
 
-A screw holds the seam, but it is not a wedge: a pulled seam can open about
+A screw holds the seam, but it has no spring: a pulled seam can open about
 0.3 to 0.5 mm. Use it to replace a lost connector until you print a new one.
 
 A screw in a socket, seen from below. Panel A is on the left of the seam
@@ -100,7 +100,7 @@ the underside of the panels, and has a flat roof.
 | `spec_end_width` | 10.6 | Width of each head or nut pocket, along the seam |
 | `spec_tail` | 5 | Slot beyond each pocket, for the screw's tip |
 | `spec_height` | 9.3 | Height of the socket roof above the underside |
-| `spec_lead_in` | 0.4 | 45 degree chamfer round the socket mouth on the underside |
+| `spec_lead_in` | 0.4 | 45 degree chamfer round the socket mouth on the underside. It follows the outline of the socket. |
 
 At the roof, the shoulders are 7 + 0.15 × 9.3 = 8.4 mm from the seam. Each
 half of a socket is the same, so a screw can go either way round.
@@ -110,45 +110,49 @@ the grid groove, and 1 mm between them.
 
 ## The printed connector
 
-A flat double-T, printed flat. Its end faces on the seam side lean like the
-shoulders. Seated, a Standard connector's bottom is 2.3 mm above the table and
-its top 1.0 mm below the socket roof. It never touches the table or the roof,
-so the table sets every panel's height, and the table keeps the connector
-from falling out.
+The connector's shape is not part of the spec: any part that fits the socket
+works. This is the connector that KomaSCAD prints. It is a flat double-T,
+printed flat, with a zigzag spring in its neck.
 
 | Part | Size (mm) |
 | --- | --- |
-| Neck | 4.2 wide (the slot, less 0.3 mm each side), and 24.4 long: it runs through both ends, so each end is joined over its full height |
-| Each end | 10.0 wide, along the seam. Its inner face is 7 + 0.15 × (2.3 + height above its bottom) from the seam, less the fit. Its outer face is 12.2 from the seam. |
-| Thickness | 6.0 |
-| Fit | Narrow: inner faces 0.1 mm nearer the seam (seats 0.67 mm nearer the table). Standard: as above. Wide: 0.1 mm further (seats 0.67 mm deeper). |
+| Neck | 4.2 wide (the slot, less 0.3 mm each side), and 24.4 long: it runs through both ends |
+| Spring | 7 slots, 0.8 wide, cut into the neck from alternate sides, 0.9 short of the far side. They leave 6 beams, 0.9 thick, across the neck. About 60 N/mm (model value). |
+| Each end | 10.0 wide, along the seam. Its inner face is straight up, 7 + 0.15 × 8.9 = 8.335 from the seam, less the fit. Its outer face is 12.2 from the seam. |
+| Thickness | 7.0. Seated against the roof, its bottom is 2.3 above the table. |
+| Fit | How far each inner face reaches past its shoulder at the roof: Loose -0.1, Standard 0, Tight +0.1. |
 | Edges | 0.4 mm chamfer at 45 degrees, top and bottom |
-| Fit dots | 1, 2 or 3 dots on the top of one end: Narrow, Standard or Wide |
+| Fit dots | 1, 2 or 3 dots on the top of one end: Loose, Standard or Tight |
 
-The shoulders lean at 8.5 degrees. That is less than the angle at which PLA
-slips on PLA, so a pressed connector stays in. **Output Mode** **Loose parts**
-prints every connector of a board and its spares. You can make a connector of
-any material to this shape.
+Pressed in, the connector stops against the roof. Only the top edges of its
+inner faces touch the shoulders, 8.9 mm above the underside, so it pulls the
+seam near the middle of the seam faces. It never touches the table, so the
+table sets every panel's height. The shoulders lean at 8.5 degrees, less than
+the angle at which PLA slips on PLA, so a pressed connector stays in. Lifting
+a panel moves its shoulder down and away from the connector, which lets go.
 
 ## The seam tongue
 
 Panels of Connectors and Keys boards also meet tongue to groove, so the
 tongue has a fixed shape too. Each right and back seam edge has a tongue, and
-each left and front seam edge a groove.
+each left and front seam edge a groove. The groove is everything below the
+tongue's top, open at the bottom, so that a panel lifts straight off.
 
 | Value | mm | Meaning |
 | --- | --- | --- |
+| `spec_tongue_center` | 4.5 | From the underside to the tongue's center line |
 | `spec_tongue_depth` | 1.2 | How far the tongue reaches past the seam. Its sides are at 45 degrees. |
-| `spec_tongue_half_height` | 2 | Half the tongue's height at the seam. The tongue is centered on the board's thickness. |
-| `spec_tongue_clearance` | 0.1 | Space between the tongue and its groove, on each side |
+| `spec_tongue_half_height` | 2 | Half the tongue's height at the seam |
+| `spec_tongue_clearance` | 0.15 | Space between the tongue's top and the groove, and round the nub |
 | `spec_tongue_tip_space` | 0.3 | Space past the tongue tip, so that the seam faces meet first |
 | `spec_tongue_margin` | 6 | From each end of a seam edge to the tongue |
 | `spec_groove_margin` | 3 | From each end of a seam edge to the groove |
 | `spec_nub_reach` | 0.6 | How far the nub reaches past the tongue. Its sides are at 45 degrees, also seen from above. |
 
+The seam faces touch only above the groove: from 6.7 mm above the underside
+up to the playing surface. The groove's wall gets the seam underside bevel.
 The nub is on the grid line nearest the middle of each seam edge, between two
-sockets. An edge one square long has no nub. The groove is longer than the
-tongue, so that a panel can go in at an angle, toward two neighbors at once.
+sockets. An edge one square long has no nub.
 
 ## Where the sockets go
 
@@ -170,3 +174,4 @@ lets modules move between boards.
 | Version | Change |
 | --- | --- |
 | 1 | First version: the tapered socket for a wedge connector or an M4 or #8-32 screw and nut, the printed wedge connector, socket places at square middles, and the seam tongue with its nub. |
+| 2 | The tongue moves down to 4.5 mm and its groove is open at the bottom, with 0.15 mm of space. The socket mouth's chamfer follows the outline (no frame). The socket is otherwise unchanged, so screws and nuts still fit. The printed connector has a spring and stops at the roof. |

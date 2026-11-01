@@ -32,7 +32,10 @@ Two rules follow:
 | --- | --- | --- | --- | --- |
 | `shogi` | two characters | one character | 9 | 40 |
 | `shogi-1char` | one character | one character | 9 | 40 |
+| `shogi-wenkai` | two characters, LXGW WenKai Mono | one character | 9 | 40 |
+| `shogi-1char-wenkai` | one character, LXGW WenKai Mono | one character | 9 | 40 |
 | `shogi-learner` | one character and its moves | one character and its moves | 9 | 40 |
+| `shogi-learner-syuku` | one character and its moves, Yuji Syuku | one character and its moves | 9 | 40 |
 | `minishogi` | two characters | one character | 7 | 12 |
 | `minishogi-1char` | one character | one character | 7 | 12 |
 | `minishogi-learner` | one character and its moves | one character and its moves | 7 | 12 |

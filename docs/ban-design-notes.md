@@ -223,6 +223,47 @@ Printed connectors snapped at the neck, and were hard to press in.
   of room. The connector is 0.6 mm thinner (6.0 mm), so a Wide one still
   clears the socket roof. The socket (spec v1) is unchanged.
 
+## Spring connector and open groove (connector spec v2)
+
+A printed board with wedge connectors (2026-10-25) held together, but it rose
+in a peak at each seam, the connectors were hard to press in, and the board
+was hard to take apart. The hulled socket frame also left an odd hexagon
+round every socket on the underside.
+
+- **Why it peaked.** The wedge pulled the panels together near the
+  underside (2.3 to 8.3 mm), and the seam faces touched near the top, where
+  a face-down print leaves a little first-layer squish. A pull below the
+  contact bends the panels up at the seam, like a tendon below the middle of
+  a beam. A solid wedge also pulls as hard as you press: a solid PLA neck
+  turns 0.1 mm of extra press into several hundred newtons. The peak at the
+  seam outweighs a panel's weight from about 10 to 20 N per connector.
+- **Why it was hard to press and to take apart.** The closed V groove had
+  two 45 degree overhangs, one on each side of the tongue, and only 0.1 mm of
+  space. Each sags about that much when printed, so the tongue could jam and
+  hold the seam open at mid-height: a pivot for the bend, and a stop for the
+  connector. The tongue also kept a panel from lifting straight up, which is
+  what frees a wedge.
+- **The spring connector.** The connector now stops against the socket roof,
+  and its inner faces are straight up, so only their top edges touch the
+  leaning shoulders, at 8.9 mm. A zigzag spring in the neck (about 60 N/mm)
+  turns print error into a small change in pull: 0.1 mm on each face is about
+  12 N. The fits set the pull, not the depth.
+- **The open groove.** The groove is now everything below the tongue's top,
+  open at the bottom, with 0.15 mm of space. Only the tongue's top is an
+  overhang, so the space is more than its sag. A panel lifts straight off,
+  and lifting it frees the connectors. The tongue moved down to 4.5 mm, so
+  the seam faces touch from 6.7 mm to the top: the connector's pull at
+  8.9 mm is about the middle of that face.
+- **The socket mouth.** The chamfer follows the outline of the socket. The
+  Socket Frame setting is gone.
+
+Costs: on a cloth, a panel can sink about 0.2 mm before it rests on the
+tongue, and a panel pushed up from below is not held down. The spring is PLA
+under load, so it relaxes over hours of play. The seam stays closed, but
+with less pull. If it is pulled hard, a connector bends instead of a panel
+breaking. These are model values: print the Joint test, and check that the
+blocks lie flat, the seam closes, and the tongue block lifts off.
+
 ## Open work
 
 - **One panel only.** `komascad.py ban` renders every panel. It cannot yet
@@ -244,8 +285,9 @@ Printed connectors snapped at the neck, and were hard to press in.
   same piece on each, and choose the slicer settings by ear.
 - **Seams.** Measure how well a seam hides next to its grid line after
   assembly, and test camp dots at a seam.
-- **Wedge, tongue and nub.** Print the Joint test. Record which connector
-  fit seats inside the socket and closes the seam. Measure the gap and the
+- **Spring connector, tongue and nub.** Print the Joint test. Record which
+  connector fit reaches the roof by thumb and closes the seam, and whether
+  the blocks lie flat. Measure the gap and the
   step at a seam with feeler gauges, on a hard table and on a cloth, and
   slide pieces across every seam, most of all at an inner corner. Check that
   the connectors stay in after a day, and after the board is carried.

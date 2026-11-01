@@ -671,9 +671,11 @@ def _assembly_text(board: Board) -> str:
         return "One-piece board. No assembly."
     if board.loose_name == "Connectors":
         return (
-            "On a flat table, lay the panels face down, edges together. Drop a connector "
-            "(or an M4 x 20 or #8-32 x 3/4 inch screw with its nut) into each socket "
-            "across the seams, then turn the board over. Lift any panel straight up to free it."
+            "On a flat table, lay the panels face down: start with the panel that has no "
+            "tongues, and lower each next one so its tongues drop into the grooves. Press a "
+            "connector (or an M4 x 22 or #8-32 x 7/8 inch screw with its nut) into each "
+            "socket up to the roof, then turn the board over. To take it apart, lift the "
+            "panels straight up, the last in assembly_order first."
         )
     if board.loose_name == "Keys":
         return (

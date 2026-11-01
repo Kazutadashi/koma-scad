@@ -40,7 +40,7 @@ MARK = [
 # A tiled board with the default joint (Connectors).
 TILED_BOARD = ["-D", "Panel_Columns=2", "-D", "Panel_Rows=2"]
 
-# Hardware that must fit the connector socket (spec v1), from the ISO and
+# Hardware that must fit the connector socket (spec v2), from the ISO and
 # ASME standards: shank diameter, head diameter and length, nut across flats,
 # across corners and thickness, in mm.
 HARDWARE = {
@@ -343,9 +343,10 @@ class ModelTests(unittest.TestCase):
                     self.assertEqual(status, 0, log[-800:])
                     self.assertLess(mesh_volume(mesh), 0.001)
 
-    def test_a_pressed_connector_stops_at_its_seat(self):
-        # A connector in the first socket of panel 0, 0's right seam. At its
-        # seat it touches the shoulders; 0.05 mm deeper, it would be inside them.
+    def test_a_seated_connector_grips_only_by_its_fit(self):
+        # A connector in the first socket of panel 0, 0's right seam, pressed up
+        # to the socket roof. A Loose one does not reach the shoulders in the
+        # model; a Tight one reaches into them, which its spring takes up.
         with tempfile.TemporaryDirectory() as folder:
             model = Path(folder) / "seat.scad"
             model.write_text(
@@ -355,21 +356,21 @@ class ModelTests(unittest.TestCase):
                 "intersection() {\n"
                 "    union() { placed([0, 0]); placed([1, 0]); }\n"
                 "    translate([tile_x_min(0) + tile_width(0),"
-                " tile_y_min(0) + socket_places_y(0)[0], connector_seat + DEEPER])"
-                " connector();\n"
+                " tile_y_min(0) + socket_places_y(0)[0], connector_seat])"
+                " connector(FIT);\n"
                 "}\n",
                 encoding="utf-8",
             )
             mesh = Path(folder) / "seat.stl"
-            for deeper, touches in ((-0.05, False), (0.05, True)):
-                with self.subTest(deeper=deeper):
+            for fit, touches in (("Loose", False), ("Tight", True)):
+                with self.subTest(fit=fit):
                     mesh.unlink(missing_ok=True)
                     command = ["openscad", "-o", str(mesh), "--export-format", "asciistl"]
                     command += TILED_BOARD + [
                         "-D",
                         "Export_Metadata=true",
                         "-D",
-                        f"DEEPER={deeper}",
+                        f'FIT="{fit}"',
                     ]
                     command.append(str(model))
                     openscad.run_openscad(command)

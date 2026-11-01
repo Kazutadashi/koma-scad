@@ -88,5 +88,62 @@
             "lance": 4,
             "pawn": 18
         }
+    },
+    "shogi-wenkai": {
+        "title": "Shogi WenKai",
+        "front": "two",
+        "back": "one",
+        "settings": {
+            "Font_Name": "LXGW WenKai Mono:style=Regular"
+        },
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 4,
+            "silver": 4,
+            "knight": 4,
+            "lance": 4,
+            "pawn": 18
+        }
+    },
+    "shogi-1char-wenkai": {
+        "title": "Shogi 1-char WenKai",
+        "front": "one",
+        "back": "one",
+        "settings": {
+            "Font_Name": "LXGW WenKai Mono:style=Regular"
+        },
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 4,
+            "silver": 4,
+            "knight": 4,
+            "lance": 4,
+            "pawn": 18
+        }
+    },
+    "shogi-learner-syuku": {
+        "title": "Shogi Learner Syuku",
+        "front": "learner",
+        "back": "learner",
+        "settings": {
+            "Font_Name": "Yuji Syuku:style=Regular"
+        },
+        "pieces": {
+            "king-osho": 1,
+            "king-gyokusho": 1,
+            "rook": 2,
+            "bishop": 2,
+            "gold": 4,
+            "silver": 4,
+            "knight": 4,
+            "lance": 4,
+            "pawn": 18
+        }
     }
 }
