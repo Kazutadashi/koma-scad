@@ -150,6 +150,47 @@ class MissingOpenSCADTests(unittest.TestCase):
             openscad.run_openscad(["/nonexistent/komascad-test/openscad", "--version"])
 
 
+class FindOpenSCADTests(unittest.TestCase):
+    """Without --openscad, the tool looks in the usual places."""
+
+    def test_option_wins(self):
+        with mock.patch.dict("os.environ", {"OPENSCAD": "/from/environment"}):
+            self.assertEqual(openscad.find_openscad("/given"), "/given")
+
+    def test_environment_variable_comes_next(self):
+        with mock.patch.dict("os.environ", {"OPENSCAD": "/from/environment"}):
+            self.assertEqual(openscad.find_openscad(None), "/from/environment")
+
+    def test_default_install_folder_when_not_on_the_path(self):
+        with tempfile.TemporaryDirectory() as folder:
+            program = Path(folder) / "OpenSCAD" / "openscad.com"
+            program.parent.mkdir()
+            program.touch()
+            with (
+                mock.patch.dict("os.environ", {"OPENSCAD": ""}),
+                mock.patch.object(openscad.shutil, "which", return_value=None),
+                mock.patch.object(openscad, "openscad_install_locations", return_value=[program]),
+            ):
+                self.assertEqual(openscad.find_openscad(None), str(program))
+
+    def test_falls_back_to_the_plain_name(self):
+        with (
+            mock.patch.dict("os.environ", {"OPENSCAD": ""}),
+            mock.patch.object(openscad.shutil, "which", return_value=None),
+            mock.patch.object(openscad, "openscad_install_locations", return_value=[]),
+        ):
+            self.assertEqual(openscad.find_openscad(None), "openscad")
+
+    def test_windows_looks_in_program_files(self):
+        folders = {"ProgramFiles": "C:\\Program Files", "ProgramFiles(x86)": ""}
+        with (
+            mock.patch.object(openscad.sys, "platform", "win32"),
+            mock.patch.dict("os.environ", folders),
+        ):
+            locations = openscad.openscad_install_locations()
+        self.assertEqual(locations[0], Path("C:\\Program Files") / "OpenSCAD" / "openscad.com")
+
+
 class FrameTests(unittest.TestCase):
     """Each animation frame renders its own values."""
 

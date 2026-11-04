@@ -99,6 +99,8 @@ class SelectionTests(unittest.TestCase):
         self.assertEqual(presets.select_presets(names, ["Shogi 09 - Pawn"]), names[2:])
         with self.assertRaisesRegex(KomaError, "No piece matches 'lion'"):
             presets.select_presets(names, ["lion"])
+        with self.assertRaisesRegex(KomaError, "Did you mean 'Shogi 09 - Pawn'.*save it"):
+            presets.select_presets(names, ["Shogi 09 - Pawm"])
 
     def test_piece_counts_default_to_one(self):
         """A file's pieceCounts set the copies; other presets count once."""

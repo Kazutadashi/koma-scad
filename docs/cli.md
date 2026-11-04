@@ -2,8 +2,10 @@
 
 `komascad.py` is the command-line tool. It needs Python 3.10 or later (on
 Windows, type `py` instead of `python3`). `preview`, `check`, `export` and
-`ban` also need OpenSCAD: either the `openscad` command on your PATH, or its
-location given with `--openscad PATH`. See [install](install.md).
+`ban` also need OpenSCAD. The tool uses, in this order: the program given with
+`--openscad PATH`, the `OPENSCAD` environment variable, `openscad` on your
+PATH, then the default install folder (`C:\Program Files\OpenSCAD\` on
+Windows, **Applications** on macOS). See [install](install.md).
 
 ```bash
 python3 komascad.py COMMAND [options]
@@ -213,7 +215,8 @@ The Customizer saves your presets in `koma/koma.json`. Export one by name:
 python3 komascad.py export koma/koma.json "My piece"
 ```
 
-Any Customizer preset file works the same way. `--openscad PATH` uses a
+Any Customizer preset file works the same way. To see the names saved in a
+file, run `python3 komascad.py list koma/koma.json`. `--openscad PATH` uses a
 specific OpenSCAD program.
 
 ## set

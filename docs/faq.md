@@ -160,11 +160,25 @@ and hot water, and avoid scratched areas.
 
 ## The tools
 
-### "cannot find OpenSCAD"
+### "cannot find OpenSCAD", or "[WinError 2] The system cannot find the file specified"
 
-The tool cannot start OpenSCAD. Install it, then either add it to your
-*PATH*, or give its location with `--openscad`. See
+The tool cannot start OpenSCAD. KomaSCAD looks for it in the default install
+folder (`C:\Program Files\OpenSCAD\` on Windows, **Applications** on
+macOS) and on the *PATH*. If it is installed somewhere else, give its
+location with `--openscad`, or
+[add it to the PATH](install.md#optional-add-openscad-to-the-path). See
 [install](install.md#2-install-openscad).
+
+`[WinError 2]` comes from older copies of KomaSCAD, which did not look in
+the default folder. Download the latest files, or add
+`--openscad "C:\Program Files\OpenSCAD\openscad.com"` to the command.
+
+### "No piece matches 'My piece'"
+
+The name is not in the preset file. Check the spelling with
+`python3 komascad.py list koma/koma.json`, which shows every saved name. A
+preset you made in OpenSCAD is only in `koma/koma.json` after you save it in
+the Customizer.
 
 ### The characters show as boxes, or the wrong font
 

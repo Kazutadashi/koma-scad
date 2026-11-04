@@ -13,7 +13,7 @@ import os
 import sys
 from pathlib import Path
 
-from . import ban, export, presets, preview
+from . import ban, export, openscad, presets, preview
 from .export import ExportOptions
 from .presets import JSON_INDENT, find_preset_file, load_preset_file, select_presets
 from .print_test_page import build_test_page
@@ -738,7 +738,10 @@ def _add_game_argument(parser: argparse.ArgumentParser) -> None:
 def _add_openscad_option(parser: argparse.ArgumentParser) -> None:
     """Adds --openscad, for commands that run OpenSCAD."""
     parser.add_argument(
-        "--openscad", default="openscad", metavar="PATH", help="OpenSCAD executable"
+        "--openscad",
+        metavar="PATH",
+        help="OpenSCAD program (default: the OPENSCAD environment variable, "
+        "then openscad on the PATH, then the default install folder)",
     )
 
 
@@ -979,6 +982,9 @@ def main(argv: list[str] | None = None) -> int:
     if not args.command:
         parser.print_help()
         return EXIT_FAILED
+
+    if "openscad" in args:
+        args.openscad = openscad.find_openscad(args.openscad)
 
     try:
         check_root()

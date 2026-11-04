@@ -116,6 +116,52 @@ def run_openscad(command: list[str]) -> tuple[int, str]:
     return result.returncode, result.stdout + "\n" + result.stderr
 
 
+def openscad_install_locations() -> list[Path]:
+    """Lists where the OpenSCAD installers put the command-line program.
+
+    Returns:
+        The usual locations on this system, most likely first. They may not exist.
+    """
+    if sys.platform == "win32":
+        folders = [os.environ.get("ProgramFiles"), os.environ.get("ProgramFiles(x86)")]
+        programs = []
+        for folder in folders:
+            if folder:
+                # openscad.com is the command-line version, which prints OpenSCAD's messages.
+                programs.append(Path(folder) / "OpenSCAD" / "openscad.com")
+                programs.append(Path(folder) / "OpenSCAD (Nightly)" / "openscad.com")
+        return programs
+    if sys.platform == "darwin":
+        app = Path("OpenSCAD.app") / "Contents" / "MacOS" / "OpenSCAD"
+        return [Path("/Applications") / app, Path.home() / "Applications" / app]
+    return []
+
+
+def find_openscad(requested: str | None) -> str:
+    """Picks the OpenSCAD program to run.
+
+    Args:
+        requested: The program given with --openscad, or None.
+
+    Returns:
+        The --openscad program when given, else the OPENSCAD environment
+        variable, else `openscad` on the PATH, else the first standard install
+        location that exists. When none is found, "openscad", so that running it
+        fails with the message from openscad_not_found().
+    """
+    if requested:
+        return requested
+    if os.environ.get("OPENSCAD"):
+        return os.environ["OPENSCAD"]
+    on_path = shutil.which("openscad")
+    if on_path:
+        return on_path
+    for program in openscad_install_locations():
+        if program.is_file():
+            return str(program)
+    return "openscad"
+
+
 def openscad_not_found(program: str) -> str:
     """Explains what to do when the OpenSCAD program cannot be started.
 
@@ -127,7 +173,8 @@ def openscad_not_found(program: str) -> str:
     """
     return (
         f"cannot find OpenSCAD (tried '{program}'). Install OpenSCAD 2021.01 or later "
-        "from https://openscad.org/downloads.html, then either add it to your PATH or "
+        "from https://openscad.org/downloads.html. KomaSCAD looks in the default install "
+        "folder and on your PATH. If you installed it somewhere else, "
         "give its location with --openscad, for example on Windows: "
         '--openscad "C:\\Program Files\\OpenSCAD\\openscad.com", or on macOS: '
         "--openscad /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD. "

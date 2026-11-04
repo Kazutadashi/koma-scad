@@ -425,7 +425,15 @@ def select_presets(names: list[str], filters: list[str]) -> list[str]:
             matches = [name for name in names if text.casefold() in name.casefold()]
 
         if not matches:
-            raise KomaError(f"No piece matches {text!r}. Use the list command to see the names.")
+            message = f"No piece matches {text!r}."
+            close = difflib.get_close_matches(text, names, n=3)
+            if close:
+                message += " Did you mean " + " or ".join(repr(name) for name in close) + "?"
+            message += (
+                " Use the list command to see the names. A preset made in OpenSCAD is"
+                " only in the file after you save it in the Customizer."
+            )
+            raise KomaError(message)
         chosen.update(matches)
 
     return [name for name in names if name in chosen]

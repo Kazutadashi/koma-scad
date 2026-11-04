@@ -38,15 +38,29 @@ Download it from [openscad.org/downloads](https://openscad.org/downloads.html).
 
 1. Run the installer and accept the defaults. OpenSCAD goes to
    `C:\Program Files\OpenSCAD\`.
-2. The installer does not add OpenSCAD to the *PATH* (the list of places the
-   command line looks for programs). The simplest fix is to tell KomaSCAD
-   where it is, every time, with `--openscad`:
+2. That's all. The installer does not add OpenSCAD to the *PATH* (the list
+   of places the command line looks for programs), so typing `openscad` in a
+   terminal does nothing, and that is fine: KomaSCAD looks in
+   `C:\Program Files\OpenSCAD\` by itself. You can still
+   [add it to the PATH](#optional-add-openscad-to-the-path) if you want the
+   `openscad` command.
+
+   If you installed OpenSCAD somewhere else, tell KomaSCAD where it is with
+   `--openscad` on each command:
 
    ```bat
-   py komascad.py check shogi pawn --openscad "C:\Program Files\OpenSCAD\openscad.com"
+   py komascad.py check shogi pawn --openscad "D:\Apps\OpenSCAD\openscad.com"
    ```
 
-   Use `openscad.com`, not `openscad.exe`: the `.com` file is the
+   Or set it once for the whole terminal session, so you can leave out
+   `--openscad`:
+
+   ```bat
+   set OPENSCAD=D:\Apps\OpenSCAD\openscad.com
+   ```
+
+   In PowerShell, type `$env:OPENSCAD = "D:\Apps\OpenSCAD\openscad.com"`
+   instead. Use `openscad.com`, not `openscad.exe`: the `.com` file is the
    command-line version, which shows OpenSCAD's messages.
 
 **macOS**
@@ -54,10 +68,11 @@ Download it from [openscad.org/downloads](https://openscad.org/downloads.html).
 1. Open the `.dmg` and drag **OpenSCAD** to **Applications**.
 2. If macOS refuses to open it the first time, right-click OpenSCAD and
    choose **Open**.
-3. Give KomaSCAD its location with `--openscad`:
+3. KomaSCAD finds it in **Applications** by itself. If you put it
+   somewhere else, give its location with `--openscad`:
 
    ```bash
-   python3 komascad.py check shogi pawn --openscad /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD
+   python3 komascad.py check shogi pawn --openscad /path/to/OpenSCAD.app/Contents/MacOS/OpenSCAD
    ```
 
 **Linux**
@@ -76,6 +91,49 @@ so use the package or the AppImage for the command-line tool.
 
 To check it, start OpenSCAD and look at **Help → About**: it should say
 2021.01 or newer.
+
+### Optional: add OpenSCAD to the PATH
+
+When you type a command such as `openscad` in a terminal, the system looks
+for a program with that name in a list of folders. That list is the *PATH*.
+If OpenSCAD's folder is not on the list, the terminal says it cannot find the
+program, even though OpenSCAD is installed.
+
+KomaSCAD does not need this for a default install, because it also looks in
+the default folder. Add OpenSCAD to the PATH if you installed it somewhere
+else and don't want to type `--openscad` on every command, or if you want to
+run `openscad` yourself from a terminal.
+
+**Windows**
+
+1. Press the Windows key, type `environment variables`, and open
+   **Edit environment variables for your account**.
+2. Under **User variables**, select **Path** and click **Edit**.
+3. Click **New** and type the folder that holds OpenSCAD, for example
+   `C:\Program Files\OpenSCAD`. Type the folder, not the program file.
+4. Click **OK** in each window.
+5. Close the terminal and open a new one. A terminal reads the PATH only when
+   it starts.
+
+Check it by typing `openscad --version` in the new terminal. It should print
+the OpenSCAD version.
+
+**macOS**
+
+Link the program into a folder that is already on the PATH:
+
+```bash
+sudo ln -s /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD /usr/local/bin/openscad
+```
+
+If `/usr/local/bin` does not exist, create it first with
+`sudo mkdir -p /usr/local/bin`. Then open a new terminal and check it with
+`openscad --version`.
+
+**Linux:** the package manager does this for you.
+
+To learn more about the PATH, see
+[PATH (variable)](https://en.wikipedia.org/wiki/PATH_(variable)) on Wikipedia.
 
 ## 3. Install Python (for color exports)
 
@@ -154,7 +212,13 @@ python3 komascad.py check shogi-learner pawn
 ```
 
 It should end with `0 of 1 pieces fail`. If it says it cannot find
-OpenSCAD, add `--openscad` with the path from [step 2](#2-install-openscad).
+OpenSCAD, see [step 2](#2-install-openscad): OpenSCAD is not installed, or is
+installed outside the default folder.
+
+If you see `[WinError 2] The system cannot find the file specified`, your copy
+of KomaSCAD is older than the automatic OpenSCAD search. Download the files
+again (see [step 1](#1-get-komascads-files)), or add `--openscad` with the
+path from [step 2](#2-install-openscad).
 If a font is missing, go back to [step 4](#4-install-the-fonts).
 
 ## Next

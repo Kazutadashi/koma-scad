@@ -43,6 +43,10 @@ progress messages as it goes, and writes `exports/koma/My piece.3mf`.
 
 Good to know:
 
+- The name must match a saved preset. To see the names in the file, run
+  `python3 komascad.py list koma/koma.json`.
+- If it says it cannot find OpenSCAD, see
+  [install](install.md#2-install-openscad).
 - The exporter reads saved presets only. Save your changes in the
   Customizer before you export.
 - If the file already exists, the tool skips it. Add `-f` to write it again.
