@@ -38,6 +38,11 @@ TOUCHING_SHELL_WARNINGS = (
     "Exported object may not be a valid 2-manifold and may need repair",
 )
 
+# Characters from here up do not survive the Windows command line of OpenSCAD
+# 2021.01, so scad_literal() escapes them: \u up to MAX_SHORT_ESCAPE, \U after.
+ASCII_LIMIT = 0x80
+MAX_SHORT_ESCAPE = 0xFFFF
+
 # How much of OpenSCAD's output an error message shows: the end, where the error is.
 LOG_TAIL = 8000
 
@@ -250,8 +255,34 @@ def scad_definitions(
     for name, value in typed.items():
         if name == "Output_Mode":
             continue
-        definitions += ["-D", name + "=" + json.dumps(value, ensure_ascii=False)]
+        definitions += ["-D", name + "=" + scad_literal(value)]
     return definitions
+
+
+def scad_literal(value: Any) -> str:
+    """Writes a value as OpenSCAD source, using only ASCII characters.
+
+    OpenSCAD 2021.01 on Windows reads its command line in the system code
+    page, which turns characters such as 歩 into "?". OpenSCAD's own escapes,
+    \\u for four hex digits and \\U for six, reach it intact on every system.
+
+    Args:
+        value: A number, boolean, text, or list of these.
+
+    Returns:
+        The value as OpenSCAD source, such as "\\u6b69" for "歩".
+    """
+    text = json.dumps(value, ensure_ascii=False)
+    escaped = []
+    for character in text:
+        code = ord(character)
+        if code < ASCII_LIMIT:
+            escaped.append(character)
+        elif code <= MAX_SHORT_ESCAPE:
+            escaped.append(f"\\u{code:04x}")
+        else:
+            escaped.append(f"\\U{code:06x}")
+    return "".join(escaped)
 
 
 def check_fonts(log: str) -> None:
@@ -615,7 +646,7 @@ def render_frames(
     command += ["-o", str(output), "--export-format", "binstl"]
     command += definitions
     for name, values in frames.items():
-        value_list = json.dumps(values, ensure_ascii=False)
+        value_list = scad_literal(values)
         command += ["-D", f"{name}={value_list}[{frame_index}]"]
     command += ["-D", "Export_Metadata=false", str(scad)]
 

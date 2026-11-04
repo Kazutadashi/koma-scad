@@ -96,7 +96,7 @@ class DefinitionTests(unittest.TestCase):
             {"Piece_Length": "30", "Front_Characters": "歩", "Output_Mode": "Inspect front"},
             {"Piece_Length": 31},
         )
-        self.assertEqual(definitions, ["-D", "Piece_Length=31", "-D", 'Front_Characters="歩"'])
+        self.assertEqual(definitions, ["-D", "Piece_Length=31", "-D", 'Front_Characters="\\u6b69"'])
 
     def test_hidden_and_retired_settings_are_ignored(self):
         self.assertEqual(
@@ -140,6 +140,22 @@ class RenderFailureTests(unittest.TestCase):
             )
         )
         self.assertFalse(openscad._is_touching_shell_warning("WARNING: Ignoring unknown variable"))
+
+
+class ScadLiteralTests(unittest.TestCase):
+    """Values reach OpenSCAD as plain ASCII, so Windows cannot garble them."""
+
+    def test_characters_are_escaped(self):
+        self.assertEqual(openscad.scad_literal("歩"), '"\\u6b69"')
+        self.assertEqual(openscad.scad_literal("a😀"), '"a\\U01f600"')
+
+    def test_other_values_are_unchanged(self):
+        self.assertEqual(openscad.scad_literal([1, 2.5, True]), "[1, 2.5, true]")
+        self.assertEqual(openscad.scad_literal('say "hi"'), '"say \\"hi\\""')
+
+    def test_definitions_are_ascii(self):
+        definitions = openscad.scad_definitions("Test", {"Front_Characters": "王将"}, {})
+        self.assertTrue(all(argument.isascii() for argument in definitions))
 
 
 class MissingOpenSCADTests(unittest.TestCase):

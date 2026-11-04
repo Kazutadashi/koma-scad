@@ -186,6 +186,12 @@ The font is not installed, or OpenSCAD was open while you installed it.
 Install the fonts from [fonts/](../fonts/README.md), then restart OpenSCAD.
 Check with **Help → Font List**.
 
+### The exported piece shows `?` instead of the characters (Windows)
+
+Older copies of KomaSCAD passed the characters to OpenSCAD in a way that
+OpenSCAD 2021.01 on Windows could not read, so each one became `?`. It is not
+a font problem. Download the latest KomaSCAD files and export again.
+
 ### `python3` is not found (Windows)
 
 On Windows, type `py` instead of `python3`.

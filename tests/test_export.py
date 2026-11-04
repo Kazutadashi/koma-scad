@@ -181,7 +181,7 @@ class ExportCommandTests(unittest.TestCase):
         )
         self.assertEqual(status, 0)
         self.assertEqual([path.name for path in self.out.iterdir()], ["02 Lion.3mf"])
-        self.assertIn('Front_Characters="獅子"', self.rendered[0])
+        self.assertIn('Front_Characters="\\u7345\\u5b50"', self.rendered[0])
         self.assertIn('Body_Filament="Purple"', self.rendered[0])
         self.assertIn('Print_Orientation="Front face down"', self.rendered[0])
 
