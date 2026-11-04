@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from komascad_lib import cli, presets
+from komascad_lib import cli, presets, project
 
 from .support import run
 
@@ -67,3 +67,13 @@ class BuildCommandTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MissingModelsTests(unittest.TestCase):
+    """A tool installed without the models next to it says how to install it."""
+
+    def test_a_tool_without_its_models_names_the_editable_install(self):
+        with mock.patch.object(project, "SCAD", Path("/nowhere/koma/koma.scad")):
+            status, _, errors = run("list")
+        self.assertEqual(status, 1)
+        self.assertIn("pip install -e .", errors)

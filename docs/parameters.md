@@ -113,7 +113,7 @@ settings together.
 
 | Parameter | Default | Description |
 | --- | --- | --- |
-| `Bevel_Width` | `0.3` | mm. Width of the edge bevel, seen from above. 0 = no bevel. |
+| `Bevel_Width` | `0.3` | mm. Width of the edge bevel, seen from above. 0 = no bevel. The bevel hides elephant's foot (the first-layer lip on the face that prints against the bed) and helps a piece slide over a board seam. |
 | `Bevel_Depth` | `0.3` | mm. Depth of the edge bevel. 0 = no bevel. |
 | `Text_Margin` | `0.9` | mm. Smallest distance from the text to the edge of the flat face. |
 | `Protect_Face_Edges` | `true` | Cut off text that goes past the margin. Inspect front and Inspect back show it in red. |

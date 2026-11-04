@@ -1,7 +1,9 @@
 # Command reference
 
-`komascad.py` is the command-line tool. It needs Python 3.10 or later.
-`preview`, `check`, `export` and `ban` also need the `openscad` command on your PATH.
+`komascad.py` is the command-line tool. It needs Python 3.10 or later (on
+Windows, type `py` instead of `python3`). `preview`, `check`, `export` and
+`ban` also need OpenSCAD: either the `openscad` command on your PATH, or its
+location given with `--openscad PATH`. See [install](install.md).
 
 ```bash
 python3 komascad.py COMMAND [options]
@@ -28,7 +30,9 @@ python3 komascad.py COMMAND [options]
   selects `Shogi 09 - Pawn`. `king` selects both kings. Put quotes around
   text with spaces.
 - **`-o DIR`** sets the output folder.
-- **`-n`** shows what the command would do. It writes nothing.
+- **`-n`** shows what the command would do. It writes nothing. For
+  `export`, it also marks each file that exists and will be skipped, and
+  shows the print orientation.
 - **`-f`** writes files that the command would otherwise keep.
 - The exit status is 0 when the command works, 1 when it fails, and 2 for a
   wrong command line.
@@ -49,7 +53,7 @@ python3 komascad.py build
 
 Makes `koma/presets/games/*.json` and `koma/koma.json` from `koma/presets/pieces/`
 and `koma/presets/games.json`. Run it after you edit these files. It also writes
-the [print test page](print-test-page.md) files in `koma/presets/print-test/`.
+the [print test page](print/print-test-page.md) files in `koma/presets/print-test/`.
 
 `preview`, `check` and `export` do not use a game file that is older than
 its piece files. They tell you to build first.
@@ -104,7 +108,7 @@ options to change this:
 | Pieces flat on the back face | `--orientation back-down` |
 | Pieces standing on the heel | `--orientation upright` |
 | Several pieces rendered at the same time | `-j N` |
-| A list of the files, without rendering | `-n` |
+| A list of the files and their orientation, without rendering | `-n` |
 | New files after a change | `-f` |
 | Lettering that the check stops | `--no-print-check` |
 | Files without filament slots | `--plain` |
@@ -140,7 +144,7 @@ uses it:
 Or it can have `layoutPositions`: the [x, y] of the middle of each piece, in
 mm from the middle of the bed. The pieces go in file order, each preset
 repeated as `pieceCounts` gives. Positions replace `layoutRows`. The
-[bed consistency test](print-test-page.md#bed-consistency-test) uses them to
+[bed consistency test](print/print-test-page.md#bed-consistency-test) uses them to
 put pieces in the corners of the bed:
 
 ```json
@@ -152,8 +156,11 @@ Do not let the slicer arrange the plate: arranging moves the pieces.
 ### Print orientation
 
 `--orientation` sets the orientation of all pieces. Without it, each piece
-uses its saved **Print Orientation**. The bundled sets stand upright. The
-[print guide](printing/print-guide.md) tells you why we print face down.
+uses its saved **Print Orientation**. The bundled sets lie front face down,
+the way we print them; the [print guide](print/print-guide.md#why-face-down)
+tells you why. A new preset made from the model's own defaults stands
+upright, so add `--orientation front-down` for your own pieces.
+`export -n` shows the orientation that the export will use.
 Raised text cannot be on the face that touches the bed: the export stops.
 
 ### Render faster
@@ -178,8 +185,9 @@ their sizes and their checksums.
 ### Filament slots
 
 Each 3MF holds the standard 3MF colors. It also holds the filament slot of
-each part, for Bambu Studio, OrcaSlicer and Elegoo Slicer. See
-[the print guide](printing/print-guide.md#import-a-color-3mf). Use `--plain`
+each part. Bambu Studio (tested) and Elegoo Slicer read the slots;
+OrcaSlicer is expected to, but is not tested yet. See
+[the print guide](print/print-guide.md#import-a-color-3mf). Use `--plain`
 to leave the slots out, for a tool that cannot read them. Bambu Studio's
 command line is one such tool.
 

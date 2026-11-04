@@ -94,7 +94,7 @@ Two settings set the size of every mark:
 
 Both are in final mm, after **Model Scale**, so a small piece keeps printable
 marks. Get them from the line and gap ladders of the
-[print test page](print-test-page.md). Neither can be less than
+[print test page](print/print-test-page.md). Neither can be less than
 **Print Line Width**.
 
 The model puts the squares as close as these two sizes allow. With

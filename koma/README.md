@@ -11,4 +11,5 @@ everything that only the pieces use.
 | `move-editor.html` | The movement diagram editor. Open it in a browser. |
 | `presets/` | Piece files, game files and generated presets. See [presets/README.md](presets/README.md). |
 
-Start with [getting started](../docs/getting-started.md).
+To print a ready-made set, see [ready-made sets](../docs/ready-sets.md). To
+make your own pieces, start with [getting started](../docs/getting-started.md).

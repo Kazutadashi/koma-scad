@@ -6,7 +6,7 @@ of the board, so that the opponent can see the captured pieces.
 
 ## Make a pair of komadai
 
-1. Open `komadai/komadai.scad` in OpenSCAD 2021.01.
+1. Open `komadai/komadai.scad` in OpenSCAD ([install it](install.md) first).
 2. Select a **Table Style**. See [Styles](#styles).
 3. In **02 - Board and pieces**, set **Board Surface Height** to the height of
    your board's playing surface above the table. Set the size of the largest

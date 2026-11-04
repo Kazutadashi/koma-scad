@@ -100,14 +100,39 @@ def run_openscad(command: list[str]) -> tuple[int, str]:
 
     Returns:
         The exit status, and everything OpenSCAD printed.
+
+    Raises:
+        KomaError: The OpenSCAD program cannot be found.
     """
     environment = os.environ.copy()
     # Without a display, OpenSCAD's Qt libraries need the offscreen platform.
     if sys.platform.startswith("linux") and not environment.get("DISPLAY"):
         environment.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-    result = subprocess.run(command, capture_output=True, text=True, env=environment)
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, env=environment)
+    except FileNotFoundError as error:
+        raise KomaError(openscad_not_found(command[0])) from error
     return result.returncode, result.stdout + "\n" + result.stderr
+
+
+def openscad_not_found(program: str) -> str:
+    """Explains what to do when the OpenSCAD program cannot be started.
+
+    Args:
+        program: The OpenSCAD program that the tool tried to run.
+
+    Returns:
+        The message to show.
+    """
+    return (
+        f"cannot find OpenSCAD (tried '{program}'). Install OpenSCAD 2021.01 or later "
+        "from https://openscad.org/downloads.html, then either add it to your PATH or "
+        "give its location with --openscad, for example on Windows: "
+        '--openscad "C:\\Program Files\\OpenSCAD\\openscad.com", or on macOS: '
+        "--openscad /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD. "
+        "See docs/install.md."
+    )
 
 
 @functools.cache

@@ -137,7 +137,7 @@ one running heel to point (widest at one side), so both bed axes are measured.
 ## Export
 
 Install the two bundled fonts first: Yuji Syuku and LXGW WenKai Mono, from
-[fonts/](../fonts/suggested_fonts.md). The export stops if a font is missing.
+[fonts/](../../fonts/README.md). The export stops if a font is missing.
 
 ```bash
 for plate in 1 2 3; do
@@ -259,12 +259,12 @@ in 5 pairs:
 | --- | --- | --- |
 | Back left, back right, middle, front left, front right | 1 character: 歩 | 2 characters: 歩兵 |
 
-- **The pawn** is the hardest standard piece to print. It has the most thin
+- The pawn is the hardest standard piece to print. It has the most thin
   strokes of all standard pieces, both with 1 and 2 characters (1.1% and
   1.4%, measured with `komascad.py check`), and the smallest body.
-- **Face down:** the front lies on the bed, so the first layer makes the
+- The pieces lie face down: the front lies on the bed, so the first layer makes the
   lettering, and the bed surface shows directly in it.
-- **The layout** is for a 256 x 256 mm bed (such as a Bambu Lab A1). The outer
+- The layout is for a 256 × 256 mm bed (such as a Bambu Lab A1). The outer
   pieces are 12 mm from the bed edges.
 
 Export it:
@@ -287,16 +287,16 @@ from the bed edges.
 
 ## What the page does not cover
 
-- **Every character in every font.** Yuji Syuku has no glyph for 䳇, 䳲, 歬 or
+- Every character in every font. Yuji Syuku has no glyph for 䳇, 䳲, 歬 or
   𠵇, which some Taikyoku pieces need; LXGW WenKai Mono has all of them. A few
   Taikyoku pieces use characters with no code point at all and need custom
   artwork in any font.
-- **Other orientations.** Upright pieces form their lettering on a side wall
+- Other orientations. Upright pieces form their lettering on a side wall
   and behave differently. Exporting a plate with `--orientation` gives a
   different test, not this baseline.
-- **Three-character names.** They carry the smallest lettering of any piece;
+- Three-character names. They carry the smallest lettering of any piece;
   the 0.5x and 0.25x sweeps are the closest stand-in.
-- **Fit and feel.** The page checks lettering, not how a piece handles on a
+- Fit and feel. The page checks lettering, not how a piece handles on a
   board.
 
 ## Change the baseline

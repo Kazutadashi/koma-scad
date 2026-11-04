@@ -3,17 +3,17 @@
 `ban/ban.scad` makes a shogi board with any number of squares, as one print
 or as panels joined by small connectors. Each panel is one PLA print, with no
 glue or supports. You can print the connectors, or replace any of them with a
-screw and nut from a hardware store. The [design notes](ban-design-notes.md)
+screw and nut from a hardware store. The [design notes](dev/ban-design-notes.md)
 tell why the joints have their shape.
 
-The defaults follow the traditional board: squares of 35.4 x 38.7 mm, a thin
-7.5 mm border, and an overall size of 333.6 x 363.3 mm, the 1尺1寸 x 1尺2寸
+The defaults follow the traditional board: squares of 35.4 × 38.7 mm, a thin
+7.5 mm border, and an overall size of 333.6 × 363.3 mm, the 1尺1寸 × 1尺2寸
 of a standard board. No common print bed holds that in one piece, so the
-default board prints as 2 x 2 panels for a 256 mm bed.
+default board prints as 2 × 2 panels for a 256 mm bed.
 
 ## Make a board
 
-1. Open `ban/ban.scad` in OpenSCAD 2021.01.
+1. Open `ban/ban.scad` in OpenSCAD ([install it](install.md) first).
 2. Select a preset at the top of the Customizer, for example
    **Shogi - 2 x 2 panels**.
 3. In **04 - Printed panels**, set **Print Bed Width** and
@@ -32,19 +32,19 @@ default board prints as 2 x 2 panels for a 256 mm bed.
 
 | Preset | Squares | Panels | Size (mm) | For |
 | --- | --- | --- | --- | --- |
-| Shogi - 2 x 2 panels | 9 x 9 | 2 x 2 | 333.6 x 363.3 | A 256 mm bed, with connectors |
-| Shogi - 2 x 2 panels, T-hook | 9 x 9 | 2 x 2 | 333.6 x 363.3 | Tabs printed on the panels: the joint that has been printed and tuned |
-| Shogi - 3 x 3 panels, 180 mm bed | 9 x 9 | 3 x 3 | 333.6 x 363.3 | A 180 mm bed |
-| Shogi - 3 x 3 modules | 9 x 9 | 3 x 3 modules of 3 x 3 squares | 333.6 x 363.3 | Modules that also fit the chu shogi board |
-| Shogi - one piece, large printer | 9 x 9 | 1 | 333.6 x 363.3 | A bed of 334 x 364 mm or more |
-| Shogi - 2 x 2 panels, keys | 9 x 9 | 2 x 2 | 333.6 x 363.3 | Butterfly keys, assembled face down |
-| Shogi - raised lines | 9 x 9 | 2 x 2 | 333.6 x 363.3 | Display: lines stand above the surface |
-| Minishogi - one piece | 5 x 5 | 1 | 192 x 208.5 | A 256 mm bed |
-| Minishogi - 2 x 2 panels | 5 x 5 | 2 x 2 | 192 x 208.5 | A small bed |
-| Chu shogi - 4 x 4 modules | 12 x 12 | 4 x 4 modules of 3 x 3 squares | 439.8 x 479.4 | Modules that also fit the shogi board |
-| Taikyoku shogi - 9 x 9 panels | 36 x 36 | 9 x 9 | 1289.4 x 1408.2 | A 256 mm bed |
-| Custom - 5 x 7 squares | 5 x 7 | 1 x 2 | 201 x 294.9 | A 256 mm bed |
-| Custom - 2 x 3 squares | 2 x 3 | 1 | 90.8 x 136.1 | Any bed |
+| Shogi - 2 x 2 panels | 9 × 9 | 2 × 2 | 333.6 × 363.3 | A 256 mm bed, with connectors |
+| Shogi - 2 x 2 panels, T-hook | 9 × 9 | 2 × 2 | 333.6 × 363.3 | Tabs printed on the panels: the joint that has been printed and tuned |
+| Shogi - 3 x 3 panels, 180 mm bed | 9 × 9 | 3 × 3 | 333.6 × 363.3 | A 180 mm bed |
+| Shogi - 3 x 3 modules | 9 × 9 | 3 × 3 modules of 3 × 3 squares | 333.6 × 363.3 | Modules that also fit the chu shogi board |
+| Shogi - one piece, large printer | 9 × 9 | 1 | 333.6 × 363.3 | A bed of 334 × 364 mm or more |
+| Shogi - 2 x 2 panels, keys | 9 × 9 | 2 × 2 | 333.6 × 363.3 | Butterfly keys, assembled face down |
+| Shogi - raised lines | 9 × 9 | 2 × 2 | 333.6 × 363.3 | Display: lines stand above the surface |
+| Minishogi - one piece | 5 × 5 | 1 | 192 × 208.5 | A 256 mm bed |
+| Minishogi - 2 x 2 panels | 5 × 5 | 2 × 2 | 192 × 208.5 | A small bed |
+| Chu shogi - 4 x 4 modules | 12 × 12 | 4 × 4 modules of 3 × 3 squares | 439.8 × 479.4 | Modules that also fit the shogi board |
+| Taikyoku shogi - 9 x 9 panels | 36 × 36 | 9 × 9 | 1289.4 × 1408.2 | A 256 mm bed |
+| Custom - 5 x 7 squares | 5 × 7 | 1 × 2 | 201 × 294.9 | A 256 mm bed |
+| Custom - 2 x 3 squares | 2 × 3 | 1 | 90.8 × 136.1 | Any bed |
 
 All boards are 12 mm thick, except **Custom - 2 x 3 squares** (10 mm). All
 boards in panels use connectors, except the T-hook and keys presets.
@@ -98,13 +98,13 @@ decides how the board is cut into printed panels:
 
 | Panel Layout | Panels | Use it for |
 | --- | --- | --- |
-| Split board (default) | **Panel Columns** x **Panel Rows** panels. 1 x 1 is a one-piece board. | The fewest seams for your bed |
+| Split board (default) | **Panel Columns** x **Panel Rows** panels. 1 × 1 is a one-piece board. | The fewest seams for your bed |
 | Modules | Panels of **Module Columns** x **Module Rows** squares | Panels that also fit other boards |
 
 - Each seam is on a grid line, so each panel holds whole squares.
 - In a split board, when the squares do not divide evenly, two panels differ
   by one row or column at most.
-- Use as few panels as your bed allows. With 2 x 2 panels, no camp dot is on
+- Use as few panels as your bed allows. With 2 × 2 panels, no camp dot is on
   a seam.
 
 Panels are counted from 0 at the front left. **Panel X** counts columns
@@ -117,21 +117,21 @@ squares. **Playing Columns** must be a multiple of **Module Columns**, and
 **Playing Rows** of **Module Rows**.
 
 A module is the same on every board with the same squares, so you can reuse
-modules. With 3 x 3 modules:
+modules. With 3 × 3 modules:
 
 | Board | Modules | Center | Edge | Corner |
 | --- | --- | --- | --- | --- |
-| Shogi, 9 x 9 | 3 x 3 | 1 | 4 | 4 |
-| Chu shogi, 12 x 12 | 4 x 4 | 4 | 8 | 4 |
-| Taikyoku shogi, 36 x 36 | 12 x 12 | 100 | 40 | 4 |
+| Shogi, 9 × 9 | 3 × 3 | 1 | 4 | 4 |
+| Chu shogi, 12 × 12 | 4 × 4 | 4 | 8 | 4 |
+| Taikyoku shogi, 36 × 36 | 12 × 12 | 100 | 40 | 4 |
 
 The four corner modules and the edge modules carry the border. A center
 module fits any center place, and any board of the same squares. An edge
 module fits any edge place on the same side. A shogi set's modules start a
 chu shogi board: print 3 center and 4 edge modules more.
 
-The camp dots depend on the board: on a 9 x 9 board they fall on module
-corners, on a 12 x 12 board inside the modules. For modules that you want to
+The camp dots depend on the board: on a 9 × 9 board they fall on module
+corners, on a 12 × 12 board inside the modules. For modules that you want to
 use on more than one board, set **Camp Dots** off.
 
 ### Seam lines
@@ -164,20 +164,18 @@ together and in line.
 **Connectors** are the default because they make the board repairable and
 modular:
 
-- **Nothing breaks on a panel.** A panel has only sockets; nothing sticks out.
-  The connector is the weak link. If a seam is pulled hard, a connector
-  breaks, and the panel is not damaged.
-- **No need to buy parts from us.** Print a new connector from the same
-  file. Until you do, a lost one can be replaced with an **M4 x 22 socket
-  head cap screw and an M4 hex nut**, or a **#8-32 x 7/8 inch socket cap
-  screw and nut**. Hardware stores and hobby shops sell both. See the
-  [connector spec](ban-connector-spec.md).
-- **The seam closes, and the board stays flat.** Each connector has a small
-  spring. Pressed in, it pulls its seam closed with a light, even force, near
-  the top of the board, so there is no gap and the panels do not bow up.
-- **Every seam edge is the same.** All sockets follow one fixed spec, so
-  connectors fit every board.
-- **Easy to take apart.** Lift the panels straight up: the connectors let go.
+- A panel has only sockets, with nothing that sticks out. If a seam is
+  pulled hard, the connector breaks and the panel is not damaged.
+- A lost connector can be printed again from the same file. Until then, an
+  M4 × 22 socket head cap screw and an M4 hex nut, or a #8-32 × 7/8 inch
+  socket cap screw and nut, can take its place. Hardware stores sell both.
+  See the [connector spec](ban-connector-spec.md).
+- Each connector has a small spring. Pressed in, it pulls its seam closed
+  with a light, even force near the top of the board, so the seam has no gap
+  and the panels do not bow up.
+- All sockets follow one fixed spec, so connectors fit every board.
+- To take the board apart, lift the panels straight up. The connectors let
+  go.
 
 The T-hook has been printed and tuned. The Connectors and Keys styles have
 not been printed yet. Print their Joint test first.
@@ -202,18 +200,18 @@ spring pulls the seam closed.
    it stops against the roof. You need no force: if it does not reach the
    roof, use a Loose connector.
 3. Turn the board over. The connectors stay in. Their bottoms are 2.3 mm
-   above the table, so the table, not a connector, holds each panel up.
+   above the table, so each panel rests on the table and the connectors carry
+   no weight.
 
 To take the board apart, lift the panels straight up, starting with the
 back-right panel: lifting a panel moves its shoulders away from the
 connectors, which let go. Each connector then drops out when you lift the
 panel under it.
 
-Why a spring: a pull below the place where the seam faces touch bends the
-panels up at the seam, like a bow. The earlier solid wedge pulled near the
-underside, and as hard as you pressed, often 100 N or more. The spring pulls
-about 10 to 25 N (model values, not measured), at the middle of the seam
-faces, which is not enough to lift a panel.
+The spring pulls about 10 to 25 N (model values, not measured), at the
+middle of the seam faces, which is not enough to lift a panel. The
+[design notes](dev/ban-design-notes.md#spring-connector-and-open-groove-connector-spec-v2)
+explain why the connector has a spring.
 
 The roof sets how deep a connector goes, so a printer that makes it a little
 larger only makes it pull a little harder: 0.1 mm on each face adds about
@@ -229,7 +227,7 @@ connector show its fit.
 The connector's edges are chamfered, so the squashed first layer does not
 catch in the socket.
 
-**With a screw and nut:** turn the nut onto the screw until the gap between
+To use a screw and nut instead, turn the nut onto the screw until the gap between
 the head and the nut is a little over 16.5 mm. Lay it flat in the socket, with
 the head in one pocket and the nut in the other. Use the smallest gap that
 still drops in. A screw has no spring: its seam can open 0.3 to 0.5 mm. See
@@ -339,7 +337,8 @@ not change.
 ### Underside relief
 
 **Underside Relief** recesses the middle of each panel's underside by 0.3 mm.
-The panel then stands on a band of **Support Band** (15 mm) around its edges.
+The panel then stands on a band of **Support Band** (25 mm by default; 15 mm
+in the T-hook preset) around its edges.
 Both sides of a seam stand on the table within a few millimeters of the
 seam, where the table is nearly the same height. This reduces the step that
 an uneven table makes. Set it to 0 for a flat underside.
@@ -363,15 +362,15 @@ The files go to `exports/ban/BOARD/`:
 
 **Whole board** is the one file to print. It fills each plate up to **Print
 Bed Width** and **Print Bed Depth**. Bambu Studio and OrcaSlicer (and its
-forks, such as Elegoo Slicer) open it with one plate for each bed load. The
-plates line up only when the printer in the slicer has the bed size of the
-preset. If a part lands between two plates, press **A** (Arrange). In
-PrusaSlicer 2.9 or later, press **A** too: it adds beds as it needs them.
+forks, such as Elegoo Slicer) are expected to open it with one plate for
+each bed load. The command lines of Bambu Studio 2.8.2 and Elegoo Slicer keep
+one plate per bed load. The slicer apps are not yet tested. The plates line
+up only when the printer in the slicer has the bed size of the preset.
 
 `CC-RR` is the column and the row of the panel, such as `01-00`. Each 3MF
 has two aligned parts: **Body** on filament 1, and **Markings** (the grid
 lines and camp dots) on filament 2. Set filament 2 to black in the slicer.
-See [the print guide](printing/print-guide.md#import-a-color-3mf).
+See [the print guide](print/print-guide.md#import-a-color-3mf).
 
 `manifest.json` lists each panel: its file, size, offset on the board and
 neighbors. It also gives the assembly order and every setting of the preset.
@@ -399,22 +398,22 @@ All parts are PLA.
      the seam. Run a fingertip and a piece across the seam: you must not feel
      a step. Lift the tongue block straight up: the connector must let go.
      Try a screw and nut in the same socket.
-   - In the slicer, turn on elephant's foot compensation (about 0.2 mm for a
-     0.4 mm nozzle). It keeps the first layer of each part the right size.
    - Keys: lay both blocks face down, edges together. Press the key in by
      hand. It must go in firmly, and hold the blocks level when you lift
      them. Change **Key Clearance** in 0.05 mm steps.
-2. Print the panels with the playing surface on the bed. In the slicer, the
+2. In the slicer, turn on elephant's foot compensation (about 0.2 mm for a
+   0.4 mm nozzle). It keeps the first layer of each part the right size.
+3. Print the panels with the playing surface on the bed. In the slicer, the
    grid is on the underside. This gives the smoothest playing surface.
-3. Use a smooth build plate for a satin surface. A textured plate prints its
+4. Use a smooth build plate for a satin surface. A textured plate prints its
    pattern on the playing surface.
-4. Use a matte PLA in a pale, warm yellow for the board. **Kaya** is the
+5. Use a matte PLA in a pale, warm yellow for the board. **Kaya** is the
    color of the traditional wood. Silk PLA is too glossy.
-5. Set the slicer for a firm surface that does not sound hollow: at least
+6. Set the slicer for a firm surface that does not sound hollow: at least
    2 mm of solid layers under the playing surface (for example, 10 bottom
    layers at 0.2 mm), and 25 to 40 percent gyroid infill. A thin skin over
    sparse infill makes a hollow "tock" when you put a piece down.
-6. Set the bottom surface pattern to straight lines that run from the front
+7. Set the bottom surface pattern to straight lines that run from the front
    to the back of the board. The faint lines then follow the files, like
    straight-grained wood.
 
@@ -452,7 +451,7 @@ To take the board apart, lift each panel straight up, in the opposite order.
 | "The shortest seam ... is too short for two tabs" | Use fewer, larger panels, or reduce **Joint Width**. |
 | "A joint must be at least ... mm from a panel corner" | Raise **Joint Edge Margin**, use fewer panels, or use smaller keys. |
 | A key is too tight or falls out | Change **Key Clearance** in 0.05 mm steps. Print the Joint test again. |
-| A connector is lost or broken | Print one from `BOARD - Connectors.3mf`, or use an M4 x 22 socket head screw and M4 nut, or a #8-32 x 7/8 inch screw and nut. |
+| A connector is lost or broken | Print one from `BOARD - Connectors.3mf`, or use an M4 × 22 socket head screw and M4 nut, or a #8-32 × 7/8 inch screw and nut. |
 | "Connectors need a board at least ... mm thick" | The sockets are 9.3 mm deep. Use **Board Thickness** 11 mm or more. |
 | A change is not in the export | Save the preset. Then export with `-f`. |
 
@@ -479,9 +478,10 @@ underscores as spaces.
 | `Playing_Rows` | `9` | Squares from front to back. |
 | `Cell_Width` | `35.4` | mm. Width of one square. 35.4 is the Japan Shogi Association board. |
 | `Cell_Depth` | `38.7` | mm. Depth of one square, front to back. 38.7 is the Japan Shogi Association board. |
-| `Board_Margin` | `7.5` | mm. Border around the grid on each edge. 7.5 with the default squares gives the traditional 1尺1寸 x 1尺2寸 board (333 x 364 mm). |
+| `Board_Margin` | `7.5` | mm. Border around the grid on each edge. 7.5 with the default squares gives the traditional 1尺1寸 × 1尺2寸 board (333.6 × 363.3 mm). |
 | `Board_Thickness` | `12` | mm. From the underside to the playing surface. |
 | `Outer_Corner_Radius` | `3` | mm. Radius of the four outer corners. |
+| `Edge_Bevel` | `0` | mm. 45 degree bevel round the outer edge of the playing surface. Printed face down, that edge is on the bed, and the bevel takes up first-layer squish (elephant's foot), so the edge stays clean. 0.3 matches the pieces. 0 = none. |
 
 ### 03 - Largest piece
 
@@ -495,7 +495,7 @@ underscores as spaces.
 | Parameter | Default | Description |
 | --- | --- | --- |
 | `Panel_Layout` | `"Split board"` | Split board: cut the board into Panel Columns x Panel Rows panels. Modules: cut it into panels of Module Columns x Module Rows squares, which also fit other boards with the same squares. Choices: Split board, Modules. |
-| `Panel_Columns` | `2` | Split board: panels from left to right. 1 x 1 is a one-piece board. Seams follow grid lines, so each panel holds whole squares. |
+| `Panel_Columns` | `2` | Split board: panels from left to right. 1 × 1 is a one-piece board. Seams follow grid lines, so each panel holds whole squares. |
 | `Panel_Rows` | `2` | Split board: panels from front to back. |
 | `Module_Columns` | `3` | Modules: squares from left to right in each module. Playing Columns must be a multiple of it. |
 | `Module_Rows` | `3` | Modules: squares from front to back in each module. Playing Rows must be a multiple of it. |

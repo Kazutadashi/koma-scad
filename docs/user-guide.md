@@ -1,71 +1,76 @@
 # User guide: game sets
 
-This guide tells you how to print a bundled set, and how to change a set and
-export it. Run all commands from the repository folder. The
+This guide shows how to export and print a bundled set, and how to change a
+set: its font, sizes, colors or pieces. You need the tools from the
+[install guide](install.md). Run all commands in a
+[terminal in the KomaSCAD folder](install.md#open-a-terminal-in-the-komascad-folder)
+(on Windows, type `py` instead of `python3`). The
 [command reference](cli.md) gives every option.
 
-## How the sets are made
-
-Each piece is in one file. A game is a list of pieces. The `build` command
-makes the preset files from these sources:
-
-```
-koma/presets/pieces/*.json   you edit these: one file for each piece
-koma/presets/games.json      you edit this: the pieces, and how many, in each game
-        |
-        |  python3 komascad.py build
-        v
-koma/presets/games/*.json    generated: one preset file for each game
-koma/koma.json               generated: all games, for the OpenSCAD Customizer
-```
-
-Two rules follow:
-
-- **Edit the source files only.** The next build overwrites the generated
-  files.
-- **A piece is shared.** A change to the pawn file changes the pawn in every
-  game.
+To print a set without changing it, download a
+[ready-made set](ready-sets.md). You only need a slicer for that.
 
 ## The games
 
-| Game | Front | Back | Different pieces | Pieces in a set |
+For new players, use `shogi-learner`. Each Learner piece shows a small
+diagram of its moves, and its back shows the moves after promotion. The
+[ready-made sets page](ready-sets.md#choose-a-set) describes the Learner,
+Classic and One character styles and the two fonts.
+
+| Game | Style | Font | Different pieces | Pieces in a set |
 | --- | --- | --- | --- | --- |
-| `shogi` | two characters | one character | 9 | 40 |
-| `shogi-1char` | one character | one character | 9 | 40 |
-| `shogi-wenkai` | two characters, LXGW WenKai Mono | one character | 9 | 40 |
-| `shogi-1char-wenkai` | one character, LXGW WenKai Mono | one character | 9 | 40 |
-| `shogi-learner` | one character and its moves | one character and its moves | 9 | 40 |
-| `shogi-learner-syuku` | one character and its moves, Yuji Syuku | one character and its moves | 9 | 40 |
-| `minishogi` | two characters | one character | 7 | 12 |
-| `minishogi-1char` | one character | one character | 7 | 12 |
-| `minishogi-learner` | one character and its moves | one character and its moves | 7 | 12 |
+| `shogi` | Classic | Yuji Syuku | 9 | 40 |
+| `shogi-1char` | One character | Yuji Syuku | 9 | 40 |
+| `shogi-wenkai` | Classic | LXGW WenKai Mono | 9 | 40 |
+| `shogi-1char-wenkai` | One character | LXGW WenKai Mono | 9 | 40 |
+| `shogi-learner` | Learner | LXGW WenKai Mono | 9 | 40 |
+| `shogi-learner-syuku` | Learner | Yuji Syuku | 9 | 40 |
+| `minishogi` | Classic | Yuji Syuku | 7 | 12 |
+| `minishogi-1char` | One character | Yuji Syuku | 7 | 12 |
+| `minishogi-learner` | Learner | LXGW WenKai Mono | 7 | 12 |
 
 A learner piece shows a diagram of its moves under the character. The back
 shows the moves after promotion. See [movement diagrams](move-diagrams.md).
 
-`python3 komascad.py list` shows this table. `python3 komascad.py list shogi`
+`python3 komascad.py list` lists the games. `python3 komascad.py list shogi`
 shows the pieces in one game.
 
 ## Print a set
 
-1. Check the pieces on one page. Open the HTML file that the command shows.
+1. Check the pieces on one page. Open the HTML file that the command shows
+   in your browser.
 
    ```bash
-   python3 komascad.py preview shogi
+   python3 komascad.py preview shogi-learner
    ```
 
-2. Export the full set as one color 3MF, with every piece flat:
+2. See what the export will write, without rendering anything:
 
    ```bash
-   python3 komascad.py export shogi --per-file all --orientation front-down
+   python3 komascad.py export shogi-learner --per-file all -n
    ```
 
-3. Open the 3MF from `exports/shogi/` in your slicer.
-4. Load filament 1 = wood, 2 = black, 3 = red.
-5. Print one piece first. Then print the set.
+   It lists one file, `Shogi Learner - Layout 01.3mf`, with all 40 pieces,
+   and says how they will lie: `Front face down`. If the file already
+   exists, it says it will skip it.
 
-The [print guide](printing/print-guide.md) gives the slicer settings that we
-use. The [command reference](cli.md) gives all export options.
+3. Export the full set as one color 3MF:
+
+   ```bash
+   python3 komascad.py export shogi-learner --per-file all
+   ```
+
+   The tool checks the lettering, then renders each of the 9 different
+   pieces once and places all 40 copies. It prints its progress, and ends
+   with `Saved 1 new 3MF file(s)`. Rendering takes a while; `-j 4` renders
+   four pieces at the same time on a computer with enough memory (see
+   [render faster](cli.md#render-faster)).
+
+4. Open `exports/shogi-learner/Shogi Learner - Layout 01.3mf` in your
+   slicer, and follow [print your first set](print/first-print.md).
+
+`manifest.json`, next to the 3MF, lists the pieces in it and how many of
+each.
 
 ## Change a set
 
@@ -95,6 +100,28 @@ use. The [command reference](cli.md) gives all export options.
    ```bash
    python3 komascad.py export shogi --per-file all -f
    ```
+
+## How the sets are made
+
+Each piece is in one file. A game is a list of pieces. The `build` command
+makes the preset files from these sources:
+
+```
+koma/presets/pieces/*.json   you edit these: one file for each piece
+koma/presets/games.json      you edit this: the pieces, and how many, in each game
+        |
+        |  python3 komascad.py build
+        v
+koma/presets/games/*.json    generated: one preset file for each game
+koma/koma.json               generated: all games, for the OpenSCAD Customizer
+```
+
+Two rules follow:
+
+- Edit the source files only. The next build overwrites the generated
+  files.
+- A piece is shared. A change to the pawn file changes the pawn in every
+  game.
 
 ## Where a setting goes
 
@@ -170,7 +197,7 @@ toward the point, edit `rook.json`:
 6. Run `python3 komascad.py build --force`.
 
 The Customizer saves into `koma/koma.json`, and the build writes that file
-again. Thus the build stops before it deletes changes that are not in the
+again. So the build stops before it deletes changes that are not in the
 piece files. `--force` tells it that you copied what you want to keep.
 
 ## Add a game
@@ -214,5 +241,5 @@ Build. `koma/presets/games/shogi-pawns-only.json` is made.
 | "Invalid JSON" | Look for a missing or extra comma or quote on the line in the message. |
 | My change does not show | Build. Then open the SCAD file again, or refresh the preview page. |
 | My change went away | You edited a generated file. Make the change in the piece file. |
-| The characters show as boxes | Install the font. Then restart OpenSCAD. |
+| The characters show as boxes | [Install the font](install.md#4-install-the-fonts). Then restart OpenSCAD. |
 | `check` says FAIL | See [lettering printability](parameters.md#lettering-printability). |

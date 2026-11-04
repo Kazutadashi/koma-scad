@@ -18,7 +18,7 @@ from .export import ExportOptions
 from .presets import JSON_INDENT, find_preset_file, load_preset_file, select_presets
 from .print_test_page import build_test_page
 from .printability import GAP_LIMIT, THIN_LIMIT, measure_presets, printability_problems
-from .project import BAN_PRESETS, CUSTOMIZER, VERSION, KomaError, read_json, shown
+from .project import BAN_PRESETS, CUSTOMIZER, VERSION, KomaError, check_root, read_json, shown
 
 # --orientation choices, and the Print_Orientation value that each selects.
 ORIENTATIONS = {
@@ -49,6 +49,19 @@ STATUS_WIDTH = len("FAIL")
 
 # Lines of the dry run are indented under the folder name.
 DRY_RUN_INDENT = "  "
+
+
+def _board_file_label(count: int, loose_name: str) -> str:
+    """Names what a board file holds in a dry run: its panels, or the loose parts.
+
+    Args:
+        count: The number of panels in the file. 0 for the file of loose parts.
+        loose_name: "Connectors" or "Keys", from the board.
+    """
+    if count == 0:
+        return loose_name.lower() or "loose parts"
+    return f"{count} panel{'s' if count != 1 else ''}"
+
 
 # Exit statuses. 130 is the shell's convention for Ctrl+C: 128 + signal 2.
 EXIT_OK = 0
@@ -268,8 +281,34 @@ def export_overrides(args: argparse.Namespace) -> dict:
     return overrides
 
 
+def print_orientations(
+    plan: list[export.PlannedFile], preset_file: presets.PresetFile, overrides: dict
+) -> None:
+    """Prints how the planned pieces will sit on the bed.
+
+    Args:
+        plan: The files.
+        preset_file: The preset file that the pieces come from.
+        overrides: The settings that the export options replace.
+    """
+    orientations = []
+    for planned in plan:
+        for name in planned.presets:
+            settings = preset_file.presets[name]
+            orientation = overrides.get("Print_Orientation")
+            if orientation is None:
+                orientation = settings.get("Print_Orientation", "Upright")
+            if orientation not in orientations:
+                orientations.append(orientation)
+    print("Print Orientation: " + ", ".join(orientations))
+
+
 def print_dry_run(
-    destination: Path, plan: list[export.PlannedFile], counts: dict[str, int], layouts: bool
+    destination: Path,
+    plan: list[export.PlannedFile],
+    counts: dict[str, int],
+    layouts: bool,
+    force: bool,
 ) -> None:
     """Prints the files that an export would write.
 
@@ -278,18 +317,24 @@ def print_dry_run(
         plan: The files.
         counts: How many of each preset a full set needs.
         layouts: True when the files are layouts, False for one file per preset.
+        force: True when existing files will be written again.
     """
     print(str(destination) + os.sep)
     for planned in plan:
         if layouts:
             pieces = export.describe_pieces(planned.presets)
-            print(f"{DRY_RUN_INDENT}{planned.filename}  ({len(planned.presets)} pieces: {pieces})")
-            continue
+            line = f"{DRY_RUN_INDENT}{planned.filename}  ({len(planned.presets)} pieces: {pieces})"
+        else:
+            copies = counts[planned.presets[0]]
+            line = DRY_RUN_INDENT + planned.filename
+            if copies > 1:
+                line += f"  (print {copies})"
 
-        copies = counts[planned.presets[0]]
-        line = DRY_RUN_INDENT + planned.filename
-        if copies > 1:
-            line += f"  (print {copies})"
+        exists = (destination / planned.filename).exists()
+        if exists and not force:
+            line += "  [exists: will skip; use -f to write it again]"
+        elif exists:
+            line += "  [exists: will overwrite]"
         print(line)
 
 
@@ -310,7 +355,8 @@ def cmd_export(args: argparse.Namespace) -> int:
     positions = _layout_positions(args, path, plan)
 
     if args.dry_run:
-        print_dry_run(destination, plan, preset_file.counts, layouts)
+        print_dry_run(destination, plan, preset_file.counts, layouts, args.force)
+        print_orientations(plan, preset_file, overrides)
         return EXIT_OK
 
     if not args.no_print_check:
@@ -457,7 +503,8 @@ def cmd_ban(args: argparse.Namespace) -> int:
         board = ban.read_preset(args.openscad, name, values)
         print(str(destination) + os.sep)
         for planned in ban.plan_files(board):
-            print(f"{DRY_RUN_INDENT}{planned.filename}  ({len(planned.panels)} panel(s))")
+            label = _board_file_label(len(planned.panels), board.loose_name)
+            print(f"{DRY_RUN_INDENT}{planned.filename}  ({label})")
         return EXIT_OK
 
     written, skipped = ban.export_board(
@@ -537,10 +584,19 @@ def positive_count(text: str) -> int:
 
 
 def per_file(text: str) -> float:
-    """Reads --per-file: a piece count of at least 1, or "all" for one file (math.inf)."""
+    """Reads --per-file: a piece count of at least 1, or "all" for one file (math.inf).
+
+    Raises:
+        argparse.ArgumentTypeError: The text is neither "all" nor a whole number of at least 1.
+    """
     if text == "all":
         return math.inf
-    return positive_count(text)
+    try:
+        return positive_count(text)
+    except argparse.ArgumentTypeError as error:
+        if str(error) == "expected a whole number":
+            raise argparse.ArgumentTypeError("expected a whole number or 'all'") from None
+        raise
 
 
 def assignment(text: str) -> tuple[str, str]:
@@ -722,7 +778,7 @@ def _add_preview_command(commands) -> None:
         "--output",
         type=Path,
         metavar="DIR",
-        help="output folder (default: exports/preview/GAME)",
+        help="output folder (default: exports/preview/GAME in the current folder)",
     )
     _add_openscad_option(parser)
 
@@ -749,7 +805,7 @@ def _add_export_selection(parser: argparse.ArgumentParser) -> None:
         "--output",
         type=Path,
         metavar="DIR",
-        help="folder receiving the 3MF files (default: exports/GAME)",
+        help="folder receiving the 3MF files (default: exports/GAME in the current folder)",
     )
     parser.add_argument(
         "--per-file",
@@ -886,7 +942,7 @@ def _add_ban_command(commands) -> None:
         "--output",
         type=Path,
         metavar="DIR",
-        help="folder receiving the 3MF files (default: exports/ban/BOARD)",
+        help="folder receiving the 3MF files (default: exports/ban/BOARD in the current folder)",
     )
     parser.add_argument(
         "-f",
@@ -925,6 +981,7 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_FAILED
 
     try:
+        check_root()
         return args.run(args)
     except (KomaError, OSError) as error:
         print(f"{parser.prog}: error: {error}", file=sys.stderr)

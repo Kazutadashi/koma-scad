@@ -154,7 +154,9 @@ def build_games() -> dict[str, Game]:
             overrides = recipe.get("settings", {})
             unknown = sorted(set(overrides) - set(preset))
             if unknown:
-                raise KomaError(f"games.json {key!r} uses unknown parameter(s): {', '.join(unknown)}")
+                raise KomaError(
+                    f"games.json {key!r} uses unknown parameter(s): {', '.join(unknown)}"
+                )
             preset.update(overrides)
             preset["Category"] = f"{title} / {piece['category']}"
 

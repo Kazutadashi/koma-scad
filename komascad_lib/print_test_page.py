@@ -4,7 +4,7 @@ The page has the same pieces with the same settings every time, so results
 from different printers, filaments and slicer profiles can be compared. Every
 value is therefore written out here instead of following koma/presets/pieces/.
 A change that alters what prints starts a new baseline: raise
-TEST_PAGE_VERSION and say so in docs/print-test-page.md.
+TEST_PAGE_VERSION and say so in docs/print/print-test-page.md.
 
 The 59 pieces are split over three plates that each fit a 220 mm bed.
 """

@@ -1,0 +1,70 @@
+name: Print report
+description: Tell us how a KomaSCAD set, board or test printed on your printer, good or bad.
+labels: [print report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you! Reports from printers and slicers we haven't tried help everyone.
+        A photo of a piece face, close up and in good light, is the most useful thing you can send.
+  - type: input
+    id: what
+    attributes:
+      label: What did you print?
+      placeholder: Learner set (release 3.5), or "Shogi - 2 x 2 panels" board
+    validations:
+      required: true
+  - type: input
+    id: printer
+    attributes:
+      label: Printer and multi-color system
+      placeholder: Bambu Lab A1 with AMS lite
+    validations:
+      required: true
+  - type: input
+    id: nozzle
+    attributes:
+      label: Nozzle size
+      placeholder: 0.4 mm
+    validations:
+      required: true
+  - type: input
+    id: plate
+    attributes:
+      label: Build plate
+      placeholder: Smooth PEI
+  - type: textarea
+    id: filament
+    attributes:
+      label: Filaments
+      description: Brand, type and color of each filament slot, and the flow ratio if you calibrated it.
+      placeholder: |
+        1: SUNLU wood PLA, flow 0.9575
+        2: Bambu PLA Matte black
+        3: Bambu PLA Matte red
+    validations:
+      required: true
+  - type: input
+    id: slicer
+    attributes:
+      label: Slicer and profile
+      placeholder: Bambu Studio 2.8, KomaSCAD face-down 0.15mm A1 0.4
+    validations:
+      required: true
+  - type: input
+    id: layer
+    attributes:
+      label: Layer height
+      placeholder: 0.15 mm
+  - type: input
+    id: time
+    attributes:
+      label: Print time and filament used (from the slicer)
+      placeholder: "Time: ..., filament 1: ... g, 2: ... g, 3: ... g"
+  - type: textarea
+    id: result
+    attributes:
+      label: How did it come out?
+      description: What worked, what didn't, and anything you changed. Drag photos into this box.
+    validations:
+      required: true

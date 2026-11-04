@@ -34,6 +34,8 @@ Board_Margin = 7.5; // [0:0.5:50]
 Board_Thickness = 12; // [2:0.5:40]
 // mm. Radius of the four outer corners.
 Outer_Corner_Radius = 3; // [0:0.5:15]
+// mm. 45 degree bevel round the outer edge of the playing surface. Printed face down, that edge is on the bed, and the bevel takes up first-layer squish (elephant's foot), so the edge stays clean. 0.3 matches the pieces. 0 = none.
+Edge_Bevel = 0; // [0:0.05:2]
 
 /* [03 - Largest piece] */
 // mm. Length of the largest piece that the squares must hold, from the heel to the point.
@@ -944,7 +946,7 @@ module panel_body_geometry(tx, ty) {
             intersection() {
                 tile_footprint(tx, ty, 0, Board_Thickness);
                 translate([-Board_Margin - tile_x_min(tx), -Board_Margin - tile_y_min(ty), 0])
-                    rounded_slab([board_width, board_depth, Board_Thickness], Outer_Corner_Radius);
+                    chamfered_slab([board_width, board_depth, Board_Thickness], Outer_Corner_Radius, 0, Edge_Bevel);
             }
             // Tabs on the right and back edges. A panel only presses down over
             // the tabs of neighbors that are already in place.

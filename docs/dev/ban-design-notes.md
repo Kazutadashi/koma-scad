@@ -2,7 +2,7 @@
 
 These notes are for contributors. They tell why the board joints have their
 shape, what printed trials showed, and what is not yet done. The
-[board guide](ban.md) tells you how to make and print a board.
+[board guide](../ban.md) tells you how to make and print a board.
 
 ## The rules for a joint
 
@@ -81,8 +81,8 @@ below the tab.
 
 ## Flatness options added after the joint research
 
-Research into flush joints for printed parts (see the project's research
-notes) led to three options. They are model values, not yet printed:
+Research into flush joints for printed parts led to three options. They are
+model values, not yet printed:
 
 - **Seam Reveal** (default on): a 45 degree bevel on both edges of each seam,
   so that a small step does not catch a piece.
@@ -91,8 +91,8 @@ notes) led to three options. They are model values, not yet printed:
   part of the table.
 - **Keys**: face-down assembly with butterfly keys (契り). The table sets the
   playing faces in one plane before the keys grip, so panel thickness does
-  not matter. The keys are loose parts, which breaks rule 1 above, so the
-  T-hook stays the default until a Keys board is printed and measured.
+  not matter. The keys are loose parts, which breaks rule 1 above, so Keys
+  stay optional until a Keys board is printed and measured.
 
 Not added: tapered sliding rails (the last panel of a closed grid would have
 to slide along two seams at once), zipper joints (made for 2 mm tiles), and
@@ -108,7 +108,7 @@ joint is now **Connectors**:
 - Panels have sockets only. The separate double-T connector is the weak link,
   so a hard pull breaks a connector, not a panel.
 - The socket takes an M4 or #8-32 screw and nut, so a lost connector can be
-  bought anywhere. See the [connector spec](ban-connector-spec.md).
+  bought anywhere. See the [connector spec](../ban-connector-spec.md).
 - Every seam edge has the same socket half, and the connector rests on the
   table, so the table still sets every panel's height. Lifting a panel
   straight up always frees it.

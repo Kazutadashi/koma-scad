@@ -1,0 +1,54 @@
+# Package metadata for the komascad command-line tool.
+#
+# The tool needs no dependencies: it uses only Python's standard library, and
+# you can run it as `python3 komascad.py` without installing anything.
+# `pip install -e .` adds a `komascad` command. Use an editable install (-e):
+# the tool reads the models and presets from this repository folder.
+#
+# Ruff's settings are in ruff.toml.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "komascad"
+dynamic = ["version"]
+description = "Build, check and export 3D-printable shogi pieces, boards, stands and boxes."
+readme = "README.md"
+requires-python = ">=3.10"
+# The license of the Python package only. The fonts and the Taikyoku data in
+# this repository have other licenses: see LICENSES.md.
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "KomaSCAD contributors" }]
+keywords = ["shogi", "openscad", "3d-printing", "3mf", "parametric"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Operating System :: OS Independent",
+    "Topic :: Games/Entertainment :: Board Games",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+]
+
+[project.scripts]
+komascad = "komascad_lib.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Kazutadashi/koma-scad"
+Documentation = "https://github.com/Kazutadashi/koma-scad/tree/main/docs"
+Issues = "https://github.com/Kazutadashi/koma-scad/issues"
+Changelog = "https://github.com/Kazutadashi/koma-scad/blob/main/CHANGELOG.md"
+
+[tool.setuptools]
+packages = ["komascad_lib"]
+
+[tool.setuptools.dynamic]
+version = { attr = "komascad_lib.project.VERSION" }

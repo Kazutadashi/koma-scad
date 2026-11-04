@@ -6,7 +6,7 @@ full sets, see the [user guide](user-guide.md). The
 
 ## Start
 
-1. Open `koma/koma.scad` in OpenSCAD 2021.01.
+1. Open `koma/koma.scad` in OpenSCAD ([install it](install.md) first).
 2. If you cannot see the Customizer, clear **Window → Hide Customizer**.
 3. Turn on **Design → Automatic Preview**. The preview then changes when you
    change a setting. If it is off, press F5.
@@ -45,8 +45,12 @@ each face its own slope, set **Taper Mode** to **Reference side angles**, then
 set the two side angles in **10 - Advanced shape angles**.
 
 **Bevel Width** and **Bevel Depth** cut a small chamfer on all edges: 0.3
-mm by default. The chamfer lets a piece slide over a seam of the board
-without catching on it. Set either to 0 for sharp edges.
+mm by default, in every bundled set. It hides elephant's foot on the face
+that prints against the bed, and lets a piece slide over a board seam. See
+[why the edges are beveled](print/print-guide.md#why-the-edges-are-beveled).
+
+Set either value to 0 for sharp edges, but expect a small lip on the face
+that prints against the bed.
 
 ### Outline angles
 
@@ -174,21 +178,9 @@ the bed. Check its first layers in the slicer.
 
 ### Several colors: 3MF
 
-1. Save your settings as a preset: select **+** and type a name.
-2. Open a terminal in the repository folder.
-3. Export the preset:
-
-   ```bash
-   python3 komascad.py export koma/koma.json "My piece" --orientation front-down
-   ```
-
-4. Open `exports/koma/My piece.3mf` in your slicer. See the
-   [print guide](printing/print-guide.md).
-
-The exporter reads saved presets only. Save your changes before you export.
-
-> **WARNING:** Do not use **File → Export → Export as 3MF** for a color
-> piece. OpenSCAD 2021.01 puts all colors into one part.
+Use `komascad.py export` for a color piece. Step 2 of
+[getting started](getting-started.md#2-export-it) shows the command and what
+it writes.
 
 ### Share a preset
 

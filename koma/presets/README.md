@@ -9,7 +9,7 @@ page gives their format.
 | `games.json` | The pieces, and how many, in each game | Yes |
 | `games/` | One preset file for each game | No: `build` makes it |
 | `../koma.json` | All games in one file, for the Customizer | No: `build` makes it |
-| `print-test/` | The [print test page](../../docs/print-test-page.md) | No: `build` makes it |
+| `print-test/` | The [print test page](../../docs/print/print-test-page.md) | No: `build` makes it |
 | `misc/` | Chu shogi learner pieces, and the Taikyoku set (CC BY-SA 4.0) | Yes, by hand |
 
 After you edit a piece or `games.json`, run `python3 komascad.py build`.

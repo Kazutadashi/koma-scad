@@ -35,14 +35,14 @@ Shogi is played with a board of 9 × 9 squares and 40 pieces, 20 for each player
 
 <table align="center">
 <tr><th align="center">Piece</th><th align="center">Front</th><th align="center">Back (promoted)</th><th align="center">Promoted name</th><th align="center">Each player has</th></tr>
-<tr><td align="center">King (ōshō 王将, gyokushō 玉将)</td><td align="center"><img src="../images/rules/piece-king-osho.svg" width="56" alt="王"> <img src="../images/rules/piece-king-gyokusho.svg" width="56" alt="玉"></td><td align="center">blank</td><td align="center">none</td><td align="center">1</td></tr>
-<tr><td align="center">Rook (hisha, 飛車)</td><td align="center"><img src="../images/rules/piece-rook.svg" width="56" alt="飛"></td><td align="center"><img src="../images/rules/piece-dragon.svg" width="56" alt="龍"></td><td align="center">Dragon (ryūō, 龍王)</td><td align="center">1</td></tr>
-<tr><td align="center">Bishop (kakugyō, 角行)</td><td align="center"><img src="../images/rules/piece-bishop.svg" width="56" alt="角"></td><td align="center"><img src="../images/rules/piece-horse.svg" width="56" alt="馬"></td><td align="center">Horse (ryūma, 龍馬)</td><td align="center">1</td></tr>
-<tr><td align="center">Gold general (kinshō, 金将)</td><td align="center"><img src="../images/rules/piece-gold.svg" width="56" alt="金"></td><td align="center">blank</td><td align="center">none</td><td align="center">2</td></tr>
-<tr><td align="center">Silver general (ginshō, 銀将)</td><td align="center"><img src="../images/rules/piece-silver.svg" width="56" alt="銀"></td><td align="center"><img src="../images/rules/piece-promoted-silver.svg" width="56" alt="全"></td><td align="center">Promoted silver (narigin, 成銀)</td><td align="center">2</td></tr>
-<tr><td align="center">Knight (keima, 桂馬)</td><td align="center"><img src="../images/rules/piece-knight.svg" width="56" alt="桂"></td><td align="center"><img src="../images/rules/piece-promoted-knight.svg" width="56" alt="圭"></td><td align="center">Promoted knight (narikei, 成桂)</td><td align="center">2</td></tr>
-<tr><td align="center">Lance (kyōsha, 香車)</td><td align="center"><img src="../images/rules/piece-lance.svg" width="56" alt="香"></td><td align="center"><img src="../images/rules/piece-promoted-lance.svg" width="56" alt="杏"></td><td align="center">Promoted lance (narikyō, 成香)</td><td align="center">2</td></tr>
-<tr><td align="center">Pawn (fuhyō, 歩兵)</td><td align="center"><img src="../images/rules/piece-pawn.svg" width="56" alt="歩"></td><td align="center"><img src="../images/rules/piece-tokin.svg" width="56" alt="と"></td><td align="center">Tokin (と金)</td><td align="center">9</td></tr>
+<tr><td align="center">King (ōshō 王将, gyokushō 玉将)</td><td align="center"><img src="../../images/rules/piece-king-osho.svg" width="56" alt="王"> <img src="../../images/rules/piece-king-gyokusho.svg" width="56" alt="玉"></td><td align="center">blank</td><td align="center">none</td><td align="center">1</td></tr>
+<tr><td align="center">Rook (hisha, 飛車)</td><td align="center"><img src="../../images/rules/piece-rook.svg" width="56" alt="飛"></td><td align="center"><img src="../../images/rules/piece-dragon.svg" width="56" alt="龍"></td><td align="center">Dragon (ryūō, 龍王)</td><td align="center">1</td></tr>
+<tr><td align="center">Bishop (kakugyō, 角行)</td><td align="center"><img src="../../images/rules/piece-bishop.svg" width="56" alt="角"></td><td align="center"><img src="../../images/rules/piece-horse.svg" width="56" alt="馬"></td><td align="center">Horse (ryūma, 龍馬)</td><td align="center">1</td></tr>
+<tr><td align="center">Gold general (kinshō, 金将)</td><td align="center"><img src="../../images/rules/piece-gold.svg" width="56" alt="金"></td><td align="center">blank</td><td align="center">none</td><td align="center">2</td></tr>
+<tr><td align="center">Silver general (ginshō, 銀将)</td><td align="center"><img src="../../images/rules/piece-silver.svg" width="56" alt="銀"></td><td align="center"><img src="../../images/rules/piece-promoted-silver.svg" width="56" alt="全"></td><td align="center">Promoted silver (narigin, 成銀)</td><td align="center">2</td></tr>
+<tr><td align="center">Knight (keima, 桂馬)</td><td align="center"><img src="../../images/rules/piece-knight.svg" width="56" alt="桂"></td><td align="center"><img src="../../images/rules/piece-promoted-knight.svg" width="56" alt="圭"></td><td align="center">Promoted knight (narikei, 成桂)</td><td align="center">2</td></tr>
+<tr><td align="center">Lance (kyōsha, 香車)</td><td align="center"><img src="../../images/rules/piece-lance.svg" width="56" alt="香"></td><td align="center"><img src="../../images/rules/piece-promoted-lance.svg" width="56" alt="杏"></td><td align="center">Promoted lance (narikyō, 成香)</td><td align="center">2</td></tr>
+<tr><td align="center">Pawn (fuhyō, 歩兵)</td><td align="center"><img src="../../images/rules/piece-pawn.svg" width="56" alt="歩"></td><td align="center"><img src="../../images/rules/piece-tokin.svg" width="56" alt="と"></td><td align="center">Tokin (と金)</td><td align="center">9</td></tr>
 </table>
 
 <p align="center"><em>Table 1. The pieces. The back of each piece is its promoted side.</em></p>
@@ -57,7 +57,7 @@ Every piece except the king and the gold general has a second symbol on its back
 
 Sit facing your opponent across the board, which has 9 × 9 squares. The four dots on the board mark the edges of the promotion zones.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Equipment">[6]</a></sup> Set up your pieces on the three rows nearest you as shown in Figure 1, with your bishop on your left, your rook on your right and every piece pointing at your opponent. Your opponent does the same.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Setup_and_gameplay">[2]</a></sup>
 
-<p align="center"><img src="../images/rules/starting-position.svg" width="560" alt="Starting position. Each player's piece stand is the small square table at that player's lower right."><br><em>Figure 1. The starting position. The small squares beside the board are the piece stands.</em></p>
+<p align="center"><img src="../../images/rules/starting-position.svg" width="560" alt="Starting position. Each player's piece stand is the small square table at that player's lower right."><br><em>Figure 1. The starting position. The small squares beside the board are the piece stands.</em></p>
 
 Place your piece stand (komadai, 駒台), a small square table, beside the board at your right-hand corner. Keep the pieces you capture on your stand. If your set has no stands, keep captured pieces on the table in the same spot, always in view of your opponent.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup>
 
@@ -67,7 +67,7 @@ To decide who goes first, one player tosses five pawns. If more of them land wit
 
 To capture one of your opponent's pieces, move one of your pieces onto its square.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup> Remove the captured piece from the board and place it on your stand. It now belongs to you and may be brought back into play on a later turn.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup> If the captured piece was promoted, turn it back over first.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup> Capture the king the same way to win the learning game.
 
-<p align="center"><img src="../images/rules/capture-example.svg" width="620" alt="The silver moves onto the pawn, and the pawn goes onto your stand."><br><em>Figure 2. Your silver captures the pawn. The pawn goes on your stand, and the shaded square shows where the silver ends up.</em></p>
+<p align="center"><img src="../../images/rules/capture-example.svg" width="620" alt="The silver moves onto the pawn, and the pawn goes onto your stand."><br><em>Figure 2. Your silver captures the pawn. The pawn goes on your stand, and the shaded square shows where the silver ends up.</em></p>
 
 ## 5. How the Pieces Move
 
@@ -77,14 +77,14 @@ In each diagram, your opponent is at the top. Your opponent's pieces move the sa
 
 <table align="center">
 <tr><th align="center">Diagram</th><th align="center">Piece</th><th align="center">Moves</th></tr>
-<tr><td align="center"><img src="../images/rules/move-king.svg" width="180" alt="King"></td><td align="center">King</td><td align="left">One square in any direction.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-rook.svg" width="180" alt="Rook"></td><td align="center">Rook</td><td align="left">Any number of squares forward, backward or sideways.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-bishop.svg" width="180" alt="Bishop"></td><td align="center">Bishop</td><td align="left">Any number of squares diagonally.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-gold.svg" width="180" alt="Gold"></td><td align="center">Gold general</td><td align="left">One square in any direction except diagonally backward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-silver.svg" width="180" alt="Silver"></td><td align="center">Silver general</td><td align="left">One square diagonally, or one square straight forward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-knight.svg" width="180" alt="Knight"></td><td align="center">Knight</td><td align="left">Jumps two squares forward and one square to the side. It cannot move any other way.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-lance.svg" width="180" alt="Lance"></td><td align="center">Lance</td><td align="left">Any number of squares straight forward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-pawn.svg" width="180" alt="Pawn"></td><td align="center">Pawn</td><td align="left">One square straight forward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-king.svg" width="180" alt="King"></td><td align="center">King</td><td align="left">One square in any direction.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-rook.svg" width="180" alt="Rook"></td><td align="center">Rook</td><td align="left">Any number of squares forward, backward or sideways.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-bishop.svg" width="180" alt="Bishop"></td><td align="center">Bishop</td><td align="left">Any number of squares diagonally.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-gold.svg" width="180" alt="Gold"></td><td align="center">Gold general</td><td align="left">One square in any direction except diagonally backward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-silver.svg" width="180" alt="Silver"></td><td align="center">Silver general</td><td align="left">One square diagonally, or one square straight forward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-knight.svg" width="180" alt="Knight"></td><td align="center">Knight</td><td align="left">Jumps two squares forward and one square to the side. It cannot move any other way.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-lance.svg" width="180" alt="Lance"></td><td align="center">Lance</td><td align="left">Any number of squares straight forward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-pawn.svg" width="180" alt="Pawn"></td><td align="center">Pawn</td><td align="left">One square straight forward.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup></td></tr>
 </table>
 
 <p align="center"><em>Table 2. How each piece moves.</em></p>
@@ -93,7 +93,7 @@ In each diagram, your opponent is at the top. Your opponent's pieces move the sa
 
 No piece except the knight may jump over other pieces.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup> If one of your own pieces is in the way, you may move only as far as the square before it. If your opponent's piece is in the way, you may capture it, but you may not go past it.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup>
 
-<p align="center"><img src="../images/rules/blocking-example.svg" width="300" alt="A rook with its own silver to its left and an opponent's pawn two squares ahead. Dots mark the squares it can reach. The pawn's square is red. A red cross marks the square beyond the pawn."><br><em>Figure 3. The rook can move to any square with a dot. It can capture the pawn on the red square, but it cannot reach the square with the cross.</em></p>
+<p align="center"><img src="../../images/rules/blocking-example.svg" width="300" alt="A rook with its own silver to its left and an opponent's pawn two squares ahead. Dots mark the squares it can reach. The pawn's square is red. A red cross marks the square beyond the pawn."><br><em>Figure 3. The rook can move to any square with a dot. It can capture the pawn on the red square, but it cannot reach the square with the cross.</em></p>
 
 ## 6. Special Moves
 
@@ -101,7 +101,7 @@ No piece except the knight may jump over other pieces.<sup><a href="https://en.w
 
 The three rows farthest from you are your promotion zone, and the row farthest from you is your last row (Figure 4). When one of your pieces moves into, within or out of your promotion zone, you may promote it by turning it over at the end of your move. For example, a rook that starts inside the zone may promote as it moves out.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup>
 
-<p align="center"><img src="../images/rules/promotion-zone.svg" width="320" alt="The promotion zone is the three far rows"><br><em>Figure 4. The shaded rows are your promotion zone. The top row is your last row.</em></p>
+<p align="center"><img src="../../images/rules/promotion-zone.svg" width="320" alt="The promotion zone is the three far rows"><br><em>Figure 4. The shaded rows are your promotion zone. The top row is your last row.</em></p>
 
 Decide whether to promote as you finish your move. If you do not promote, you may promote on a later move that starts or ends in the zone.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup>
 
@@ -111,9 +111,9 @@ The king and the gold general never promote. A promoted piece stays promoted unt
 
 <table align="center">
 <tr><th align="center">Diagram</th><th align="center">Promoted piece</th><th align="center">Moves</th></tr>
-<tr><td align="center"><img src="../images/rules/move-dragon.svg" width="180" alt="Dragon"></td><td align="center">Dragon (promoted rook)</td><td align="left">As a rook, plus one square diagonally.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-horse.svg" width="180" alt="Horse"></td><td align="center">Horse (promoted bishop)</td><td align="left">As a bishop, plus one square forward, backward or sideways.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup></td></tr>
-<tr><td align="center"><img src="../images/rules/move-tokin.svg" width="180" alt="Tokin"></td><td align="center">Tokin, promoted silver, promoted knight, promoted lance</td><td align="left">As a gold general.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-dragon.svg" width="180" alt="Dragon"></td><td align="center">Dragon (promoted rook)</td><td align="left">As a rook, plus one square diagonally.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-horse.svg" width="180" alt="Horse"></td><td align="center">Horse (promoted bishop)</td><td align="left">As a bishop, plus one square forward, backward or sideways.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup></td></tr>
+<tr><td align="center"><img src="../../images/rules/move-tokin.svg" width="180" alt="Tokin"></td><td align="center">Tokin, promoted silver, promoted knight, promoted lance</td><td align="left">As a gold general.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup></td></tr>
 </table>
 
 <p align="center"><em>Table 3. How promoted pieces move.</em></p>
@@ -122,23 +122,23 @@ The king and the gold general never promote. A promoted piece stays promoted unt
 
 Instead of moving a piece, you may take a piece from your stand and drop it onto any empty square, pointing at your opponent (Figure 5). A drop is your whole turn, and a drop may not capture.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup>
 
-<p align="center"><img src="../images/rules/drop-sequence.svg" width="620" alt="The silver on your stand is dropped onto an empty square."><br><em>Figure 5. The silver on your stand is dropped onto the shaded square.</em></p>
+<p align="center"><img src="../../images/rules/drop-sequence.svg" width="620" alt="The silver on your stand is dropped onto an empty square."><br><em>Figure 5. The silver on your stand is dropped onto the shaded square.</em></p>
 
 **Important:** Always drop a piece with its front facing up, even into your promotion zone. It may promote on a later move.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup> You may drop a piece on almost any empty square, but there are three exceptions.
 
 First, you may not drop a pawn into a column that already has one of your unpromoted pawns (Figure 6). This is called nifu (二歩).<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup>
 
-<p align="center"><img src="../images/rules/nifu-example.svg" width="200" alt="Your pawn is already in this column, so the pawn on your stand cannot be dropped on any square marked with a cross."><br><em>Figure 6. Your pawn is already in this column, so a pawn may not be dropped on any square with a cross.</em></p>
+<p align="center"><img src="../../images/rules/nifu-example.svg" width="200" alt="Your pawn is already in this column, so the pawn on your stand cannot be dropped on any square marked with a cross."><br><em>Figure 6. Your pawn is already in this column, so a pawn may not be dropped on any square with a cross.</em></p>
 
 Second, you may not drop a pawn to checkmate your opponent (Figure 7). This is called uchifuzume (打ち歩詰め).<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup>
 
-<p align="center"><img src="../images/rules/uchifuzume-example.svg" width="420" alt="The opponent's king is boxed in by its own lances, and your gold guards the square in front of it. Dropping the pawn from your stand onto that square would be checkmate, so it is marked with a cross."><br><em>Figure 7. The king is boxed in by its own lances, and your gold guards the square in front of it. A pawn dropped on the cross would be checkmate, so it is not allowed.</em></p>
+<p align="center"><img src="../../images/rules/uchifuzume-example.svg" width="420" alt="The opponent's king is boxed in by its own lances, and your gold guards the square in front of it. Dropping the pawn from your stand onto that square would be checkmate, so it is marked with a cross."><br><em>Figure 7. The king is boxed in by its own lances, and your gold guards the square in front of it. A pawn dropped on the cross would be checkmate, so it is not allowed.</em></p>
 
 **Important:** This rule applies only to dropped pawns. You may still checkmate by moving a pawn that is already on the board, or by dropping any other piece. You may also drop a pawn to give check, as long as it is not checkmate.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup>
 
 Third, you may not drop a piece where it would have no legal moves, leaving it stuck for the rest of the game (Figure 8). Never drop a pawn or lance on your last row, or a knight on either of your last two rows.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup>
 
-<p align="center"><img src="../images/rules/stuck-example.svg" width="300" alt="The far edge of the board. A pawn, a lance and a knight on your last row, and a knight on the row before it, are each marked with a red cross."><br><em>Figure 8. None of these drops is allowed. A pawn, lance or knight on your last row could never move, and neither could a knight on the row before it.</em></p>
+<p align="center"><img src="../../images/rules/stuck-example.svg" width="300" alt="The far edge of the board. A pawn, a lance and a knight on your last row, and a knight on the row before it, are each marked with a red cross."><br><em>Figure 8. None of these drops is allowed. A pawn, lance or knight on your last row could never move, and neither could a knight on the row before it.</em></p>
 
 ## 7. Ending the Game
 
@@ -146,11 +146,11 @@ Third, you may not drop a piece where it would have no legal moves, leaving it s
 
 **Example:** In Figure 9, your opponent's rook attacks your king down the column, so your king is in check. You must get out of check on this turn. Here, your king can step to any square with a dot. It cannot step forward to the cross, because that square is still in the rook's path. You could also capture the rook, if one of your pieces could reach it, or move or drop a piece onto a square between the rook and your king.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Check">[3]</a></sup>
 
-<p align="center"><img src="../images/rules/check-example.svg" width="260" alt="An opponent's rook at the top of a column attacks your king at the bottom. Dots mark four squares the king can escape to. A cross marks the square in front of the king, which is still in the rook's path."><br><em>Figure 9. Your king is in check from the rook. It can escape to any square with a dot, but not to the cross.</em></p>
+<p align="center"><img src="../../images/rules/check-example.svg" width="260" alt="An opponent's rook at the top of a column attacks your king at the bottom. Dots mark four squares the king can escape to. A cross marks the square in front of the king, which is still in the rook's path."><br><em>Figure 9. Your king is in check from the rook. It can escape to any square with a dot, but not to the cross.</em></p>
 
 **Example:** In Figure 10, you drop a gold directly in front of your opponent's king, which stands on the far edge of the board. The king is in check. It cannot step to any square with a cross, because the gold attacks all of them. It cannot capture the gold either, because your pawn guards it. The king has no escape, so it is checkmated, and you win.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Checkmate">[4]</a></sup>
 
-<p align="center"><img src="../images/rules/checkmate-example.svg" width="300" alt="Your gold stands directly in front of the opponent's king on the far edge, with your pawn behind it. Crosses mark the four squares around the king that the gold attacks."><br><em>Figure 10. Checkmate. The gold attacks every square the king could escape to, and the pawn guards the gold.</em></p>
+<p align="center"><img src="../../images/rules/checkmate-example.svg" width="300" alt="Your gold stands directly in front of the opponent's king on the far edge, with your pawn behind it. Crosses mark the four squares around the king that the gold attacks."><br><em>Figure 10. Checkmate. The gold attacks every square the king could escape to, and the pawn guards the gold.</em></p>
 
 ### Other Ways the Game Ends
 
@@ -164,21 +164,21 @@ This short example shows capturing, promotion and drops working together. It fol
 
 **Moves 1 and 2:** You move forward the pawn that blocks your bishop's diagonal. Your opponent does the same on their side. The two bishops now face each other along an open diagonal, marked with dots in Figure 11.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup>
 
-<p align="center"><img src="../images/rules/example-1.svg" width="440" alt="The starting position with your seventh-file pawn and your opponent's third-file pawn each moved forward one square. Dots mark the open diagonal between the two bishops."><br><em>Figure 11. Both players have moved one pawn forward. The dots show the open diagonal between the two bishops.</em></p>
+<p align="center"><img src="../../images/rules/example-1.svg" width="440" alt="The starting position with your seventh-file pawn and your opponent's third-file pawn each moved forward one square. Dots mark the open diagonal between the two bishops."><br><em>Figure 11. Both players have moved one pawn forward. The dots show the open diagonal between the two bishops.</em></p>
 
 **Move 3:** Your bishop slides along the diagonal and captures your opponent's bishop. The captured bishop goes on your stand. Your bishop has entered your promotion zone, so you choose to promote it, and turn it over to show the horse (Figure 12).<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup><sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup>
 
-<p align="center"><img src="../images/rules/example-2.svg" width="440" alt="Your bishop has moved along the diagonal, captured your opponent's bishop and promoted to a horse. The captured bishop is on your stand."><br><em>Figure 12. Your bishop captures your opponent's bishop and promotes to a horse. The captured bishop goes on your stand.</em></p>
+<p align="center"><img src="../../images/rules/example-2.svg" width="440" alt="Your bishop has moved along the diagonal, captured your opponent's bishop and promoted to a horse. The captured bishop is on your stand."><br><em>Figure 12. Your bishop captures your opponent's bishop and promotes to a horse. The captured bishop goes on your stand.</em></p>
 
 **Move 4:** Your opponent's silver captures your horse. Because a captured piece loses its promotion, the horse goes on your opponent's stand as a plain bishop (Figure 13).<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Promotion">[10]</a></sup>
 
-<p align="center"><img src="../images/rules/example-3.svg" width="440" alt="Your opponent's silver has captured the horse. Each player now has a bishop on their stand."><br><em>Figure 13. Your opponent's silver captures the horse, which goes on their stand as a bishop. Each player now has a bishop in hand.</em></p>
+<p align="center"><img src="../../images/rules/example-3.svg" width="440" alt="Your opponent's silver has captured the horse. Each player now has a bishop on their stand."><br><em>Figure 13. Your opponent's silver captures the horse, which goes on their stand as a bishop. Each player now has a bishop in hand.</em></p>
 
 Each player now has a bishop in hand. On any later turn, either player may drop their bishop onto an empty square instead of moving a piece.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup>
 
 **Move 5:** Instead of moving a piece, you drop your bishop from your stand onto an empty square in the center of the board. The dropped bishop moves like any other bishop. From the center, it attacks your opponent's pawn and silver on the red squares in Figure 14. Your opponent must now decide how to respond.<sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Drops">[7]</a></sup><sup><a href="https://en.wikipedia.org/w/index.php?title=Shogi&oldid=1376162208#Movement">[9]</a></sup>
 
-<p align="center"><img src="../images/rules/example-4.svg" width="440" alt="Your bishop has been dropped from your stand onto the center of the board. Dots mark its diagonals to two of your opponent's pieces, a pawn and a silver, which are on red squares."><br><em>Figure 14. You drop your bishop in the center. It now attacks the pawn and the silver on the red squares.</em></p>
+<p align="center"><img src="../../images/rules/example-4.svg" width="440" alt="Your bishop has been dropped from your stand onto the center of the board. Dots mark its diagonals to two of your opponent's pieces, a pawn and a silver, which are on red squares."><br><em>Figure 14. You drop your bishop in the center. It now attacks the pawn and the silver on the red squares.</em></p>
 
 ## 9. Tips for Your First Games
 
@@ -254,7 +254,7 @@ To resign, bow and say "makemashita" (負けました), meaning "I have lost".<s
 
 Minishogi (gogo shōgi, 5五将棋) is a short version of shogi played on a 5 × 5 board. Use the same rules as in shogi, except for the changes below.<sup><a href="https://en.wikipedia.org/w/index.php?title=Minishogi&oldid=1325110169">[35]</a></sup>
 
-<p align="center"><img src="../images/rules/minishogi-start.svg" width="320" alt="Minishogi starting position"><br><em>Figure 15. The minishogi starting position.</em></p>
+<p align="center"><img src="../../images/rules/minishogi-start.svg" width="320" alt="Minishogi starting position"><br><em>Figure 15. The minishogi starting position.</em></p>
 
 Each player starts with a king, rook, bishop, gold general, silver general and pawn, set up as shown.<sup><a href="https://en.wikipedia.org/w/index.php?title=Minishogi&oldid=1325110169#Setup">[36]</a></sup>
 
@@ -270,14 +270,14 @@ Shogi sets do not all look alike. Traditional sets write the full name of each p
 
 <table align="center">
 <tr><th align="center">Piece</th><th align="center">One character (these rules)</th><th align="center">Two characters (traditional)</th></tr>
-<tr><td align="center">King</td><td align="center"><img src="../images/rules/piece-king-osho.svg" width="56" alt="王"> <img src="../images/rules/piece-king-gyokusho.svg" width="56" alt="玉"></td><td align="center"><img src="../images/rules/variation-king-osho.svg" width="56" alt="王将"> <img src="../images/rules/variation-king-gyokusho.svg" width="56" alt="玉将"></td></tr>
-<tr><td align="center">Rook</td><td align="center"><img src="../images/rules/piece-rook.svg" width="56" alt="飛"></td><td align="center"><img src="../images/rules/variation-rook.svg" width="56" alt="飛車"></td></tr>
-<tr><td align="center">Bishop</td><td align="center"><img src="../images/rules/piece-bishop.svg" width="56" alt="角"></td><td align="center"><img src="../images/rules/variation-bishop.svg" width="56" alt="角行"></td></tr>
-<tr><td align="center">Gold general</td><td align="center"><img src="../images/rules/piece-gold.svg" width="56" alt="金"></td><td align="center"><img src="../images/rules/variation-gold.svg" width="56" alt="金将"></td></tr>
-<tr><td align="center">Silver general</td><td align="center"><img src="../images/rules/piece-silver.svg" width="56" alt="銀"></td><td align="center"><img src="../images/rules/variation-silver.svg" width="56" alt="銀将"></td></tr>
-<tr><td align="center">Knight</td><td align="center"><img src="../images/rules/piece-knight.svg" width="56" alt="桂"></td><td align="center"><img src="../images/rules/variation-knight.svg" width="56" alt="桂馬"></td></tr>
-<tr><td align="center">Lance</td><td align="center"><img src="../images/rules/piece-lance.svg" width="56" alt="香"></td><td align="center"><img src="../images/rules/variation-lance.svg" width="56" alt="香車"></td></tr>
-<tr><td align="center">Pawn</td><td align="center"><img src="../images/rules/piece-pawn.svg" width="56" alt="歩"></td><td align="center"><img src="../images/rules/variation-pawn.svg" width="56" alt="歩兵"></td></tr>
+<tr><td align="center">King</td><td align="center"><img src="../../images/rules/piece-king-osho.svg" width="56" alt="王"> <img src="../../images/rules/piece-king-gyokusho.svg" width="56" alt="玉"></td><td align="center"><img src="../../images/rules/variation-king-osho.svg" width="56" alt="王将"> <img src="../../images/rules/variation-king-gyokusho.svg" width="56" alt="玉将"></td></tr>
+<tr><td align="center">Rook</td><td align="center"><img src="../../images/rules/piece-rook.svg" width="56" alt="飛"></td><td align="center"><img src="../../images/rules/variation-rook.svg" width="56" alt="飛車"></td></tr>
+<tr><td align="center">Bishop</td><td align="center"><img src="../../images/rules/piece-bishop.svg" width="56" alt="角"></td><td align="center"><img src="../../images/rules/variation-bishop.svg" width="56" alt="角行"></td></tr>
+<tr><td align="center">Gold general</td><td align="center"><img src="../../images/rules/piece-gold.svg" width="56" alt="金"></td><td align="center"><img src="../../images/rules/variation-gold.svg" width="56" alt="金将"></td></tr>
+<tr><td align="center">Silver general</td><td align="center"><img src="../../images/rules/piece-silver.svg" width="56" alt="銀"></td><td align="center"><img src="../../images/rules/variation-silver.svg" width="56" alt="銀将"></td></tr>
+<tr><td align="center">Knight</td><td align="center"><img src="../../images/rules/piece-knight.svg" width="56" alt="桂"></td><td align="center"><img src="../../images/rules/variation-knight.svg" width="56" alt="桂馬"></td></tr>
+<tr><td align="center">Lance</td><td align="center"><img src="../../images/rules/piece-lance.svg" width="56" alt="香"></td><td align="center"><img src="../../images/rules/variation-lance.svg" width="56" alt="香車"></td></tr>
+<tr><td align="center">Pawn</td><td align="center"><img src="../../images/rules/piece-pawn.svg" width="56" alt="歩"></td><td align="center"><img src="../../images/rules/variation-pawn.svg" width="56" alt="歩兵"></td></tr>
 </table>
 
 <p align="center"><em>Table 4. One-character and two-character piece names.</em></p>
@@ -286,11 +286,11 @@ The backs of the pieces vary the most. They are often written in red ink, usuall
 
 <table align="center">
 <tr><th align="center">Promoted piece</th><th align="center">These rules</th><th align="center">Other common form</th></tr>
-<tr><td align="center">Dragon (ryūō, 龍王)</td><td align="center"><img src="../images/rules/piece-dragon.svg" width="56" alt="龍"></td><td align="center"><img src="../images/rules/variation-dragon.svg" width="56" alt="竜"></td></tr>
-<tr><td align="center">Promoted silver (narigin, 成銀)</td><td align="center"><img src="../images/rules/piece-promoted-silver.svg" width="56" alt="全"></td><td align="center"><img src="../images/rules/piece-promoted-silver.svg" width="56" alt="全"></td></tr>
-<tr><td align="center">Promoted knight (narikei, 成桂)</td><td align="center"><img src="../images/rules/piece-promoted-knight.svg" width="56" alt="圭"></td><td align="center"><img src="../images/rules/variation-knight-cursive.svg" width="56" alt="今"></td></tr>
-<tr><td align="center">Promoted lance (narikyō, 成香)</td><td align="center"><img src="../images/rules/piece-promoted-lance.svg" width="56" alt="杏"></td><td align="center"><img src="../images/rules/variation-lance-cursive.svg" width="56" alt="仝"></td></tr>
-<tr><td align="center">Tokin (と金)</td><td align="center"><img src="../images/rules/piece-tokin.svg" width="56" alt="と"></td><td align="center"><img src="../images/rules/variation-pawn-cursive.svg" width="56" alt="个"></td></tr>
+<tr><td align="center">Dragon (ryūō, 龍王)</td><td align="center"><img src="../../images/rules/piece-dragon.svg" width="56" alt="龍"></td><td align="center"><img src="../../images/rules/variation-dragon.svg" width="56" alt="竜"></td></tr>
+<tr><td align="center">Promoted silver (narigin, 成銀)</td><td align="center"><img src="../../images/rules/piece-promoted-silver.svg" width="56" alt="全"></td><td align="center"><img src="../../images/rules/piece-promoted-silver.svg" width="56" alt="全"></td></tr>
+<tr><td align="center">Promoted knight (narikei, 成桂)</td><td align="center"><img src="../../images/rules/piece-promoted-knight.svg" width="56" alt="圭"></td><td align="center"><img src="../../images/rules/variation-knight-cursive.svg" width="56" alt="今"></td></tr>
+<tr><td align="center">Promoted lance (narikyō, 成香)</td><td align="center"><img src="../../images/rules/piece-promoted-lance.svg" width="56" alt="杏"></td><td align="center"><img src="../../images/rules/variation-lance-cursive.svg" width="56" alt="仝"></td></tr>
+<tr><td align="center">Tokin (と金)</td><td align="center"><img src="../../images/rules/piece-tokin.svg" width="56" alt="と"></td><td align="center"><img src="../../images/rules/variation-pawn-cursive.svg" width="56" alt="个"></td></tr>
 </table>
 
 <p align="center"><em>Table 5. Two ways of writing the promoted sides.</em></p>

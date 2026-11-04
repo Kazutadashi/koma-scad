@@ -1,4 +1,4 @@
-# Taikyoku Shogi Character Data — Attribution and License
+# Taikyoku shogi character data: attribution and license
 
 `taikyoku_piece_characters.csv` is an adapted, machine-readable transcription of the Taikyoku shogi piece table from English Wikipedia.
 

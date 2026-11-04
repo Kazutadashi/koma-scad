@@ -1,0 +1,89 @@
+# Runs the tests, the generated-preset check and the style checks on every
+# push to main and every pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch cancels the run that is still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # The oldest supported Python, and a current one.
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+
+      # Ubuntu 24.04 packages OpenSCAD 2021.01, the version KomaSCAD supports.
+      # xvfb gives OpenSCAD a virtual display for its preview renders, and
+      # xvfb-run needs xauth. fonts-liberation2 is OpenSCAD's fallback font.
+      - name: Install OpenSCAD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends openscad fontconfig xvfb xauth fonts-liberation2
+
+      # Without the fonts, the model tests fail on missing glyphs.
+      - name: Install the bundled fonts
+        run: |
+          mkdir -p ~/.local/share/fonts
+          cp fonts/*.ttf ~/.local/share/fonts/
+          fc-cache -f
+          for font in "Yuji Syuku" "Yuji Mai" "LXGW WenKai Mono" "Kaisei Tokumin" "Iansui" "DotGothic16"; do
+            fc-list | grep -qi "$font" || { echo "Font not installed: $font"; exit 1; }
+          done
+
+      - name: Show the tool versions
+        run: |
+          python --version
+          openscad --version
+          node --version
+
+      - name: Check that the generated presets are current
+        run: python komascad.py build --check
+
+      # node is preinstalled on GitHub's Ubuntu runners; it runs the move
+      # editor's solver tests. ruff and prettier run in the style job.
+      - name: Run the tests
+        run: xvfb-run -a python -m unittest discover -t . -s tests -v
+
+      - name: Check the komascad command
+        run: |
+          python -m pip install -e .
+          komascad -V
+
+  style:
+    name: Style
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Ruff format
+        run: uvx ruff format --check
+
+      - name: Ruff check
+        run: uvx ruff check
+
+      - name: Prettier (koma/move-editor.html)
+        run: npx --yes prettier@3 --check .

@@ -204,7 +204,8 @@ class BanCommandTests(unittest.TestCase):
     def test_dry_run_writes_nothing(self):
         status, out, _ = run("ban", "Minishogi - 2 x 2 panels", "-o", self.out, "-n")
         self.assertEqual(status, 0)
-        self.assertIn("Whole board.3mf  (4 panel(s))", out)
+        self.assertIn("Whole board.3mf  (4 panels)", out)
+        self.assertIn("Panel 00-00.3mf  (1 panel)\n", out)
         self.assertFalse(self.out.exists())
 
     def test_unknown_board_is_explained(self):

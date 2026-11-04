@@ -1,58 +1,102 @@
 # KomaSCAD
 
-![OpenSCAD](https://img.shields.io/badge/OpenSCAD-2021.01-yellow)
-![Code license](https://img.shields.io/badge/code-MIT-blue)
-![Data license](https://img.shields.io/badge/data-CC_BY--SA_4.0-green)
+KomaSCAD is a parametric generator for 3D-printed shogi equipment, written in OpenSCAD with a
+Python command-line tool. It produces the pieces (koma), the board (ban), the piece stands
+(komadai) and the box (komabako). Pieces are exported as multi-color 3MF files, with the
+lettering printed in a second color flush with the face.
 
-KomaSCAD is an open-source parametric generator for shogi pieces, written in OpenSCAD. It produces complete, printable 3D models of pieces from their inscribed characters and a defined set of parameters governing dimensions, edge geometry and lettering.
+## Get a set
 
-KomaSCAD also makes the rest of a shogi set. Each part of the set is a module in its own folder:
+Ready-to-print 3MF files for the six piece sets are attached to each
+[release](https://github.com/Kazutadashi/koma-scad/releases/latest). Printing them needs only a
+slicer. See [Ready-made sets](docs/ready-sets.md) to choose one, and
+[First print](docs/print/first-print.md) for a step-by-step guide to the slicer.
 
-| Module | Part | Guide |
-| --- | --- | --- |
-| [koma](koma/README.md) (駒) | The pieces | [Getting started](docs/getting-started.md) |
-| [ban](ban/README.md) (盤) | The board, in one piece or in panels that lock together | [Board guide](docs/ban.md) |
-| [komadai](komadai/README.md) (駒台) | The stand for captured pieces | [Komadai guide](docs/komadai.md) |
-| [komabako](komabako/README.md) (駒箱) | The box for a set of pieces | [Komabako guide](docs/komabako.md) |
+## Features
 
-<!-- PICTURE (photo): printed KomaSCAD pieces. Save it as images/printed-set.jpg,
-     then replace the render line below with:
-![Printed KomaSCAD pieces](images/printed-set.jpg)
--->
-![OpenSCAD preview of a KomaSCAD piece](images/preview.png)
+- Complete shogi and minishogi sets. A full 40-piece shogi set exports as one multi-color 3MF
+  that fits on a single 256 × 256 mm build plate.
+- Three piece styles: traditional two-character pieces, one-character pieces, and learner pieces
+  that show each piece's moves on the front and its promoted moves on the back.
+- Boards from minishogi (5 × 5) to taikyoku shogi (36 × 36), split into panels that fit common
+  print beds and join with printed connectors.
+- Every dimension, font and inscription is a parameter, so you can make your own sets.
 
-- **Parametric:** Every dimension of a piece, from its outline and thickness to the bevel on its edges, is a setting in the OpenSCAD Customizer. A design is saved as a preset, which other people can load and change.
-- **Lettered on both faces:** Each face carries its own characters, in any installed font that contains them. The lettering can be recessed, raised, or inlaid level with the face in a second color. An optional diagram on the face shows how the piece moves.
-- **Checked before printing:** A command-line tool measures the lettering against the printer's line width, and stops when strokes or gaps are too fine to print. It exports color 3MF files of the pieces and the boards, in which each part already has its filament slot.
+## Repository layout
 
-## Getting started
+| Path                         | Contents                                              |
+| ---------------------------- | ----------------------------------------------------- |
+| [koma/](koma/)               | Piece generator, move diagrams and presets            |
+| [ban/](ban/)                 | Board generator and board presets                     |
+| [komadai/](komadai/)         | Piece stand                                           |
+| [komabako/](komabako/)       | Piece box                                             |
+| [lib/](lib/)                 | OpenSCAD code shared by the models                    |
+| [komascad_lib/](komascad_lib/) | Code for the `komascad.py` command-line tool        |
+| [fonts/](fonts/README.md)    | Bundled fonts and their licenses                      |
+| [docs/](docs/README.md)      | Guides and reference                                  |
+| [tests/](tests/)             | Test suite                                            |
 
-KomaSCAD requires OpenSCAD 2021.01, Python 3.10 or later, and a filament 3D printer. Color pieces require a printer that can change filament. KomaSCAD is tested on a Bambu Lab A1 with an AMS lite and a 0.4 mm nozzle, and its color files open in Bambu Studio, OrcaSlicer and Elegoo Slicer.
+## Requirements
 
-The [getting started tutorial](docs/getting-started.md) covers the complete process for one custom piece: design, export and printing.
+To make your own sets, you need:
+
+- [OpenSCAD](https://openscad.org/downloads.html) 2021.01 (the latest stable release)
+- Python 3.10 or later (standard library only)
+- The fonts in [fonts/](fonts/README.md), installed on your system
+
+The stands and the box can be made in OpenSCAD alone. The pieces and boards are exported with
+`komascad.py`, which needs both OpenSCAD and Python. See the [install guide](docs/install.md) for
+Windows, macOS and Linux.
+
+## Quick start
+
+```bash
+git clone https://github.com/Kazutadashi/koma-scad
+cd koma-scad
+
+python3 komascad.py list                               # available sets
+python3 komascad.py check shogi-learner                # check that the lettering will print
+python3 komascad.py preview shogi-learner              # render every piece to one HTML page
+python3 komascad.py export shogi-learner --per-file all  # full 40-piece set in one 3MF
+```
+
+The export is written to `exports/shogi-learner/`. Run `python3 komascad.py COMMAND --help` for
+the options of each command, or see the [command reference](docs/cli.md).
+
+Boards are exported with the `ban` command:
+
+```bash
+python3 komascad.py ban                               # list board presets
+python3 komascad.py ban "Shogi - 2 x 2 panels"        # export a board as color 3MF files
+```
+
+## Printing
+
+The 3MF files open in Bambu Studio with the filament slots already assigned: slot 1 for the body,
+slot 2 for the front lettering and slot 3 for the back lettering. A full set of 40 pieces fits on
+a 256 × 256 mm bed. Pieces print lying on the front face, which gives the lettered face the
+smooth finish of the build plate.
+
+- [First print](docs/print/first-print.md): a step-by-step walkthrough of the slicer
+- [Print guide](docs/print/print-guide.md): settings, calibration and troubleshooting
+- [Board guide](docs/ban.md): printing and assembling the board
 
 ## Documentation
 
-The guides cover more specific tasks, such as combining pieces into complete sets.
-
-| Guide | Contents |
-| --- | --- |
-| [User guide](docs/user-guide.md) | Printing and changing sets, and adding pieces and games |
-| [Design guide](docs/design-guide.md) | Shape, lettering, colors and signature |
-| [Movement diagrams](docs/move-diagrams.md) | Diagrams of a piece's moves on its face |
-| [Board guide](docs/ban.md) | Boards, panels, joints, and how to put a board together |
-| [Komadai guide](docs/komadai.md) and [komabako guide](docs/komabako.md) | The piece stand and the piece box |
-| [Print guide](docs/printing/print-guide.md) | Slicer settings and printing |
-| [Print test page](docs/print-test-page.md) | Measuring what a printer can reproduce |
-| [Command reference](docs/cli.md) | Every `komascad.py` command and option |
-| [Parameter reference](docs/parameters.md) | Every OpenSCAD setting, with its default value |
+- [Getting started](docs/getting-started.md): design your first piece
+- [User guide](docs/user-guide.md): change the sets, fonts, sizes and colors
+- [Parameter reference](docs/parameters.md): every setting of the piece generator
+- [How to play](docs/play/how-to-play.md): the rules of shogi
+- [Full index](docs/README.md)
 
 ## Contributing
 
-Problems and questions go in [GitHub Issues](https://github.com/Kazutadashi/koma-scad/issues). Print results from other printers are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) describes how the code is organized and how to test a change.
-
-[@imtrmu](https://github.com/imtrmu) gave the project its parametric approach, and works on the printer and slicer settings that make the pieces easy to print. [CONTRIBUTORS.md](CONTRIBUTORS.md) lists everyone who has contributed.
+Bug reports, print results and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md)
+for how to run the tests and submit changes.
 
 ## License
 
-The code, the documentation, the images and the bundled presets are released under the [MIT License](LICENSE), except the Taikyoku data and its presets, which are under [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt). The bundled fonts are under the SIL Open Font License. [LICENSES.md](LICENSES.md) explains what applies to a shared print file.
+The code, documentation and presets are released under the [MIT license](LICENSE). The bundled
+fonts are under the SIL Open Font License 1.1, and the Taikyoku shogi data is under CC BY-SA 4.0.
+Prints made with KomaSCAD, including pieces lettered in the bundled fonts, may be shared and sold.
+See [LICENSES.md](LICENSES.md) for details.

@@ -62,7 +62,7 @@
         "Output_Mode": "Model",
         "Pawn_Circle": "true",
         "Print_Line_Width": "0.5",
-        "Print_Orientation": "Upright",
+        "Print_Orientation": "Front face down",
         "Protect_Face_Edges": "true",
         "Show_Layout_Guides": "true",
         "Signature_Color": "[0.025, 0.02, 0.015, 1]",

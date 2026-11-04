@@ -189,7 +189,18 @@ class ExportCommandTests(unittest.TestCase):
         status, out, _ = run("export", self.presets, "-o", self.out, "-n")
         self.assertEqual(status, 0)
         self.assertIn("01 Pawn.3mf  (print 2)", out)
+        self.assertIn("Print Orientation:", out)
         self.assertFalse(self.out.exists())
+
+    def test_dry_run_names_files_that_will_be_skipped(self):
+        self.out.mkdir(parents=True)
+        (self.out / "01 Pawn.3mf").write_bytes(b"")
+        status, out, _ = run(
+            "export", self.presets, "-o", self.out, "-n", "--orientation", "front-down"
+        )
+        self.assertEqual(status, 0)
+        self.assertIn("01 Pawn.3mf  (print 2)  [exists: will skip; use -f", out)
+        self.assertIn("Print Orientation: Front face down", out)
 
     def test_failed_piece_keeps_completed_exports_for_resume(self):
         """A failed export keeps the completed files and leaves no partial one."""

@@ -235,7 +235,7 @@ function sum(v, n) = n <= 0 ? 0 : v[n-1] + sum(v, n-1);
 function unit(v) = v/norm(v);
 function inward(v) = [-v[1], v[0]];
 
-version = "3.5";   // the same as VERSION in komascad.py; a test checks this
+version = "3.5";   // the same as VERSION in komascad_lib/project.py; a test checks this
 $fn = Text_Curve_Resolution;
 epsilon = 0.02;   // overlap that keeps boolean operations clean
 

@@ -7,14 +7,23 @@
 *.bgcode
 *.3mf
 *.csg
-# Intentionally released print files are documented and licensed in models/.
-!models/
-!models/**/*.stl
-!models/**/*.3mf
-!models/**/*.license
-# Python and editor artifacts
+# Ready-made print files are GitHub Release assets, not git files.
+# Python, test and tool artifacts
 __pycache__/
 *.py[cod]
+*.egg-info/
+/dist/
+.venv/
+venv/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+# Slicer command-line output
+/result.json
+# Editor and OS artifacts
 *.bak
 *~
 .DS_Store

@@ -5,7 +5,7 @@ pieces. The defaults hold the 40 pieces of a shogi set, loose.
 
 ## Make a komabako
 
-1. Open `komabako/komabako.scad` in OpenSCAD 2021.01.
+1. Open `komabako/komabako.scad` in OpenSCAD ([install it](install.md) first).
 2. In **02 - Pieces**, set the number of pieces and the size of the largest
    piece.
 3. Set **Output Mode** to **Closed**. Press F5 to see the box with its lid.

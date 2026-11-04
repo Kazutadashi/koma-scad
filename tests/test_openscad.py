@@ -142,6 +142,14 @@ class RenderFailureTests(unittest.TestCase):
         self.assertFalse(openscad._is_touching_shell_warning("WARNING: Ignoring unknown variable"))
 
 
+class MissingOpenSCADTests(unittest.TestCase):
+    """A missing OpenSCAD program gives a message that says what to do."""
+
+    def test_missing_program_is_explained(self):
+        with self.assertRaisesRegex(KomaError, "cannot find OpenSCAD.*--openscad"):
+            openscad.run_openscad(["/nonexistent/komascad-test/openscad", "--version"])
+
+
 class FrameTests(unittest.TestCase):
     """Each animation frame renders its own values."""
 

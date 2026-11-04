@@ -1,0 +1,50 @@
+name: Bug report
+description: Something in KomaSCAD doesn't work as the docs say.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! Please check the [FAQ](https://github.com/Kazutadashi/koma-scad/blob/main/docs/faq.md) first.
+        For how a print came out, use the **Print report** form instead.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command or file
+      description: The full `komascad.py` command, or the `.scad` file and preset you used.
+      placeholder: python3 komascad.py export shogi-learner --per-file all
+  - type: textarea
+    id: output
+    attributes:
+      label: Error or Console output
+      description: The full `komascad.py` error, or the full OpenSCAD Console output.
+      render: text
+  - type: input
+    id: font
+    attributes:
+      label: Font name
+      placeholder: Yuji Syuku:style=Regular
+  - type: input
+    id: openscad
+    attributes:
+      label: OpenSCAD version
+      description: Help → About in OpenSCAD, or `openscad --version`.
+      placeholder: "2021.01"
+  - type: input
+    id: system
+    attributes:
+      label: Operating system and Python version
+      placeholder: Windows 11, Python 3.12
+  - type: input
+    id: version
+    attributes:
+      label: KomaSCAD version
+      description: "`python3 komascad.py -V`, or the release you downloaded."
+      placeholder: "3.5"

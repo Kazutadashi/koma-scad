@@ -64,8 +64,12 @@ class BuildTests(unittest.TestCase):
         games = presets.build_games()
         wenkai = "LXGW WenKai Mono:style=Regular"
         syuku = "Yuji Syuku:style=Regular"
-        for key, font in (("shogi-wenkai", wenkai), ("shogi-1char-wenkai", wenkai),
-                          ("shogi-learner-syuku", syuku), ("shogi", syuku)):
+        for key, font in (
+            ("shogi-wenkai", wenkai),
+            ("shogi-1char-wenkai", wenkai),
+            ("shogi-learner-syuku", syuku),
+            ("shogi", syuku),
+        ):
             for name, preset in games[key].presets.items():
                 self.assertEqual(preset["Font_Name"], font, name)
 

@@ -85,3 +85,20 @@ def read_json(path: Path) -> Any:
         return json.loads(text)
     except json.JSONDecodeError as error:
         raise KomaError(f"Invalid JSON in {shown(path)}: {error}") from None
+
+
+def check_root() -> None:
+    """Checks that the models sit next to the tool, as in a clone of the repository.
+
+    A plain ``pip install .`` copies only the Python code into site-packages,
+    so the models and presets are not found there.
+
+    Raises:
+        KomaError: The piece model is not where the tool expects it.
+    """
+    if not SCAD.is_file():
+        raise KomaError(
+            f"Cannot find the KomaSCAD models next to the tool ({ROOT}). "
+            "Install with 'pip install -e .' from a clone of the repository, "
+            "or run 'python3 komascad.py' from the repository folder."
+        )

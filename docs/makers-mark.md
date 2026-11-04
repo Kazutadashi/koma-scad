@@ -62,7 +62,7 @@ text in strokes thinner than a line, and 5% in gaps narrower than a line.
 | A thin Mincho, such as Shippori Mincho SemiBold | 0 | 12 mm | 8 mm or more |
 | A thin Mincho, such as Shippori Mincho SemiBold | 0.08 | 7 mm | 8 mm |
 | A thin Mincho, such as Shippori Mincho SemiBold | 0.12 | 6 mm | 5 mm |
-| A brush font, such as Yuji Syuku (one character) | 0.08 | 7 mm | — |
+| A brush font, such as Yuji Syuku (one character) | 0.08 | 7 mm | None |
 
 **Mark Stroke** thickens every stroke by that much on each side. It lets a
 thin Mincho print at a useful size. Set **Mark Min Text Size** to the larger
@@ -94,8 +94,9 @@ a nine-letter wordmark at **Mark Min Text Size** 6:
 ## Keep your mark out of the project
 
 Your mark is yours, so do not save it in the bundled preset files. Put it in
-a preset file of your own, outside the project or in `ignored/`, which Git
-does not track. A preset needs only the settings that it changes. Use it with
+a preset file of your own, outside the project folder, such as
+`~/my-presets/`. Then an update of KomaSCAD never overwrites it, and it
+never ends up in a pull request by accident. A preset needs only the settings that it changes. Use it with
 the `-p` option:
 
 ```bash

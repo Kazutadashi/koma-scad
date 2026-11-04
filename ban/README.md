@@ -9,5 +9,5 @@ presets.
 | `ban.json` | The Customizer presets of the bundled boards. `komascad.py ban` exports them. |
 
 The [board guide](../docs/ban.md) tells you how to make, export, print and
-put together a board. The [design notes](../docs/ban-design-notes.md) tell
+put together a board. The [design notes](../docs/dev/ban-design-notes.md) tell
 why the joints have their shape.
